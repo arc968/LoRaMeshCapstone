@@ -7,6 +7,10 @@
 #ifndef HAL_H
 #define HAL_H
 
+#ifndef HW_H
+	#error "Hardware not defined"
+#endif // HW_H
+
 #include "hal_gpio.h"
 #include "hal_i2c.h"
 #include "hal_interrupt.h"

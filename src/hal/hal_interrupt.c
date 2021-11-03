@@ -1,1 +1,1 @@
-#include "hal_interrupt.c"
+#include "hal_interrupt.h"
