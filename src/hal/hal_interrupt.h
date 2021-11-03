@@ -1,0 +1,4 @@
+#ifndef HAL_INTERRUPT_H
+#define HAL_INTERRUPT_H
+
+#endif // HAL_INTERRUPT_H
