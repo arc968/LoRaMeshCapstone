@@ -1,15 +1,11 @@
-#include "config.h"
-
-#ifndef HW_H
-	#error "No hardware selected"
-#endif
-
-#ifndef HAL_H
-#define HAL_H
+#include "hal_config.h"
 
 #ifndef HW_H
 	#error "Hardware not defined"
 #endif // HW_H
+
+#ifndef HAL_H
+#define HAL_H
 
 #include "hal_gpio.h"
 #include "hal_i2c.h"
