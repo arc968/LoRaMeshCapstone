@@ -3,7 +3,7 @@
 #elif !defined(HW_H) && !defined(MKRWAN1300_H)
 	#define HW_H
 	#define MKRWAN1300_H
-	#include "mkrwan1300_registers.h"
+	#include "hw_mkrwan1300_registers.h"
 
 
 #endif // HW_H MKRWAN1300_H
