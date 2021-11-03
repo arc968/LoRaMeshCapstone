@@ -1,2 +1,2 @@
-#include "../driver/drv_mesh.h"
+#include "../drivers/mesh/drv_mesh.h"
 
