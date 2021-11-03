@@ -7,5 +7,6 @@
 #include "hal_serial.h"
 #include "hal_spi.h"
 #include "hal_timer.h"
+#include "hal_power.h"
 
 #endif // HAL_H
