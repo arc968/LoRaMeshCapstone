@@ -1,9 +1,3 @@
-#include "hal_config.h"
-
-#ifndef HW_H
-	#error "Hardware not defined"
-#endif // HW_H
-
 #ifndef HAL_H
 #define HAL_H
 
