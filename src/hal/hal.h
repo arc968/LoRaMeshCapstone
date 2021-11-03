@@ -1,3 +1,9 @@
+#include "config.h"
+
+#ifndef HW_H
+	#error "No hardware selected"
+#endif
+
 #ifndef HAL_H
 #define HAL_H
 
