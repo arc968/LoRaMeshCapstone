@@ -5,6 +5,6 @@
 	#define HW_ARDUINO
 	#define HW_MKRWAN1300_H
 	#include "hw_mkrwan1300_registers.h"
-
+	#include "Arduino.h"
 
 #endif // HW_H MKRWAN1300_H

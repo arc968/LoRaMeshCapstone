@@ -3,6 +3,7 @@
 
 #include "hal_defines.h"
 
+#ifndef HW_ARDUINO
 enum HAL_GPIO_PINMODE {
 	INPUT = 0,
 	OUTPUT = 1,
@@ -14,6 +15,7 @@ enum HAL_GPIO_OUTPUT {
 	LOW = 0,
 	HIGH = 1
 };
+#endif //HW_ARDUINO
 
 void hal_gpio_pinMode(pin_t pin, enum HAL_GPIO_PINMODE);
 

@@ -12,7 +12,7 @@ void hal_gpio_pinMode(pin_t pin, enum HAL_GPIO_PINMODE) {
 	#elif HW_IBUG_H
 	
 	#else
-		#error ""
+		#error "Hardware not yet implemented"
 	#endif
 	
 }
