@@ -1,7 +1,7 @@
-#ifndef HAL_DEFINES_H
-#define HAL_DEFINES_H
+#ifndef HAL_COMMON_H
+#define HAL_COMMON_H
 
 #include <stdint.h>
 typedef uint_fast16_t pin_t;
 
-#endif // HAL_DEFINES_H
+#endif // HAL_COMMON_H
