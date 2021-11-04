@@ -1,8 +1,8 @@
-#if defined(HW_H) && !defined(IBUG_H)
+#if defined(HW_H) && !defined(HW_IBUG_H)
 	#error "Multiple hardware definitions"
-#elif !defined(HW_H) && !defined(IBUG_H)
+#elif !defined(HW_H) && !defined(HW_IBUG_H)
 	#define HW_H
-	#define IBUG_H
+	#define HW_IBUG_H
 	#include "hw_ibug_registers.h"
 
 
