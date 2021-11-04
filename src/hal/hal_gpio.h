@@ -15,11 +15,7 @@ enum HAL_GPIO_OUTPUT {
 	LOW = 0,
 	HIGH = 1
 };
-<<<<<<< Updated upstream
-#endif //HW_ARDUINO
-=======
 #endif // HW_ARDUINO
->>>>>>> Stashed changes
 
 void hal_gpio_pinMode(pin_t pin, uint8_t mode);
 

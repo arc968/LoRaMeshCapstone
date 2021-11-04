@@ -5,7 +5,7 @@
 
 #include "hal_gpio.h"
 
-void hal_gpio_pinMode(pin_t pin, enum HAL_GPIO_PINMODE) {
+void hal_gpio_pinMode(pin_t pin, uint8_t mode) {
 	
 	#ifdef HW_ARDUINO
 		pinMode(pin, HAL_GPIO_PINMODE);	
@@ -17,7 +17,7 @@ void hal_gpio_pinMode(pin_t pin, enum HAL_GPIO_PINMODE) {
 	
 }
 
-void hal_gpio_digitalWrite(pin_t pin, enum HAL_GPIO_OUTPUT);
+void hal_gpio_digitalWrite(pin_t pin, uint8_t mode);
 
 uint8_t hal_gpio_digitalRead(pin_t pin);
 
