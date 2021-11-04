@@ -6,7 +6,7 @@
 //////////SX1276-7-8 Registers///////////////
 // SX1276-7-8 Datasheet: https://www.mouser.com/datasheet/2/761/sx1276-1278113.pdf
 
-//Base Adresses
+//Base Addresses
 #define REGFIFO		 	0x00	//FIFO read/write access
 #define REGOPMODE	 	0x01	//Operating mode & LoRaTM / FSK selection
 #define REGBITRATEMSB	0x02	//Bit Rate setting, Most Significant Bits
@@ -29,7 +29,7 @@
 ///////////nRF52832////////////////////////////
 //nRF52832 Datasheet: https://infocenter.nordicsemi.com/pdf/nRF52832_PS_v1.0.pdf
 
-//Base Adresses
+//Base Addresses
 
 
 
