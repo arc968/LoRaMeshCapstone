@@ -1,7 +1,7 @@
 #ifndef HAL_GPIO_H
 #define HAL_GPIO_H
 
-#include "hal_defines.h"
+#include "hal_common.h"
 
 #ifndef HW_ARDUINO
 enum HAL_GPIO_PINMODE {

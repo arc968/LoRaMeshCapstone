@@ -1,7 +1,7 @@
 #ifndef HAL_INTERRUPT_H
 #define HAL_INTERRUPT_H
 
-#include "hal_defines.h"
+#include "hal_common.h"
 
 enum HAL_INTERRUPT_MODE {
 	LOW = 0,
