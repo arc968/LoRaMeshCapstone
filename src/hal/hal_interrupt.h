@@ -12,18 +12,14 @@ enum HAL_INTERRUPT_MODE {
 };
 
 enum HAL_INTERRUPT_TYPE {
-	LOW = 0,
-	HIGH = 1,
-	CHANGE = 2,
-	RISING = 3,
-	FALLING = 4
+	
 };
 
 void hal_interrupt_enable(void);
 
 void hal_interrupt_disable(void);
 
-void hal_interrupt_attachPin(pin_t pin, void (*isr)(void), enum HAL_INTERRUPT_MODE);
+void hal_interrupt_attachPin(pin_t pin, void (*isr)(void), uint8_t mode);
 
 void hal_interrupt_detachPin(pin_t pin);
 

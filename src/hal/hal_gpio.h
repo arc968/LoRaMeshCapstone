@@ -15,11 +15,15 @@ enum HAL_GPIO_OUTPUT {
 	LOW = 0,
 	HIGH = 1
 };
+<<<<<<< Updated upstream
 #endif //HW_ARDUINO
+=======
+#endif // HW_ARDUINO
+>>>>>>> Stashed changes
 
-void hal_gpio_pinMode(pin_t pin, enum HAL_GPIO_PINMODE);
+void hal_gpio_pinMode(pin_t pin, uint8_t mode);
 
-void hal_gpio_digitalWrite(pin_t pin, enum HAL_GPIO_OUTPUT);
+void hal_gpio_digitalWrite(pin_t pin, uint8_t mode);
 
 uint8_t hal_gpio_digitalRead(pin_t pin);
 
