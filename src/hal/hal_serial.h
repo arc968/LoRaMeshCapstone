@@ -1,6 +1,8 @@
 #ifndef HAL_SERIAL_H
 #define HAL_SERIAL_H
 
+#include "../hardware/hardware.h"
+
 #include "hal_common.h"
 
 void hal_serial_begin(uint16_t baud);

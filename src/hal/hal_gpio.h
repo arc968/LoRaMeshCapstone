@@ -1,6 +1,8 @@
 #ifndef HAL_GPIO_H
 #define HAL_GPIO_H
 
+#include "../hardware/hardware.h"
+
 #include "hal_common.h"
 
 #ifndef HW_ARDUINO
