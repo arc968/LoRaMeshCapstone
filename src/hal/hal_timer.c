@@ -1,6 +1,4 @@
 #define HAL_LIB
-#include "../hardware/hardware.h"
-
 #include "hal_gpio.h"
 
 void hal_timer_delay(uint16_t msdelay) {

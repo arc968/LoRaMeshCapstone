@@ -1,6 +1,8 @@
 #ifndef HAL_COMMON_H
 #define HAL_COMMON_H
 
+#include "../hardware/hardware.h"
+
 #include <stdint.h>
 typedef uint_fast16_t pin_t;
 

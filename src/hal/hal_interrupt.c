@@ -1,8 +1,5 @@
 #define HAL_LIB
-#include "../hardware/hardware.h"
-
 #include "hal_interrupt.h"
-
 
 void hal_interrupt_enable(void) {
 	

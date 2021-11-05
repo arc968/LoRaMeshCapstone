@@ -1,8 +1,6 @@
 #ifndef HAL_TIMER_H
 #define HAL_TIMER_H
 
-#include "../hardware/hardware.h"
-
 #include "hal_common.h"
 
 void hal_timer_delay(uint16_t msdelay);

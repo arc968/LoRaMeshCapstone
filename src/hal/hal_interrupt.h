@@ -1,8 +1,6 @@
 #ifndef HAL_INTERRUPT_H
 #define HAL_INTERRUPT_H
 
-#include "../hardware/hardware.h"
-
 #include "hal_common.h"
 
 enum HAL_INTERRUPT_MODE {

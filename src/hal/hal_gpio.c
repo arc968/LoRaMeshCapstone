@@ -1,6 +1,4 @@
 #define HAL_LIB
-#include "../hardware/hardware.h"
-
 #include "hal_gpio.h"
 
 void hal_gpio_pinMode(pin_t pin, uint8_t mode) {
