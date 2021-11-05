@@ -3,6 +3,7 @@
 
 #include "hal_common.h"
 
+#ifndef HW_ARDUINO
 enum HAL_INTERRUPT_MODE {
 	LOW = 0,
 	HIGH = 1,
@@ -14,6 +15,7 @@ enum HAL_INTERRUPT_MODE {
 enum HAL_INTERRUPT_TYPE {
 	
 };
+#endif // HW_ARDUINO
 
 void hal_interrupt_enable(void);
 
@@ -23,8 +25,12 @@ void hal_interrupt_attachPin(pin_t pin, void (*isr)(void), uint8_t mode);
 
 void hal_interrupt_detachPin(pin_t pin);
 
+#ifndef HW_ARDUINO
 void hal_interrupt_attach(enum HAL_INTERRUPT_TYPE trigger, void (*isr)(void));
+#endif // HW_ARDUINO
 
+#ifndef HW_ARDUINO
 void hal_interrupt_detach(enum HAL_INTERRUPT_TYPE trigger);
+#endif // HW_ARDUINO
 
 #endif // HAL_INTERRUPT_H
