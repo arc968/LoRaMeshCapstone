@@ -8,7 +8,7 @@
 void hal_gpio_pinMode(pin_t pin, uint8_t mode) {
 	
 	#ifdef HW_ARDUINO
-		pinMode(pin, HAL_GPIO_PINMODE);	
+		pinMode(pin, mode);	
 	#elif HW_IBUG_H
 	
 	#else
