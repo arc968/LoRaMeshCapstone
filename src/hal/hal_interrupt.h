@@ -13,7 +13,7 @@ enum HAL_INTERRUPT_MODE {
 };
 
 enum HAL_INTERRUPT_TYPE {
-	
+	TODO = 0
 };
 #endif // HW_ARDUINO
 

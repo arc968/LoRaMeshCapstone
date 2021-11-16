@@ -1,12 +1,12 @@
 #define HAL_LIB
-#include "hal_gpio.h"
+#include "hal_timer.h"
 
 void hal_timer_delay(uint16_t msdelay) {
 	
-	#ifdef HW_ARDUINO
+	#if defined(HW_ARDUINO)
 		delay(msdelay);	
-	#elif HW_IBUG_H
-	
+	#elif defined(HW_IBUG_H)
+		int noop; //TODO
 	#else
 		#error "Hardware not yet implemented"
 	#endif
@@ -15,10 +15,10 @@ void hal_timer_delay(uint16_t msdelay) {
 
 uint32_t hal_timer_millis(void) {
 	
-	#ifdef HW_ARDUINO
+	#if defined(HW_ARDUINO)
 		return millis();	
-	#elif HW_IBUG_H
-	
+	#elif defined(HW_IBUG_H)
+		return 0; //TODO
 	#else
 		#error "Hardware not yet implemented"
 	#endif

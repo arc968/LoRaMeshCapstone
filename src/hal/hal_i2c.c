@@ -10,16 +10,17 @@ extern "C" {
 #endif
 
 
+/*
 	void func() {
 		#ifdef HW_ARDUINO
 			Wire.begin();
 		#elif HW_IBUG_H
-		
+			
 		#else
 			#error "Hardware not yet implemented"
 		#endif
 	}
-
+*/
 
 
 #ifdef __cplusplus
