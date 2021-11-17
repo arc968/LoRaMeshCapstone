@@ -4,14 +4,14 @@
 #include "hal_common.h"
 
 #ifndef HW_ARDUINO
-enum HAL_SPI_MODE {
+enum hal_spi_mode_e {
 	SPI_MODE0 = 0,
 	SPI_MODE1 = 1,
 	SPI_MODE2 = 2,
 	SPI_MODE3 = 3
 };
 
-enum HAL_SPI_BIT_ORDER {
+enum hal_spi_bit_order_e {
 	LSBFIRST = 0,
 	MSBFIRST = 1
 };
@@ -19,10 +19,10 @@ enum HAL_SPI_BIT_ORDER {
 
 void hal_spi_begin(void);
 void hal_spi_end(void);
-void hal_spi_begin_transaction(uint32_t speedmax, uint8_t dataorder, uint8_t datamode);
-void hal_spi_end_transaction(void);
-void hal_spi_transfer(uint8_t data);
-void hal_spi_transfer_buf(uint8_t* buf, uint16_t length);
-void hal_spi_using_interrupt(uint16_t interuptnum);
+void hal_spi_beginTransaction(uint32_t speedmax, uint8_t dataorder, uint8_t datamode);
+void hal_spi_endTransaction(void);
+uint8_t hal_spi_transfer(uint8_t data);
+void hal_spi_transferBuf(uint8_t* buf, uint16_t length);
+void hal_spi_usingInterrupt(uint16_t interuptnum);
 
 #endif // HAL_SPI_H

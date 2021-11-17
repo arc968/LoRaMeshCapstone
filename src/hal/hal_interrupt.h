@@ -4,7 +4,7 @@
 #include "hal_common.h"
 
 #ifndef HW_ARDUINO
-enum HAL_INTERRUPT_MODE {
+enum hal_interupt_mode_e {
 	LOW = 0,
 	HIGH = 1,
 	CHANGE = 2,
@@ -12,7 +12,7 @@ enum HAL_INTERRUPT_MODE {
 	FALLING = 4
 };
 
-enum HAL_INTERRUPT_TYPE {
+enum hal_interupt_type_e {
 	TODO = 0
 };
 #endif // HW_ARDUINO
