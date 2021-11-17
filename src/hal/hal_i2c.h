@@ -7,7 +7,7 @@ void hal_i2c_begin(uint16_t address);
 void hal_i2c_requestFrom(uint16_t address, uint16_t quantity, bool stop);
 void hal_i2c_beginTransmission(uint16_t address);
 uint8_t hal_i2c_endTransmission(bool stop);
-void hal_i2c_write(uint8_t *data, uint16_t length);
+void hal_i2c_write(uint8_t *buf, uint16_t length);
 uint16_t hal_i2c_available(void);
 uint8_t hal_i2c_read(void);
 void hal_i2c_setClock(uint32_t freq);

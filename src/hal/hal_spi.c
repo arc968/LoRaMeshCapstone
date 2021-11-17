@@ -52,7 +52,7 @@ uint8_t hal_spi_transfer(uint8_t data) {
 	#if defined(HW_ARDUINO)
 		return SPI.transfer(data);
 	#elif defined(HW_IBUG_H)
-	
+		return 0; //TODO
 	#else
 		#error "Hardware not yet implemented"
 	#endif

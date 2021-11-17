@@ -43,15 +43,15 @@ uint8_t hal_i2c_endTransmission(bool stop) {
 	#if defined(HW_ARDUINO)
 		return Wire.endTransmission(stop);
 	#elif defined(HW_IBUG_H)
-	
+		return 0; //TODO
 	#else
 		#error "Hardware not yet implemented"
 	#endif
 }
 
-void hal_i2c_write(uint8_t *data, uint16_t length) {
+void hal_i2c_write(uint8_t *buf, uint16_t length) {
 	#if defined(HW_ARDUINO)
-		Wire.write(data, length);
+		Wire.write(buf, length);
 	#elif defined(HW_IBUG_H)
 	
 	#else
@@ -63,7 +63,7 @@ uint16_t hal_i2c_available(void) {
 	#if defined(HW_ARDUINO)
 		return Wire.available();
 	#elif defined(HW_IBUG_H)
-	
+		return 0; //TODO
 	#else
 		#error "Hardware not yet implemented"
 	#endif
@@ -73,7 +73,7 @@ uint8_t hal_i2c_read(void) {
 	#if defined(HW_ARDUINO)
 		return Wire.read();
 	#elif defined(HW_IBUG_H)
-	
+		return 0; //TODO
 	#else
 		#error "Hardware not yet implemented"
 	#endif
