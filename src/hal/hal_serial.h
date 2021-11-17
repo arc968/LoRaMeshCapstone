@@ -3,16 +3,12 @@
 
 #include "hal_common.h"
 
+bool hal_serial_ready(void);
 void hal_serial_begin(uint16_t baud);
-
 void hal_serial_end(void);
-
 void hal_serial_write(uint8_t *buff, uint16_t len);
-
 size_t hal_serial_read_bytes(uint8_t *buff, uint16_t len);
-
 size_t hal_serial_print(uint8_t *val, uint8_t format);
-
 size_t hal_serial_print(uint8_t *val, uint8_t format);
 
 #endif // HAL_SERIAL_H

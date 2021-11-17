@@ -6,7 +6,7 @@ void hal_timer_delay(uint16_t msdelay) {
 	#if defined(HW_ARDUINO)
 		delay(msdelay);	
 	#elif defined(HW_IBUG_H)
-		int noop; //TODO
+		
 	#else
 		#error "Hardware not yet implemented"
 	#endif
