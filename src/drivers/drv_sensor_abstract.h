@@ -1,0 +1,7 @@
+#ifndef DRV_SENSOR_ABSTRACT_H
+#define DRV_SENSOR_ABSTRACT_H
+
+
+
+
+#endif //DRV_SENSOR_ABSTRACT_H
