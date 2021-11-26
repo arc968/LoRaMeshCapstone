@@ -18,6 +18,9 @@ class drv_sensor_abstract {
 		virtual bool begin() = 0;
 		virtual bool end() = 0;
 		
+		virtual void enable() {enabled = true;}
+		virtual void disable() {enabled = false;}
+		
 		bool isInitialized() {return initialized;}
 		bool isEnabled() {
 			if (isInitialized()){
