@@ -42,7 +42,7 @@ void hal_interrupt_detachPin(pin_t pin) {
 }
 
 #ifndef HW_ARDUINO
-void hal_interrupt_attach(enum HAL_INTERRUPT_TYPE trigger, void (*isr)(void)) {
+void hal_interrupt_attach(enum hal_interrupt_type_e trigger, void (*isr)(void)) {
 	#if defined(HW_IBUG_H)
 	
 	#else
@@ -52,7 +52,7 @@ void hal_interrupt_attach(enum HAL_INTERRUPT_TYPE trigger, void (*isr)(void)) {
 #endif // HW_ARDUINO
 
 #ifndef HW_ARDUINO
-void hal_interrupt_detach(enum HAL_INTERRUPT_TYPE trigger) {
+void hal_interrupt_detach(enum hal_interrupt_type_e trigger) {
 	#if defined(HW_IBUG_H)
 	
 	#else

@@ -1,4 +1,4 @@
-#include "../hal/hal.h"
+#include "../../hal/hal.h"
 #include "drv_sched.h"
 
 #define DRV_SCHED_MAX_JOBS 16
@@ -16,5 +16,7 @@ __attribute__((noreturn))
 void drv_sched_start(void) {
 	while (1) {
 		
+		
+		//sleep
 	}
 }

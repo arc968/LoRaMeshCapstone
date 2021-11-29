@@ -1,4 +1,4 @@
-#include "../hal/hal.h"
+#include "../../hal/hal.h"
 #include "drv_gps.h"
 
 void drv_gps_init(uint16_t baud) {

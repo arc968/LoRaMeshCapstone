@@ -4,6 +4,7 @@
 #include "../hardware/hardware.h"
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdlib.h>
 typedef uint_fast16_t pin_t;
 

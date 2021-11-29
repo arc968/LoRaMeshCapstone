@@ -21,8 +21,8 @@ void hal_spi_begin(void);
 void hal_spi_end(void);
 void hal_spi_beginTransaction(uint32_t speedmax, uint8_t dataorder, uint8_t datamode);
 void hal_spi_endTransaction(void);
-uint8_t hal_spi_transfer(uint8_t data, mosi);
-void hal_spi_transferBuf(uint8_t* buf, uint16_t length, mosi);
+uint8_t hal_spi_transfer(uint8_t data);
+void hal_spi_transferBuf(uint8_t* buf, uint16_t length);
 void hal_spi_usingInterrupt(uint16_t interuptnum);
 
 #endif // HAL_SPI_H
