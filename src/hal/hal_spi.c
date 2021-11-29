@@ -13,7 +13,7 @@ void hal_spi_begin(void) {
 	#if defined(HW_ARDUINO)
 		SPI.begin();
 	#elif defined(HW_IBUG_H)
-	
+		
 	#else
 		#error "Hardware not yet implemented"
 	#endif
@@ -48,7 +48,7 @@ void hal_spi_endTransaction(void) {
 		#error "Hardware not yet implemented"
 	#endif
 }
-uint8_t hal_spi_transfer(uint8_t data) {
+uint8_t hal_spi_transfer(uint8_t data, mosi) {
 	#if defined(HW_ARDUINO)
 		return SPI.transfer(data);
 	#elif defined(HW_IBUG_H)
@@ -58,7 +58,7 @@ uint8_t hal_spi_transfer(uint8_t data) {
 	#endif
 }
 
-void hal_spi_transferBuf(uint8_t* buf, uint16_t length) {
+void hal_spi_transferBuf(uint8_t* buf, uint16_t length, mosi) {
 	#if defined(HW_ARDUINO)
 		SPI.transfer(buff, length);
 	#elif defined(HW_IBUG_H)

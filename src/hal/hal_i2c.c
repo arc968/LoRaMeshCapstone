@@ -9,9 +9,9 @@
 extern "C" {
 #endif
 
-void hal_i2c_begin(uint16_t address) {
+void hal_i2c_begin(void) {
 	#if defined(HW_ARDUINO)
-		Wire.begin(address);
+		Wire.begin();
 	#elif defined(HW_IBUG_H)
 	
 	#else

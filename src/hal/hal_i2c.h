@@ -3,7 +3,7 @@
 
 #include "hal_common.h"
 
-void hal_i2c_begin(uint16_t address);
+void hal_i2c_begin(void);
 void hal_i2c_requestFrom(uint16_t address, uint16_t quantity, bool stop);
 void hal_i2c_beginTransmission(uint16_t address);
 uint8_t hal_i2c_endTransmission(bool stop);
