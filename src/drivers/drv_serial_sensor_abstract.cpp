@@ -3,7 +3,8 @@
 
 void begin(void) {
 	
-	if (drv_serial_begun == false) {
+	if (!hal_serial_ready()) {
+		
 		hal_serial_begin();
 	
 		if (hal_serial_ready()) {
@@ -16,6 +17,13 @@ void begin(void) {
 			drv_enabled = false;
 		}
 	
+	}
+	else {
+		
+		drv_serial_begun = true;
+		drv_initialized = true;
+		drv_enabled = true;
+		
 	}
 	
 }

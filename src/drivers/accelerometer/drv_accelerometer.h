@@ -1,0 +1,6 @@
+#ifndef DRV_ACCELEROMETER_H
+#define DRV_ACCELEROMETER_H
+
+
+
+#endif // DRV_ACCELEROMETER_H
