@@ -1,12 +1,9 @@
-#include "drv_i2c_sensor_abstract.h"
-#include "hal.h"
+#include "drv_i2c_abstract.h"
+#include "../hal/hal.h"
 
 void begin(void) {
 	
-	if (drv_i2c_begun == false) {
-		hal_i2c_begin();
-		drv_i2c_begun = true;
-	}
+	hal_i2c_begin();
 	drv_initialized = true;
 	drv_enabled = true;
 	

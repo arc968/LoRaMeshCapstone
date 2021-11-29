@@ -9,14 +9,19 @@
 extern "C" {
 #endif
 
+bool hal_i2c_begun = 0;
+
 void hal_i2c_begin(void) {
+	if(!hal_i2c_begun) {
 	#if defined(HW_ARDUINO)
 		Wire.begin();
+		hal_i2c_begun = 1;
 	#elif defined(HW_IBUG_H)
 	
 	#else
 		#error "Hardware not yet implemented"
 	#endif
+	}
 }
 
 void hal_i2c_requestFrom(uint16_t address, uint16_t quantity, bool stop) {

@@ -9,14 +9,20 @@
 extern "C" {
 #endif
 
+bool hal_spi_begun = 0;
+
 void hal_spi_begin(void) {
+	if (!hal_spi_begun) {
 	#if defined(HW_ARDUINO)
 		SPI.begin();
+		hal_spi_begun = 1;
 	#elif defined(HW_IBUG_H)
 		
 	#else
 		#error "Hardware not yet implemented"
 	#endif
+	
+	}
 }
 
 void hal_spi_end(void) {

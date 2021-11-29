@@ -1,18 +1,17 @@
-#ifndef DRV_SPI_SENSOR_ABSTRACT_H
-#define DRV_SPI_SENSOR_ABSTRACT_H
+#ifndef DRV_SPI_ABSTRACT_H
+#define DRV_SPI_ABSTRACT_H
 
 #include "drv_sensor_abstract.h"
 
-class drv_spi_sensor_abstract : drv_sensor_abstract{
+class drv_spi_abstract : drv_sensor_abstract{
 	
 	private:
 		
 		uint8_t drv_cs, drv_mosi, drv_miso, drv_clk;
-		static bool drv_spi_begun;
 		
 	public:
 	
-	drv_spi_sensor_abstract(cs, mosi, miso, clk) {
+	virtual drv_spi_abstract(cs, mosi, miso, clk) {
 			drv_cs = cs;
 			drv_mosi = mosi;
 			drv_miso = miso;
@@ -22,7 +21,7 @@ class drv_spi_sensor_abstract : drv_sensor_abstract{
 			drv_isEnabled = false;
 	}
 	
-	~drv_spi_sensor_abstract(void) {delete drv_cs; delete drv_mosi; delete drv_miso; delete drv_clk; delete drv_initalized; delete drv_enabled;}
+	virtual ~drv_spi_abstract(void) {}
 	
 	virtual void begin(void);
 	virtual void end(void);
@@ -41,4 +40,4 @@ class drv_spi_sensor_abstract : drv_sensor_abstract{
 }
 
 
-#endif //DRV_SPI_SENSOR_ABSTRACT_H
+#endif //DRV_SPI_ABSTRACT_H

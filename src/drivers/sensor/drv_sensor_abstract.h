@@ -12,8 +12,8 @@ class drv_sensor_abstract {
 		
 	public:
 	
-		virtual drv_sensor_abstract(void) {drv_initalized = false; drv_isEnabled = false;}
-		virtual ~drv_sensor_abstract(void) {delete drv_initalized; delete drv_enabled;}
+		virtual drv_sensor_abstract(void) {drv_initalized = false; drv_enabled = false;}
+		virtual ~drv_sensor_abstract(void) {}
 		
 		virtual bool begin() = 0;
 		virtual bool end() = 0;
@@ -22,12 +22,7 @@ class drv_sensor_abstract {
 		virtual void disable(void) {drv_enabled = false;}
 		
 		virtual bool isInitialized(void) {return drv_initialized;}
-		bool isEnabled(void) {
-			if (isInitialized()){
-				return drv_enabled;
-			}
-			return false;
-		}
+		bool isEnabled(void);
 		
 		virtual uint8_t read() = 0;
 		virtual void write() = 0;

@@ -1,13 +1,11 @@
-#include "drv_spi_sensor_abstract.h"
-#include "hal.h"
+#include "drv_spi_abstract.h"
+#include "../hal/hal.h"
 
 void begin(void) {
 	
 	hal_gpio_pinMode(drv_cs, OUTPUT);
-	if (drv_spi_begun == false) {
-		hal_spi_begin();
-		drv_spi_begun = true;
-	}
+	hal_spi_begin();
+	drv_spi_begun = true;
 	drv_initialized = true;
 	drv_enabled = true;
 	

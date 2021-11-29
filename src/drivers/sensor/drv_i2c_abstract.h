@@ -1,18 +1,17 @@
-#ifndef DRV_I2C_SENSOR_ABSTRACT_H
-#define DRV_I2C_SENSOR_ABSTRACT_H
+#ifndef DRV_I2C_ABSTRACT_H
+#define DRV_I2C_ABSTRACT_H
 
 #include "drv_sensor_abstract.h"
 
-class drv_i2c_sensor_abstract : drv_sensor_abstract{
+class drv_i2c_abstract : drv_sensor_abstract{
 	
 	private:
 		
 		uint8_t drv_address, drv_sda, drv_scl;
-		static bool drv_i2c_begun;
 		
 	public:
 	
-	drv_i2c_sensor_abstract(address, sda, scl) {
+	virtual drv_i2c_abstract(address, sda, scl) {
 			drv_address = address;
 			drv_sda = sda;
 			drv_scl = scl;
@@ -21,7 +20,7 @@ class drv_i2c_sensor_abstract : drv_sensor_abstract{
 			drv_isEnabled = false;
 	}
 	
-	~drv_i2c_sensor_abstract(void) {delete drv_address; delete drv_sda; delete drv_scl; delete drv_initalized; delete drv_enabled;}
+	virtual ~drv_i2c_abstract(void) {}
 	
 	virtual void begin(void);
 	virtual void end(void);
@@ -38,4 +37,4 @@ class drv_i2c_sensor_abstract : drv_sensor_abstract{
 }
 
 
-#endif //DRV_I2C_SENSOR_ABSTRACT_H
+#endif //DRV_I2C_ABSTRACT_H
