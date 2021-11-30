@@ -3,7 +3,7 @@
 
 #include "../drv_spi_abstract.h"
 
-class drv_accelerometer : drv_spi_sensor_abstract {
+class drv_accelerometer : drv_spi_abstract {
 	
 	private:
 		
@@ -13,6 +13,6 @@ class drv_accelerometer : drv_spi_sensor_abstract {
 		
 		
 		
-}
+};
 
 #endif // DRV_ACCELEROMETER_H

@@ -1,7 +1,7 @@
-#include "drv_spi_sensor_abstract.h"
-#include "../hal/hal.h"
+#include "drv_sensor_abstract.h"
+#include "../../hal/hal.h"
 
-bool isEnabled(void) {
+bool drv_sensor_abstract :: isEnabled(void) {
 	if (isInitialized()){
 		return drv_enabled;
 	}

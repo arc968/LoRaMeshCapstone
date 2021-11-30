@@ -11,16 +11,15 @@ class drv_i2c_abstract : drv_sensor_abstract{
 		
 	public:
 	
-	virtual drv_i2c_abstract(address, sda, scl) {
+	drv_i2c_abstract(uint16_t address, uint8_t sda, uint8_t scl) {
 			drv_address = address;
 			drv_sda = sda;
 			drv_scl = scl;
-			drv_i2c_begun = false;
 			drv_initalized = false; 
-			drv_isEnabled = false;
+			drv_enabled = false;
 	}
 	
-	virtual ~drv_i2c_abstract(void) {}
+	~drv_i2c_abstract(void) {}
 	
 	virtual void begin(void);
 	virtual void end(void);
@@ -34,7 +33,7 @@ class drv_i2c_abstract : drv_sensor_abstract{
 	void setSCLPin(uint8_t scl) {drv_scl = scl;}
 	uint8_t getSCLPin(void) {return drv_scl;}
 	
-}
+};
 
 
 #endif //DRV_I2C_ABSTRACT_H
