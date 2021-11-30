@@ -1,4 +1,4 @@
-#include "../drivers/mesh/drv_mesh.h"
+#include "../drivers/drv.h"
 
 int main(void) {
 	return 0;
