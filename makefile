@@ -17,16 +17,22 @@ UNIX_INCLUDES =
 UNIX_LFLAGS = -pthread -lm -Wl,--gc-sections
 UNIX_LIBS =
 
-SRCS_MODULE = $(patsubst $(PATH_SRC_MODULE)/%,%,$(call rwildcard,$(PATH_SRC_MODULE), *.c))
-UNIX_OBJS_MODULE = $(addprefix $(UNIX_PATH_BUILD_MODULE)/, $(SRCS_MODULE:.c=.o))
+UNIX_CPP_CC = g++
+UNIX_CPP_CFLAGS = -DIBUG -Wall -std=gnu++11 -Os -Wno-unused-variable -fdata-sections
+UNIX_CPP_INCLUDES = 
+UNIX_CPP_LFLAGS = -pthread -lm -Wl,--gc-sections
+UNIX_CPP_LIBS =
+
+SRCS_MODULE = $(patsubst $(PATH_SRC_MODULE)/%,%,$(call rwildcard,$(PATH_SRC_MODULE),*.c)) $(patsubst $(PATH_SRC_MODULE)/%,%,$(call rwildcard,$(PATH_SRC_MODULE),*.cpp))
+UNIX_OBJS_MODULE = $(addprefix $(UNIX_PATH_BUILD_MODULE)/, $(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(SRCS_MODULE))))
 UNIX_PATH_BUILD_MODULES = $(dir $(UNIX_OBJS_MODULE))
 
-SRCS_LIB = $(patsubst $(PATH_SRC_LIB)/%,%,$(call rwildcard,$(PATH_SRC_LIB), *.c))
-UNIX_OBJS_LIB = $(addprefix $(UNIX_PATH_BUILD_LIB)/, $(SRCS_LIB:.c=.o))
+SRCS_LIB = $(patsubst $(PATH_SRC_LIB)/%,%,$(call rwildcard,$(PATH_SRC_LIB),*.c)) $(patsubst $(PATH_SRC_LIB)/%,%,$(call rwildcard,$(PATH_SRC_LIB),*.cpp))
+UNIX_OBJS_LIB = $(addprefix $(UNIX_PATH_BUILD_LIB)/, $(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(SRCS_LIB))))
 UNIX_PATH_BUILD_LIBS = $(dir $(UNIX_OBJS_LIB))
 
-SRCS_BINARY = $(patsubst $(PATH_SRC_BINARY)/%,%,$(call rwildcard,$(PATH_SRC_BINARY), *.c))
-UNIX_OBJS_BINARY = $(addprefix $(UNIX_PATH_BUILD_BINARY)/, $(SRCS_BINARY:.c=))
+SRCS_BINARY = $(patsubst $(PATH_SRC_BINARY)/%,%,$(call rwildcard,$(PATH_SRC_BINARY),*.c)) $(patsubst $(PATH_SRC_BINARY)/%,%,$(call rwildcard,$(PATH_SRC_BINARY),*.cpp))
+UNIX_OBJS_BINARY = $(addprefix $(UNIX_PATH_BUILD_BINARY)/, $(patsubst %.c,%,$(patsubst %.cpp,%,$(SRCS_BINARY))))
 UNIX_PATH_BUILD_BINARIES = $(dir $(UNIX_OBJS_BINARY))
 
 PATH_ALL = $(PATH_SRC) $(PATH_SRC_MODULE) $(PATH_SRC_LIB) $(PATH_SRC_BINARY) $(PATH_BUILD) $(UNIX_PATH_BUILD) $(UNIX_PATH_BUILD_BINARY) $(UNIX_PATH_BUILD_MODULES) $(UNIX_PATH_BUILD_LIBS) $(UNIX_PATH_BUILD_BINARIES)
@@ -73,7 +79,7 @@ pre-build: makefile
 	@mkdir -p $(PATH_ALL)
 
 build: pre-build $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) $(UNIX_OBJS_BINARY)
-
+#C
 $(UNIX_PATH_BUILD_BINARY)%: %.c %.h $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB)
 	$(UNIX_CC) $(UNIX_CFLAGS) $(UNIX_INCLUDES) $< $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) -o $@ $(UNIX_LFLAGS) $(UNIX_LIBS)
 	
@@ -85,6 +91,18 @@ $(UNIX_PATH_BUILD_MODULE)/%.o: $(PATH_SRC_MODULE)/%.c $(PATH_SRC_MODULE)/%.h
 	
 $(UNIX_PATH_BUILD_LIB)/%.o: $(PATH_SRC_LIB)/%.c $(PATH_SRC_LIB)/%.h
 	$(UNIX_CC) $(UNIX_CFLAGS) -c $< -o $@
+#C++
+$(UNIX_PATH_BUILD_BINARY)%: %.cpp %.h $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB)
+	$(UNIX_CPP_CC) $(UNIX_CPP_CFLAGS) $(UNIX_CPP_INCLUDES) $< $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) -o $@ $(UNIX_LFLAGS) $(UNIX_LIBS)
+	
+$(UNIX_PATH_BUILD_BINARY)%: %.cpp $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB)
+	$(UNIX_CPP_CC) $(UNIX_CPP_CFLAGS) $(UNIX_INCLUDES) $< $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) -o $@ $(UNIX_LFLAGS) $(UNIX_LIBS)
+
+$(UNIX_PATH_BUILD_MODULE)/%.o: $(PATH_SRC_MODULE)/%.cpp $(PATH_SRC_MODULE)/%.h
+	$(UNIX_CPP_CC) $(UNIX_CPP_CFLAGS) -c $< -o $@
+	
+$(UNIX_PATH_BUILD_LIB)/%.o: $(PATH_SRC_LIB)/%.cpp $(PATH_SRC_LIB)/%.h
+	$(UNIX_CPP_CC) $(UNIX_CPP_CFLAGS) -c $< -o $@
 
 clean:
 	rm -rf $(PATH_BUILD) 2>/dev/null

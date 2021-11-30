@@ -1,5 +1,5 @@
 #include "drv_i2c_abstract.h"
-#include "../hal/hal.h"
+#include "../../hal/hal.h"
 
 void begin(void) {
 	
