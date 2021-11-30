@@ -85,44 +85,50 @@ $(info $$PATH_ALL is [${PATH_ALL}])
 
 $(info ---------------)
 
-post-build: pre-build build
+all: pre-build build post-build makefile.uptodate
 
-pre-build: makefile
+post-build: pre-build build makefile.uptodate
+
+pre-build: makefile.uptodate
 	@mkdir -p $(PATH_ALL)
 
-build: pre-build $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) $(UNIX_OBJS_BINARY)
+build: pre-build $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) $(UNIX_OBJS_BINARY) makefile.uptodate
 
 -include $(UNIX_DEPS_MODULE)
 -include $(UNIX_DEPS_LIB)
 -include $(UNIX_DEPS_BINARY)
 #C
-$(UNIX_PATH_BUILD_BINARY)%: $(PATH_SRC_BINARY)/%.c $(PATH_SRC_BINARY)/%.h $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) makefile
+$(UNIX_PATH_BUILD_BINARY)%: $(PATH_SRC_BINARY)/%.c $(PATH_SRC_BINARY)/%.h $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) makefile.uptodate
 	$(UNIX_CC) $(UNIX_CFLAGS) $(UNIX_INCLUDES) -MMD -MP $< $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) -o $@ $(UNIX_LFLAGS) $(UNIX_LIBS)
 	
-$(UNIX_PATH_BUILD_BINARY)%: $(PATH_SRC_BINARY)/%.c $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) makefile
+$(UNIX_PATH_BUILD_BINARY)%: $(PATH_SRC_BINARY)/%.c $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) makefile.uptodate
 	$(UNIX_CC) $(UNIX_CFLAGS) $(UNIX_INCLUDES) -MMD -MP $< $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) -o $@ $(UNIX_LFLAGS) $(UNIX_LIBS)
 
-$(UNIX_PATH_BUILD_MODULE)/%.o: $(PATH_SRC_MODULE)/%.c $(PATH_SRC_MODULE)/%.h makefile
+$(UNIX_PATH_BUILD_MODULE)/%.o: $(PATH_SRC_MODULE)/%.c $(PATH_SRC_MODULE)/%.h makefile.uptodate
 	$(UNIX_CC) $(UNIX_CFLAGS) -MMD -MP -c $< -o $@
 	
-$(UNIX_PATH_BUILD_LIB)/%.o: $(PATH_SRC_LIB)/%.c $(PATH_SRC_LIB)/%.h makefile
+$(UNIX_PATH_BUILD_LIB)/%.o: $(PATH_SRC_LIB)/%.c $(PATH_SRC_LIB)/%.h makefile.uptodate
 	$(UNIX_CC) $(UNIX_CFLAGS) -MMD -MP -c $< -o $@
 #C++
-$(UNIX_PATH_BUILD_BINARY)%: $(PATH_SRC_BINARY)/%.cpp $(PATH_SRC_BINARY)/%.h $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) makefile
+$(UNIX_PATH_BUILD_BINARY)%: $(PATH_SRC_BINARY)/%.cpp $(PATH_SRC_BINARY)/%.h $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) makefile.uptodate
 	$(UNIX_CPP_CC) $(UNIX_CPP_CFLAGS) $(UNIX_CPP_INCLUDES) -MMD -MP $< $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) -o $@ $(UNIX_LFLAGS) $(UNIX_LIBS)
 	
-$(UNIX_PATH_BUILD_BINARY)%: $(PATH_SRC_BINARY)/%.cpp $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) makefile
+$(UNIX_PATH_BUILD_BINARY)%: $(PATH_SRC_BINARY)/%.cpp $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) makefile.uptodate
 	$(UNIX_CPP_CC) $(UNIX_CPP_CFLAGS) $(UNIX_CPP_INCLUDES) -MMD -MP $< $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) -o $@ $(UNIX_LFLAGS) $(UNIX_LIBS)
 	
-$(UNIX_PATH_BUILD_MODULE)/%.o: $(PATH_SRC_MODULE)/%.cpp $(PATH_SRC_MODULE)/%.h makefile
+$(UNIX_PATH_BUILD_MODULE)/%.o: $(PATH_SRC_MODULE)/%.cpp $(PATH_SRC_MODULE)/%.h makefile.uptodate
 	$(UNIX_CPP_CC) $(UNIX_CPP_CFLAGS) -MMD -MP -c $< -o $@
 	
-$(UNIX_PATH_BUILD_LIB)/%.o: $(PATH_SRC_LIB)/%.cpp $(PATH_SRC_LIB)/%.h makefile
+$(UNIX_PATH_BUILD_LIB)/%.o: $(PATH_SRC_LIB)/%.cpp $(PATH_SRC_LIB)/%.h makefile.uptodate
 	$(UNIX_CPP_CC) $(UNIX_CPP_CFLAGS) -MMD -MP -c $< -o $@
+	
+makefile.uptodate: makefile
+	@echo makefile changed, cleaning...
+	@make deepclean >/dev/null
+	@touch makefile.uptodate
 
 clean:
 	@-find $(PATH_BUILD) -mindepth 1 -name "*" -type f -printf "%p\n" -delete 2>/dev/null || true
 
 deepclean:
 	@-rm -rf $(PATH_BUILD) 2>/dev/null
-	
