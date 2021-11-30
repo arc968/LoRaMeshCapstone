@@ -11,13 +11,13 @@ UNIX_PATH_BUILD_MODULE = build/unix/module
 UNIX_PATH_BUILD_LIB = build/unix/lib
 UNIX_PATH_BUILD_BINARY = build/unix/bin
 
-UNIX_CC = arm-linux-gnueabi-gcc -g
+UNIX_CC = gcc -g
 UNIX_CFLAGS = -DIBUG -Wall -std=gnu99 -Os -Wno-unused-variable -fdata-sections
 UNIX_INCLUDES =
 UNIX_LFLAGS = -pthread -lm -Wl,--gc-sections
 UNIX_LIBS =
 
-UNIX_CPP_CC = arm-linux-gnueabi-g++ -g
+UNIX_CPP_CC = g++ -g
 UNIX_CPP_CFLAGS = -DIBUG -Wall -std=gnu++11 -Os -Wno-unused-variable -fdata-sections
 UNIX_CPP_INCLUDES =
 UNIX_CPP_LFLAGS = -pthread -lm -Wl,--gc-sections
