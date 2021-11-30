@@ -11,15 +11,15 @@ UNIX_PATH_BUILD_MODULE = build/unix/module
 UNIX_PATH_BUILD_LIB = build/unix/lib
 UNIX_PATH_BUILD_BINARY = build/unix/bin
 
-UNIX_CC = gcc
+UNIX_CC = arm-linux-gnueabi-gcc -g
 UNIX_CFLAGS = -DIBUG -Wall -std=gnu99 -Os -Wno-unused-variable -fdata-sections
-UNIX_INCLUDES = 
+UNIX_INCLUDES =
 UNIX_LFLAGS = -pthread -lm -Wl,--gc-sections
 UNIX_LIBS =
 
-UNIX_CPP_CC = g++
+UNIX_CPP_CC = arm-linux-gnueabi-g++ -g
 UNIX_CPP_CFLAGS = -DIBUG -Wall -std=gnu++11 -Os -Wno-unused-variable -fdata-sections
-UNIX_CPP_INCLUDES = 
+UNIX_CPP_INCLUDES =
 UNIX_CPP_LFLAGS = -pthread -lm -Wl,--gc-sections
 UNIX_CPP_LIBS =
 
@@ -98,10 +98,10 @@ build: pre-build $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) $(UNIX_OBJS_BINARY) makefi
 -include $(UNIX_DEPS_LIB)
 -include $(UNIX_DEPS_BINARY)
 #C
-$(UNIX_PATH_BUILD_BINARY)%: $(PATH_SRC_BINARY)/%.c $(PATH_SRC_BINARY)/%.h $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) makefile.uptodate
+$(UNIX_PATH_BUILD_BINARY)/%: $(PATH_SRC_BINARY)/%.c $(PATH_SRC_BINARY)/%.h $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) makefile.uptodate
 	$(UNIX_CC) $(UNIX_CFLAGS) $(UNIX_INCLUDES) -MMD -MP $< $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) -o $@ $(UNIX_LFLAGS) $(UNIX_LIBS)
 	
-$(UNIX_PATH_BUILD_BINARY)%: $(PATH_SRC_BINARY)/%.c $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) makefile.uptodate
+$(UNIX_PATH_BUILD_BINARY)/%: $(PATH_SRC_BINARY)/%.c $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) makefile.uptodate
 	$(UNIX_CC) $(UNIX_CFLAGS) $(UNIX_INCLUDES) -MMD -MP $< $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) -o $@ $(UNIX_LFLAGS) $(UNIX_LIBS)
 
 $(UNIX_PATH_BUILD_MODULE)/%.o: $(PATH_SRC_MODULE)/%.c $(PATH_SRC_MODULE)/%.h makefile.uptodate
@@ -110,10 +110,10 @@ $(UNIX_PATH_BUILD_MODULE)/%.o: $(PATH_SRC_MODULE)/%.c $(PATH_SRC_MODULE)/%.h mak
 $(UNIX_PATH_BUILD_LIB)/%.o: $(PATH_SRC_LIB)/%.c $(PATH_SRC_LIB)/%.h makefile.uptodate
 	$(UNIX_CC) $(UNIX_CFLAGS) -MMD -MP -c $< -o $@
 #C++
-$(UNIX_PATH_BUILD_BINARY)%: $(PATH_SRC_BINARY)/%.cpp $(PATH_SRC_BINARY)/%.h $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) makefile.uptodate
+$(UNIX_PATH_BUILD_BINARY)/%: $(PATH_SRC_BINARY)/%.cpp $(PATH_SRC_BINARY)/%.h $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) makefile.uptodate
 	$(UNIX_CPP_CC) $(UNIX_CPP_CFLAGS) $(UNIX_CPP_INCLUDES) -MMD -MP $< $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) -o $@ $(UNIX_LFLAGS) $(UNIX_LIBS)
 	
-$(UNIX_PATH_BUILD_BINARY)%: $(PATH_SRC_BINARY)/%.cpp $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) makefile.uptodate
+$(UNIX_PATH_BUILD_BINARY)/%: $(PATH_SRC_BINARY)/%.cpp $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) makefile.uptodate
 	$(UNIX_CPP_CC) $(UNIX_CPP_CFLAGS) $(UNIX_CPP_INCLUDES) -MMD -MP $< $(UNIX_OBJS_MODULE) $(UNIX_OBJS_LIB) -o $@ $(UNIX_LFLAGS) $(UNIX_LIBS)
 	
 $(UNIX_PATH_BUILD_MODULE)/%.o: $(PATH_SRC_MODULE)/%.cpp $(PATH_SRC_MODULE)/%.h makefile.uptodate
