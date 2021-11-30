@@ -1,4 +1,4 @@
-#include "../hal/hal.h"
+#include "../../hal/hal.h"
 #include "../gps/drv_gps.h"
 #include "../lora/drv_lora.h"
 #include "../sched/drv_sched.h"

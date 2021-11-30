@@ -5,11 +5,11 @@
 
 #ifndef HW_ARDUINO
 enum hal_interrupt_mode_e {
-	LOW = 0,
-	HIGH = 1,
-	CHANGE = 2,
-	RISING = 3,
-	FALLING = 4
+	INTERRUPT_LOW = 0,
+	INTERRUPT_HIGH = 1,
+	INTERRUPT_CHANGE = 2,
+	INTERRUPT_RISING = 3,
+	INTERRUPT_FALLING = 4
 };
 
 enum hal_interrupt_type_e {

@@ -5,15 +5,15 @@
 
 #ifndef HW_ARDUINO
 enum hal_gpio_pinmode_e {
-	INPUT = 0,
-	OUTPUT = 1,
-	INPUT_PULLUP = 2,
-	INPUT_PULLDOWN = 3
+	GPIO_INPUT = 0,
+	GPIO_OUTPUT = 1,
+	GPIO_INPUT_PULLUP = 2,
+	GPIO_INPUT_PULLDOWN = 3
 };
 
 enum hal_gpio_output_e {
-	LOW = 0,
-	HIGH = 1
+	GPIO_LOW = 0,
+	GPIO_HIGH = 1
 };
 #endif // HW_ARDUINO
 
