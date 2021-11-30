@@ -4,7 +4,7 @@
 //LoRa Drivers
 #include "gps/drv_gps.h"
 #include "lora/drv_lora.h"
-#include "mesh/drv_mesh"
+#include "mesh/drv_mesh.h"
 #include "sched/drv_sched.h"
 
 //Sensor Drivers
