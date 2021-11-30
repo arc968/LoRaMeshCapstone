@@ -17,7 +17,7 @@ UNIX_INCLUDES =
 UNIX_LFLAGS = -pthread -lm -Wl,--gc-sections
 UNIX_LIBS =
 
-UNIX_CPP_CC = echo g++
+UNIX_CPP_CC = g++
 UNIX_CPP_CFLAGS = -DIBUG -Wall -std=gnu++11 -Os -Wno-unused-variable -fdata-sections
 UNIX_CPP_INCLUDES = 
 UNIX_CPP_LFLAGS = -pthread -lm -Wl,--gc-sections
@@ -68,14 +68,17 @@ $(info $$UNIX_CPP_LIBS is [${UNIX_CPP_LIBS}])
 
 $(info $$SRCS_MODULE is [${SRCS_MODULE}])
 $(info $$UNIX_OBJS_MODULE is [${UNIX_OBJS_MODULE}])
+$(info $$UNIX_DEPS_MODULE is [${UNIX_DEPS_MODULE}])
 $(info $$UNIX_PATH_BUILD_MODULES is [${UNIX_PATH_BUILD_MODULES}])
 
 $(info $$SRCS_LIB is [${SRCS_LIB}])
 $(info $$UNIX_OBJS_LIB is [${UNIX_OBJS_LIB}])
+$(info $$UNIX_DEPS_LIB is [${UNIX_DEPS_LIB}])
 $(info $$UNIX_PATH_BUILD_LIBS is [${UNIX_PATH_BUILD_LIBS}])
 
 $(info $$SRCS_BINARY is [${SRCS_BINARY}])
 $(info $$UNIX_OBJS_BINARY is [${UNIX_OBJS_BINARY}])
+$(info $$UNIX_DEPS_BINARY is [${UNIX_DEPS_BINARY}])
 $(info $$UNIX_PATH_BUILD_BINARIES is [${UNIX_PATH_BUILD_BINARIES}])
 
 $(info $$PATH_ALL is [${PATH_ALL}])
