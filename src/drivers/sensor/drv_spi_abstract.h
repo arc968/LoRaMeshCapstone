@@ -11,17 +11,16 @@ class drv_spi_abstract : drv_sensor_abstract{
 		
 	public:
 	
-	virtual drv_spi_abstract(cs, mosi, miso, clk) {
+	drv_spi_abstract(uint8_t cs, uint8_t mosi, uint8_t miso, uint8_t clk) {
 			drv_cs = cs;
 			drv_mosi = mosi;
 			drv_miso = miso;
 			drv_clk = clk;
-			drv_spi_begun = false;
 			drv_initalized = false; 
-			drv_isEnabled = false;
+			drv_enabled = false;
 	}
 	
-	virtual ~drv_spi_abstract(void) {}
+	~drv_spi_abstract(void) {}
 	
 	virtual void begin(void);
 	virtual void end(void);
@@ -37,7 +36,7 @@ class drv_spi_abstract : drv_sensor_abstract{
 	
 	void setClkPin(uint8_t clk) {drv_clk = clk;}
 	uint8_t getCLKPin(void) {return drv_clk;}
-}
+};
 
 
 #endif //DRV_SPI_ABSTRACT_H

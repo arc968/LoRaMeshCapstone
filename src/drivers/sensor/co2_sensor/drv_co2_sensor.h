@@ -3,7 +3,7 @@
 
 #include "../drv_spi_abstract.h"
 
-class drv_co2_sensor : drv_spi_sensor_abstract {
+class drv_co2_sensor : drv_spi_abstract {
 	
 	private:
 		
@@ -13,6 +13,6 @@ class drv_co2_sensor : drv_spi_sensor_abstract {
 		
 		
 		
-}
+};
 
 #endif // DRV_CO2_SENSOR_H
