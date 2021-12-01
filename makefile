@@ -1,5 +1,6 @@
 rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
 
+PATH_DOCS = docs
 DOXYGEN_CONFIG = doxygen.conf
 
 PATH_SRC = src
@@ -87,9 +88,9 @@ $(info $$PATH_ALL is [${PATH_ALL}])
 
 $(info ---------------)
 
-all: pre-build build post-build makefile.uptodate
-
 post-build: pre-build build makefile.uptodate
+
+all: pre-build build post-build makefile.uptodate docs
 
 pre-build: makefile.uptodate
 	@mkdir -p $(PATH_ALL)
@@ -129,7 +130,8 @@ makefile.uptodate: makefile
 	@make deepclean >/dev/null
 	@touch makefile.uptodate
 	
-docs:
+.PHONY: docs
+docs: all $(DOXYGEN_CONFIG)
 	@doxygen $(DOXYGEN_CONFIG)
 
 clean:
@@ -137,3 +139,4 @@ clean:
 
 deepclean:
 	@-rm -rf $(PATH_BUILD) 2>/dev/null
+	@-rm -rf $(PATH_DOCS) 2>/dev/null

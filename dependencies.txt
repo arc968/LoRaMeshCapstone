@@ -1,0 +1,6 @@
+Compilation:
+
+
+Documentation generation:
+	doxygen
+	graphviz
