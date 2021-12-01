@@ -1,5 +1,7 @@
 rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
 
+DOXYGEN_CONFIG = doxygen.conf
+
 PATH_SRC = src
 PATH_SRC_MODULE = src/hal
 PATH_SRC_LIB = src/drivers
@@ -126,6 +128,9 @@ makefile.uptodate: makefile
 	@echo makefile changed, cleaning...
 	@make deepclean >/dev/null
 	@touch makefile.uptodate
+	
+docs:
+	@doxygen $(DOXYGEN_CONFIG)
 
 clean:
 	@-find $(PATH_BUILD) -mindepth 1 -name "*" -type f -printf "%p\n" -delete 2>/dev/null || true

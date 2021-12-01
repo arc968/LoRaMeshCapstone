@@ -31,5 +31,6 @@
 *.out
 *.app
 
-# Build folder(s)
+# Generated folder(s)
 build/
+docs/
