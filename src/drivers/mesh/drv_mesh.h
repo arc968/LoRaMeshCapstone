@@ -5,12 +5,12 @@
 
 #include "../../lib/ip/lib_ip.h"
 
-#define DRV_MESH_PACKET_BUF_SIZE 256
+#define DRV_MESH_PACKET_SIZE_MAX 256
 
 struct drv_mesh_packet_s {
 	ip_t ip;
 	uint16_t len;
-	uint8_t buf[DRV_MESH_PACKET_BUF_SIZE];
+	uint8_t buf[DRV_MESH_PACKET_SIZE_MAX];
 };
 
 enum drv_mesh_error_e {
