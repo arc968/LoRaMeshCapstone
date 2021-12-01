@@ -1,4 +1,15 @@
-rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
+# Andrew Courtemanche
+# December 2021
+
+# Targets:
+# 	compile (default): compiles everything
+#	clean: deletes all build artifacts
+#	deepclean: deletes all build artifacts and generated documentation
+#	docs: generates documentation
+#	debug: prints all variables
+#	all: compiles everything and generates documentation
+
+# START CONFIG
 
 PATH_DOCS = docs
 DOXYGEN_CONFIG = doxygen.conf
@@ -26,6 +37,10 @@ UNIX_CPP_INCLUDES =
 UNIX_CPP_LFLAGS = -pthread -lm -Wl,--gc-sections
 UNIX_CPP_LIBS =
 
+# END CONFIG
+
+rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
+
 SRCS_MODULE = $(patsubst $(PATH_SRC_MODULE)/%,%,$(call rwildcard,$(PATH_SRC_MODULE),*.c)) $(patsubst $(PATH_SRC_MODULE)/%,%,$(call rwildcard,$(PATH_SRC_MODULE),*.cpp))
 UNIX_OBJS_MODULE = $(addprefix $(UNIX_PATH_BUILD_MODULE)/,$(patsubst %.c,%.o,$(patsubst %.cpp,%.o,$(SRCS_MODULE))))
 UNIX_DEPS_MODULE = $(addprefix $(UNIX_PATH_BUILD_MODULE)/,$(patsubst %.c,%.d,$(patsubst %.cpp,%.d,$(SRCS_MODULE))))
@@ -44,7 +59,11 @@ UNIX_PATH_BUILD_BINARIES = $(dir $(UNIX_OBJS_BINARY))
 PATH_ALL = $(PATH_SRC) $(PATH_SRC_MODULE) $(PATH_SRC_LIB) $(PATH_SRC_BINARY) $(PATH_BUILD) $(UNIX_PATH_BUILD) $(UNIX_PATH_BUILD_BINARY) $(UNIX_PATH_BUILD_MODULES) $(UNIX_PATH_BUILD_LIBS) $(UNIX_PATH_BUILD_BINARIES)
 VPATH = $(PATH_ALL)
 
+ifeq ("$(findstring debug,$(MAKECMDGOALS))","debug")
 $(info -----DEBUG-----)
+
+$(info $$PATH_DOCS is [${PATH_DOCS}])
+$(info $$DOXYGEN_CONFIG is [${DOXYGEN_CONFIG}])
 
 $(info $$PATH_SRC is [${PATH_SRC}])
 $(info $$PATH_SRC_MODULE is [${PATH_SRC_MODULE}])
@@ -87,6 +106,9 @@ $(info $$UNIX_PATH_BUILD_BINARIES is [${UNIX_PATH_BUILD_BINARIES}])
 $(info $$PATH_ALL is [${PATH_ALL}])
 
 $(info ---------------)
+endif
+
+compile: post-build makefile.uptodate
 
 post-build: pre-build build makefile.uptodate
 
@@ -130,13 +152,16 @@ makefile.uptodate: makefile
 	@make deepclean >/dev/null
 	@touch makefile.uptodate
 	
-.PHONY: docs
-docs: all $(DOXYGEN_CONFIG)
-	@doxygen $(DOXYGEN_CONFIG)
-
 clean:
 	@-find $(PATH_BUILD) -mindepth 1 -name "*" -type f -printf "%p\n" -delete 2>/dev/null || true
 
 deepclean:
 	@-rm -rf $(PATH_BUILD) 2>/dev/null
 	@-rm -rf $(PATH_DOCS) 2>/dev/null
+
+.PHONY: docs debug
+docs: post-build $(DOXYGEN_CONFIG)
+	@doxygen $(DOXYGEN_CONFIG)
+
+debug:
+	@:
