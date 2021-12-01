@@ -1,0 +1,83 @@
+# CONFIG
+MAKEFILE_MONITOR = makefile.uptodate
+
+PATH_DOCS = docs
+DOXYGEN_CONFIG = doxygen.conf
+
+PATH_SRC = src
+PATHS_SRC_OBJS = hal drivers
+PATHS_SRC_BIN = app
+PATH_BUILD = build
+PATH_BUILD_BIN = bin
+PATH_BUILD_OBJS = objs
+
+C_AND_CPP_FLAGS = -DIBUG -g -Wall -Os -Wno-unused-variable -Wno-unused-function
+C_AND_CPP_INCLUDES = 
+C_AND_CPP_LFLAGS = 
+C_AND_CPP_LIBS = 
+
+C_FLAGS = 
+C_INCLUDES = 
+C_LFLAGS = 
+C_LIBS = 
+
+CPP_FLAGS = 
+CPP_INCLUDES = 
+CPP_LFLAGS = 
+CPP_LIBS = 
+
+include shared.mk
+
+# CONFIG-UNIX
+TARGET=UNIX
+$(TARGET)_NAME=unix
+$(TARGET)_BIN_EXT=
+$(TARGET)_OBJ_EXT=.o
+$(TARGET)_DEP_EXT=.d
+
+$(TARGET)_C_AND_CPP_FLAGS = 
+$(TARGET)_C_AND_CPP_INCLUDES = 
+$(TARGET)_C_AND_CPP_LFLAGS = -pthread -lm
+$(TARGET)_C_AND_CPP_LIBS = 
+
+$(TARGET)_C_CC = gcc
+$(TARGET)_C_FLAGS = -std=gnu99 
+$(TARGET)_C_INCLUDES =
+$(TARGET)_C_LFLAGS = 
+$(TARGET)_C_LIBS =
+
+$(TARGET)_CPP_CC = g++
+$(TARGET)_CPP_FLAGS = -std=gnu++11
+$(TARGET)_CPP_INCLUDES =
+$(TARGET)_CPP_LFLAGS = 
+$(TARGET)_CPP_LIBS =
+
+include target.mk
+# END CONFIG-UNIX
+
+# CONFIG-WIN64
+TARGET=WIN64
+$(TARGET)_NAME=win64
+$(TARGET)_BIN_EXT=.exe
+$(TARGET)_OBJ_EXT=.obj
+$(TARGET)_DEP_EXT=.d
+
+$(TARGET)_C_AND_CPP_FLAGS = 
+$(TARGET)_C_AND_CPP_INCLUDES = 
+$(TARGET)_C_AND_CPP_LFLAGS =
+$(TARGET)_C_AND_CPP_LIBS = 
+
+$(TARGET)_C_CC = x86_64-w64-mingw32-gcc
+$(TARGET)_C_FLAGS = -std=gnu99 
+$(TARGET)_C_INCLUDES =
+$(TARGET)_C_LFLAGS = 
+$(TARGET)_C_LIBS =
+
+$(TARGET)_CPP_CC = x86_64-w64-mingw32-g++
+$(TARGET)_CPP_FLAGS = -std=gnu++11
+$(TARGET)_CPP_INCLUDES =
+$(TARGET)_CPP_LFLAGS = 
+$(TARGET)_CPP_LIBS =
+
+include target.mk
+# END CONFIG-WIN64

@@ -1,0 +1,45 @@
+
+$(TARGET)_PATH_BUILD := $(addprefix $(PATH_BUILD)/,$($(TARGET)_NAME))
+$(TARGET)_PATH_BUILD_BIN := $(addprefix $($(TARGET)_PATH_BUILD)/,$(PATH_BUILD_BIN))
+$(TARGET)_PATH_BUILD_OBJS := $(addprefix $($(TARGET)_PATH_BUILD)/,$(PATH_BUILD_OBJS))
+
+$(TARGET)_C_FLAGS += $(C_FLAGS) $($(TARGET)_C_AND_CPP_FLAGS)
+$(TARGET)_C_INCLUDES += $(C_INCLUDES) $($(TARGET)_C_AND_CPP_INCLUDES)
+$(TARGET)_C_LFLAGS += $(C_LFLAGS) $($(TARGET)_C_AND_CPP_LFLAGS)
+$(TARGET)_C_LIBS += $(C_LIBS) $($(TARGET)_C_AND_CPP_LIBS)
+
+$(TARGET)_CPP_FLAGS += $(CPP_FLAGS) $($(TARGET)_C_AND_CPP_FLAGS)
+$(TARGET)_CPP_INCLUDES += $(CPP_INCLUDES) $($(TARGET)_C_AND_CPP_INCLUDES)
+$(TARGET)_CPP_LFLAGS += $(CPP_LFLAGS) $($(TARGET)_C_AND_CPP_LFLAGS)
+$(TARGET)_CPP_LIBS += $(CPP_LIBS) $($(TARGET)_C_AND_CPP_LIBS)
+
+$(TARGET)_OBJS = $(addprefix $($(TARGET)_PATH_BUILD_OBJS)/,$(patsubst $(PATH_SRC)/%,%,$(patsubst %.c,%$($(TARGET)_OBJ_EXT),$(patsubst %.cpp,%$($(TARGET)_OBJ_EXT),$(FILES_SRC_OBJS)))))
+$(TARGET)_DEPS_OBJS = $(addprefix $($(TARGET)_PATH_BUILD_OBJS)/,$(patsubst $(PATH_SRC)/%,%,$(patsubst %.c,%$($(TARGET)_DEP_EXT),$(patsubst %.cpp,%$($(TARGET)_DEP_EXT),$(FILES_SRC_OBJS)))))
+$(TARGET)_PATH_BUILD_OBJS_FOLDERS = $(dir $($(TARGET)_OBJS))
+
+$(TARGET)_BIN = $(addprefix $($(TARGET)_PATH_BUILD_BIN)/,$(patsubst $(PATH_SRC)/%,%,$(patsubst %.c,%$($(TARGET)_BIN_EXT),$(patsubst %.cpp,%$($(TARGET)_BIN_EXT),$(FILES_SRC_BIN)))))
+$(TARGET)_DEPS_BIN = $(addprefix $($(TARGET)_PATH_BUILD_BIN)/,$(patsubst $(PATH_SRC)/%,%,$(patsubst %.c,%$($(TARGET)_DEP_EXT),$(patsubst %.cpp,%$($(TARGET)_DEP_EXT),$(FILES_SRC_BIN)))))
+$(TARGET)_PATH_BUILD_BIN_FOLDERS = $(dir $($(TARGET)_BIN))
+
+FILES_ALL_OBJS := $(FILES_ALL_OBJS) $($(TARGET)_OBJS) $($(TARGET)_BIN)
+
+PATHS_ALL := $(PATHS_ALL) $($(TARGET)_PATH_BUILD) $($(TARGET)_PATH_BUILD_BIN) $($(TARGET)_PATH_BUILD_OBJS) $($(TARGET)_PATH_BUILD_OBJS_FOLDERS) $($(TARGET)_PATH_BUILD_BIN_FOLDERS)
+VPATH = $(PATH_ALL)
+
+# DEBUG
+ifeq ("$(findstring debug,$(MAKECMDGOALS))","debug")
+$(info $$$(TARGET)_PATH_BUILD is [${$(TARGET)_PATH_BUILD}])
+$(info $$$(TARGET)_PATH_BUILD_BIN is [${$(TARGET)_PATH_BUILD_BIN}])
+$(info $$$(TARGET)_PATH_BUILD_OBJS is [${$(TARGET)_PATH_BUILD_OBJS}])
+
+$(info $$$(TARGET)_OBJS is [${$(TARGET)_OBJS}])
+$(info $$$(TARGET)_DEPS_OBJS is [${$(TARGET)_DEPS_OBJS}])
+$(info $$$(TARGET)_PATH_BUILD_OBJS_FOLDERS is [${$(TARGET)_PATH_BUILD_OBJS_FOLDERS}])
+
+$(info $$$(TARGET)_BIN is [${$(TARGET)_BIN}])
+$(info $$$(TARGET)_DEPS_BIN is [${$(TARGET)_DEPS_BIN}])
+$(info $$$(TARGET)_PATH_BUILD_BIN_FOLDERS is [${$(TARGET)_PATH_BUILD_BIN_FOLDERS}])
+endif
+# END DEBUG
+
+include rules.mk

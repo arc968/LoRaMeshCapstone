@@ -1,0 +1,28 @@
+include config.mk
+
+# CONFIG-UNIX
+TARGET=UNIX
+TARGET_NAME=unix
+TARGET_BIN_EXT=
+TARGET_OBJ_EXT=.o
+TARGET_DEP_EXT=.d
+
+$(TARGET)_C_AND_CPP_FLAGS = 
+$(TARGET)_C_AND_CPP_INCLUDES = 
+$(TARGET)_C_AND_CPP_LFLAGS = -pthread -lm -Wl,--gc-sections
+$(TARGET)_C_AND_CPP_LIBS = 
+
+$(TARGET)_C_CC = gcc
+$(TARGET)_C_FLAGS = -std=gnu99 
+$(TARGET)_C_INCLUDES =
+$(TARGET)_C_LFLAGS = 
+$(TARGET)_C_LIBS =
+
+$(TARGET)_CPP_CC = g++
+$(TARGET)_CPP_FLAGS = -std=gnu++11
+$(TARGET)_CPP_INCLUDES =
+$(TARGET)_CPP_LFLAGS = 
+$(TARGET)_CPP_LIBS =
+
+include target.mk
+# END CONFIG-UNIX

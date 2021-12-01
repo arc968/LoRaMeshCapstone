@@ -3,6 +3,8 @@
 
 #include "../../lib/datetime/lib_datetime.h"
 
+#include <stdint.h>
+
 enum drv_sched_pri_e {
 	PRI_IDLE = 0,
 	PRI_LOW = 63,

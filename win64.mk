@@ -1,0 +1,28 @@
+include config.mk
+
+# CONFIG-WIN64
+TARGET=WIN64
+$(TARGET)_NAME=win64
+$(TARGET)_BIN_EXT=.exe
+$(TARGET)_OBJ_EXT=.obj
+$(TARGET)_DEP_EXT=.d
+
+$(TARGET)_C_AND_CPP_FLAGS = 
+$(TARGET)_C_AND_CPP_INCLUDES = 
+$(TARGET)_C_AND_CPP_LFLAGS = -lm -Wl,--gc-sections
+$(TARGET)_C_AND_CPP_LIBS = 
+
+$(TARGET)_C_CC = x86_64-w64-mingw32-gcc
+$(TARGET)_C_FLAGS = -std=gnu99 
+$(TARGET)_C_INCLUDES =
+$(TARGET)_C_LFLAGS = 
+$(TARGET)_C_LIBS =
+
+$(TARGET)_CPP_CC = x86_64-w64-mingw32-g++
+$(TARGET)_CPP_FLAGS = -std=gnu++11
+$(TARGET)_CPP_INCLUDES =
+$(TARGET)_CPP_LFLAGS = 
+$(TARGET)_CPP_LIBS =
+
+include target.mk
+# END CONFIG-WIN64
