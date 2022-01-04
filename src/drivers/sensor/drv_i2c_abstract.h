@@ -5,7 +5,7 @@
 
 class drv_i2c_abstract : drv_sensor_abstract{
 	
-	private:
+	protected:
 		
 		uint8_t drv_address, drv_sda, drv_scl;
 		

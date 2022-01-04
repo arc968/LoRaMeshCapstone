@@ -1,3 +1,22 @@
+/*****************************************************************************************
+ * \addtogroup hwlayer [Hardware Layer]
+ *@{
+****************************************************************************************/
+
+/*****************************************************************************************
+ *
+ * \file hardware.h
+ * \brief This file uses the selected hardware from hw_config.h to include the selected
+ * hardwares setup files.
+ * 
+ * The included setup file of the selected hardware is included into the library's
+ * compiling to allow the code in the hardware abstraction layer to work on the selected
+ * hardware.
+ *
+ * \author Josh Lariviere
+ * \author Andrew Courtemanche
+ ****************************************************************************************/
+
 #ifndef HARDWARE_H
 #define HARDWARE_H
 
@@ -12,3 +31,5 @@
 #endif
 
 #endif // HARDWARE_H
+
+/** @} */ // end of hwlayer group

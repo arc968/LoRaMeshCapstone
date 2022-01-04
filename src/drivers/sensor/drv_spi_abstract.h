@@ -5,7 +5,7 @@
 
 class drv_spi_abstract : drv_sensor_abstract{
 	
-	private:
+	protected:
 		
 		uint8_t drv_cs, drv_mosi, drv_miso, drv_clk;
 		
