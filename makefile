@@ -21,7 +21,7 @@ PATH_SRC_LIB = drivers
 PATH_SRC_BINARY = app
 PATH_BUILD = build
 
-C_AND_CPP_FLAGS = -DIBUG -g -Wall -Os -Wno-unused-variable -fdata-sections
+C_AND_CPP_FLAGS = -DIBUG -g -Wall -Os -Wno-unused-variable -Wno-unused-function -fdata-sections
 C_AND_CPP_INCLUDES = 
 C_AND_CPP_LFLAGS = 
 C_AND_CPP_LIBS = 

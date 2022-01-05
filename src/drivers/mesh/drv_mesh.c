@@ -58,9 +58,9 @@ void drv_mesh_init(void) {
 }
 
 static uint64_t getCenterFrequency(uint16_t channel, uint16_t bandwidth) {
-	
+	return 0;
 }
 
 static uint16_t getChannel() {
-	
+	return 0;
 }
