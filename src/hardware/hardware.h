@@ -1,9 +1,9 @@
-/************************************************************************************//**
+/**
  * \addtogroup hwlayer [Hardware Layer]
  *@{
-****************************************************************************************/
+ */
 
-/************************************************************************************//**
+/**
  *
  * \file hardware.h
  * \brief This file uses the selected hardware from hw_config.h to include the selected
@@ -15,7 +15,7 @@
  *
  * \author Josh Lariviere
  * \author Andrew Courtemanche
- ****************************************************************************************/
+ */
 
 #ifndef HARDWARE_H
 #define HARDWARE_H

@@ -1,9 +1,9 @@
-/************************************************************************************//**
+/**
  * \addtogroup hwlayer [Hardware Layer]
  *@{
-****************************************************************************************/
+ */
 
-/***********************************************************************************//**
+/**
  * \file hw_config.h
  * \brief This file is used to select which hardware device the library code should be 
  * compiled for to work with. 
@@ -15,7 +15,7 @@
  *
  * \author Josh Lariviere
  * \author Andrew Courtemanche
- ****************************************************************************************/
+ */
 
 #ifndef HW_CONFIG_H
 #define HW_CONFIG_H

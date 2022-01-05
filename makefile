@@ -229,7 +229,7 @@ $(DOXYGEN_CONFIG):
 	
 .PHONY: docs debug
 docs: post-build $(DOXYGEN_CONFIG) $(MAKEFILE_MONITOR)
-	@( cat $(DOXYGEN_CONFIG) ; echo "INPUT=$(PATH_SRC)/" ; echo "OUTPUT_DIRECTORY=$(PATH_DOCS)/" ) | doxygen -
+	@( cat $(DOXYGEN_CONFIG); echo "INPUT=$(PATH_SRC)/"; echo "OUTPUT_DIRECTORY=$(PATH_DOCS)/"; echo "RECURSIVE=YES" ) | doxygen -
 
 debug:
 	@:
