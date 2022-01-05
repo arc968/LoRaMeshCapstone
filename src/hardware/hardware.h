@@ -1,6 +1,6 @@
 /**
  * \addtogroup hwlayer [Hardware Layer]
- *@{
+ * @{
  */
 
 /**

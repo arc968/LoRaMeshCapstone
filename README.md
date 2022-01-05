@@ -9,4 +9,4 @@
 this will open the document as a website to navigate in your web browser of choise
 
 
-## How to Implient The Library
+## How to Implement The Library
