@@ -1,5 +1,8 @@
 #ifndef HAL_COMMON_H
 #define HAL_COMMON_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "../hardware/hardware.h"
 
@@ -15,4 +18,7 @@
 
 typedef uint_fast16_t pin_t;
 
+#ifdef __cplusplus
+}
+#endif
 #endif // HAL_COMMON_H

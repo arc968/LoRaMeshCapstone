@@ -1,5 +1,8 @@
 #ifndef HAL_INTERRUPT_H
 #define HAL_INTERRUPT_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "hal_common.h"
 
@@ -33,4 +36,7 @@ void hal_interrupt_attach(enum hal_interrupt_type_e trigger, void (*isr)(void));
 void hal_interrupt_detach(enum hal_interrupt_type_e trigger);
 #endif // HW_ARDUINO
 
+#ifdef __cplusplus
+}
+#endif
 #endif // HAL_INTERRUPT_H

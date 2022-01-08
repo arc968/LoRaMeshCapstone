@@ -1,5 +1,8 @@
 #ifndef LIB_DATETIME_H
 #define LIB_DATETIME_H
+#if defined (__cplusplus)
+extern "C" {
+#endif
 
 #include <stdint.h>
 
@@ -30,4 +33,7 @@ int lib_datetime_datetimeToTime(struct lib_datetime_s * dt, lib_datetime_time_t 
 //adds an interval to a time, wrapping around as necessary
 lib_datetime_time_t lib_datetime_addIntervalToTime(lib_datetime_time_t time, lib_datetime_interval_t interval);
 
+#if defined (__cplusplus)
+}
+#endif
 #endif // LIB_DATETIME_H

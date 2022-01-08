@@ -1,5 +1,8 @@
 #ifndef HAL_SERIAL_H
 #define HAL_SERIAL_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "hal_common.h"
 
@@ -11,4 +14,7 @@ size_t hal_serial_readBytes(uint8_t *buf, uint16_t length);
 void hal_serial_flush(void);
 void hal_serial_setTimeout(uint32_t mstime);
 
+#ifdef __cplusplus
+}
+#endif
 #endif // HAL_SERIAL_H

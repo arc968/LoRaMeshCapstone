@@ -1,5 +1,8 @@
 #ifndef HAL_GPIO_H
 #define HAL_GPIO_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "hal_common.h"
 
@@ -39,4 +42,7 @@ uint8_t hal_gpio_digitalRead(pin_t pin);
 
 uint16_t hal_gpio_analogRead(pin_t pin);
 
+#ifdef __cplusplus
+}
+#endif
 #endif // HAL_GPIO_H

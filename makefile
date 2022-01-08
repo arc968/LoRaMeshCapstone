@@ -4,6 +4,7 @@
 
 # Targets:
 #	compile (default): compiles everything
+#	oneshot: compiles final binary with no intermediate files. Will fail if multiple main() are defined
 #	clean: deletes all build artifacts
 #	deepclean: deletes all build artifacts and generated documentation
 #	docs: generates documentation
@@ -40,7 +41,7 @@ UNIX_PATH_BUILD = unix
 
 UNIX_C_AND_CPP_FLAGS =
 UNIX_C_AND_CPP_INCLUDES =
-UNIX_C_AND_CPP_LFLAGS = -pthread -lm -Wl,--gc-sections
+UNIX_C_AND_CPP_LFLAGS = -Wl,--gc-sections
 UNIX_C_AND_CPP_LIBS =
 
 UNIX_C_CC = gcc
@@ -181,6 +182,11 @@ endif
 # END DEBUG
 
 compile: post-build $(MAKEFILE_MONITOR)
+
+.PHONY: oneshot
+oneshot: pre-build $(MAKEFILE_MONITOR)
+	@echo oneshot build...
+	$(UNIX_CPP_CC) $(UNIX_CPP_FLAGS) $(UNIX_CPP_INCLUDES) $(strip $(call rwildcard,$(PATH_SRC),*.c)) $(strip $(call rwildcard,$(PATH_SRC),*.cpp)) -o $(UNIX_PATH_BUILD_BINARY)/main $(UNIX_CPP_LFLAGS) $(UNIX_CPP_LIBS)
 
 post-build: pre-build build $(MAKEFILE_MONITOR)
 

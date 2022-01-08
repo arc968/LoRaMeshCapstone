@@ -1,5 +1,8 @@
 #ifndef DRV_SCHED_H
 #define DRV_SCHED_H
+#if defined (__cplusplus)
+extern "C" {
+#endif
 
 #include "../../lib/datetime/lib_datetime.h"
 
@@ -31,4 +34,7 @@ int drv_sched_repeating(void (*fun_ptr)(void), enum drv_sched_pri_e priority, li
 //0 if successful, -1 if failed
 int drv_sched_at(void (*fun_ptr)(void), enum drv_sched_pri_e priority, lib_datetime_time_t time);
 
+#if defined (__cplusplus)
+}
+#endif
 #endif // DRV_SCHED_H

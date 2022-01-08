@@ -1,5 +1,8 @@
 #ifndef HAL_SPI_H
 #define HAL_SPI_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "hal_common.h"
 
@@ -25,4 +28,7 @@ uint8_t hal_spi_transfer(uint8_t data);
 void hal_spi_transferBuf(uint8_t* buf, uint16_t length);
 void hal_spi_usingInterrupt(uint16_t interuptnum);
 
+#ifdef __cplusplus
+}
+#endif
 #endif // HAL_SPI_H

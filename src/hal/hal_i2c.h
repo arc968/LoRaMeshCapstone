@@ -1,5 +1,8 @@
 #ifndef HAL_I2C_H
 #define HAL_I2C_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include "hal_common.h"
 
@@ -14,4 +17,7 @@ void hal_i2c_setClock(uint32_t freq);
 void hal_i2c_onReceive(uint32_t numBytes);
 void hal_i2c_onRequest(void (*handler)(void));
 
+#ifdef __cplusplus
+}
+#endif
 #endif // HAL_I2C_H

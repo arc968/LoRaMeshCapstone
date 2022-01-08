@@ -3,12 +3,12 @@ extern "C" {
 #include "../drivers/drv.h"
 }
 
-void test(void) {
+void testing(void) {
 	
 }
 
 int main(void) {
 	drv_sched_init();
-	drv_sched_once(test, PRI_NORMAL, 0);
+	drv_sched_once(&testing, PRI_NORMAL, 0);
 	return 0;
 }

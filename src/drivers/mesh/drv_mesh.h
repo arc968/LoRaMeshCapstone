@@ -1,5 +1,8 @@
 #ifndef DRV_MESH_H
 #define DRV_MESH_H
+#if defined (__cplusplus)
+extern "C" {
+#endif
 
 #include <stdint.h>
 
@@ -26,4 +29,7 @@ void drv_mesh_setRecvHandler(void (*fun_ptr)(ip_t *));
 
 enum drv_mesh_error_e drv_mesh_send(uint32_t ip, uint16_t len, uint8_t * buf);
 
+#if defined (__cplusplus)
+}
+#endif
 #endif // DRV_MESH_H
