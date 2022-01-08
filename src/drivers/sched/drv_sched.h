@@ -22,10 +22,13 @@ __attribute__((noreturn))
 #endif
 void drv_sched_start(void);
 
-void drv_sched_repeating(void (*fun_ptr)(void), enum drv_sched_pri_e priority, uint16_t interval_ms);
+//0 if successful, -1 if failed
+int drv_sched_once(void (*fun_ptr)(void), enum drv_sched_pri_e priority, lib_datetime_interval_t delay_ms);
 
-void drv_sched_once(void (*fun_ptr)(void), enum drv_sched_pri_e priority, uint16_t delay_ms);
+//0 if successful, -1 if failed
+int drv_sched_repeating(void (*fun_ptr)(void), enum drv_sched_pri_e priority, lib_datetime_interval_t interval_ms);
 
-void drv_sched_at(void (*fun_ptr)(void), enum drv_sched_pri_e priority, struct lib_datetime_s * dt);
+//0 if successful, -1 if failed
+int drv_sched_at(void (*fun_ptr)(void), enum drv_sched_pri_e priority, lib_datetime_time_t time);
 
 #endif // DRV_SCHED_H

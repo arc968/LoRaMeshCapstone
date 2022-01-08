@@ -3,7 +3,7 @@
 # Updated January 2022
 
 # Targets:
-# 	compile (default): compiles everything
+#	compile (default): compiles everything
 #	clean: deletes all build artifacts
 #	deepclean: deletes all build artifacts and generated documentation
 #	docs: generates documentation
@@ -20,7 +20,7 @@ PATH_SRC = src
 PATH_SRC_BINARY = app
 PATH_BUILD = build
 
-C_AND_CPP_FLAGS = -DIBUG -g -Wall -Os -Wno-unused-variable -Wno-unused-function -fdata-sections
+C_AND_CPP_FLAGS = -DIBUG -g -Wall -Os -Wno-unused-variable -Wno-unused-function -ffunction-sections -fdata-sections
 C_AND_CPP_INCLUDES =
 C_AND_CPP_LFLAGS =
 C_AND_CPP_LIBS =
@@ -234,12 +234,14 @@ endif
 
 #C
 $(UNIX_PATH_BUILD_BINARY)/%: $(PATH_SRC_BINARY)/%.c $(PATH_SRC_BINARY)/%.h $(UNIX_OBJS) $(MAKEFILE_MONITOR)
-	$(UNIX_C_CC) $(UNIX_C_FLAGS) $(UNIX_C_INCLUDES) $< $(UNIX_OBJS) -o $@ $(UNIX_C_LFLAGS) $(UNIX_C_LIBS)
+	@cp $(PATH_SRC)/$*.h $(UNIX_PATH_BUILD)/$*.h
+	$(UNIX_C_CC) $(UNIX_C_FLAGS) $(UNIX_C_INCLUDES) -o $@ $(UNIX_OBJS) $< $(UNIX_C_LFLAGS) $(UNIX_C_LIBS)
 	
 $(UNIX_PATH_BUILD_BINARY)/%: $(PATH_SRC_BINARY)/%.c $(UNIX_OBJS) $(MAKEFILE_MONITOR)
-	$(UNIX_C_CC) $(UNIX_C_FLAGS) $(UNIX_C_INCLUDES) $< $(UNIX_OBJS) -o $@ $(UNIX_C_LFLAGS) $(UNIX_C_LIBS)
+	$(UNIX_C_CC) $(UNIX_C_FLAGS) $(UNIX_C_INCLUDES) -o $@ $(UNIX_OBJS) $< $(UNIX_C_LFLAGS) $(UNIX_C_LIBS)
 
 $(UNIX_PATH_BUILD)/%.o: $(PATH_SRC)/%.c $(PATH_SRC)/%.h $(MAKEFILE_MONITOR)
+	@cp $(PATH_SRC)/$*.h $(UNIX_PATH_BUILD)/$*.h
 	$(UNIX_C_CC) $(UNIX_C_FLAGS) -c $< -o $@
 
 $(UNIX_PATH_BUILD)/%.o: $(PATH_SRC)/%.c $(MAKEFILE_MONITOR)
@@ -247,12 +249,14 @@ $(UNIX_PATH_BUILD)/%.o: $(PATH_SRC)/%.c $(MAKEFILE_MONITOR)
 
 #C++
 $(UNIX_PATH_BUILD_BINARY)/%: $(PATH_SRC_BINARY)/%.cpp $(PATH_SRC_BINARY)/%.h $(UNIX_OBJS) $(MAKEFILE_MONITOR)
-	$(UNIX_CPP_CC) $(UNIX_CPP_FLAGS) $(UNIX_CPP_INCLUDES) $< $(UNIX_OBJS) -o $@ $(UNIX_CPP_LFLAGS) $(UNIX_CPP_LIBS)
+	@cp $(PATH_SRC)/$*.h $(UNIX_PATH_BUILD)/$*.h
+	$(UNIX_CPP_CC) $(UNIX_CPP_FLAGS) $(UNIX_CPP_INCLUDES) -o $@ $(UNIX_OBJS) $< $(UNIX_CPP_LFLAGS) $(UNIX_CPP_LIBS)
 	
 $(UNIX_PATH_BUILD_BINARY)/%: $(PATH_SRC_BINARY)/%.cpp $(UNIX_OBJS) $(MAKEFILE_MONITOR)
-	$(UNIX_CPP_CC) $(UNIX_CPP_FLAGS) $(UNIX_CPP_INCLUDES) $< $(UNIX_OBJS) -o $@ $(UNIX_CPP_LFLAGS) $(UNIX_CPP_LIBS)
+	$(UNIX_CPP_CC) $(UNIX_CPP_FLAGS) $(UNIX_CPP_INCLUDES) -o $@ $(UNIX_OBJS) $< $(UNIX_CPP_LFLAGS) $(UNIX_CPP_LIBS)
 	
 $(UNIX_PATH_BUILD)/%.o: $(PATH_SRC)/%.cpp $(PATH_SRC)/%.h $(MAKEFILE_MONITOR)
+	@cp $(PATH_SRC)/$*.h $(UNIX_PATH_BUILD)/$*.h
 	$(UNIX_CPP_CC) $(UNIX_CPP_FLAGS) -c $< -o $@
 
 $(UNIX_PATH_BUILD)/%.o: $(PATH_SRC)/%.cpp $(MAKEFILE_MONITOR)

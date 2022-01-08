@@ -1,5 +1,6 @@
 #include "drv_spi_abstract.h"
-#include "../../hal/hal.h"
+#include "../../hal/hal_spi.h"
+#include "../../hal/hal_gpio.h"
 
 void drv_spi_abstract :: begin(void) {
 	

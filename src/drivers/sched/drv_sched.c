@@ -1,10 +1,74 @@
 #include "../../hal/hal.h"
 #include "drv_sched.h"
 
-#define DRV_SCHED_MAX_JOBS 16
+#include "../gps/drv_gps.h"
+
+#define DRV_SCHED_MAX_JOBS 16 //must be >=1
+
+enum job_type_e {
+	JOB_TYPE_ONCE = 0,
+	JOB_TYPE_REPEAT = 1,
+	JOB_TYPE_AT = 2,
+};
+
+struct job_s {
+	struct job_s * next;
+	lib_datetime_interval_t interval;
+	lib_datetime_time_t time;
+	void (*fun_ptr)(void);
+	enum drv_sched_pri_e priority;
+	enum job_type_e type;
+};
+
+struct state_s {
+	struct job_s * head_ready;
+	struct job_s * head_empty;
+	struct job_s jobs[DRV_SCHED_MAX_JOBS];
+} state;
 
 void drv_sched_init(void) {
+	state.head_ready = NULL;
+	state.head_empty = &(state.jobs[0]);
+	for (int i=0; i<DRV_SCHED_MAX_JOBS; i++) {
+		if (i == DRV_SCHED_MAX_JOBS-1) {
+			state.jobs[i].next = NULL;
+		} else {
+			state.jobs[i].next = &(state.jobs[i+1]);
+		}
+		state.jobs[i].interval = 0;
+		state.jobs[i].time = 0;
+		state.jobs[i].fun_ptr = NULL;
+		state.jobs[i].priority = PRI_IDLE;
+		state.jobs[i].type = JOB_TYPE_ONCE;
+	}
+}
+
+static int schedule(void (*fun_ptr)(void), enum job_type_e type, enum drv_sched_pri_e priority, lib_datetime_interval_t interval, lib_datetime_time_t time) {
+	if (state.head_empty == NULL) return -1; //failed to schedule, no job slots remaining
+	struct job_s * job = state.head_empty; //get empty job slot
+	state.head_empty = job->next; //remove from linked list of empty jobs
 	
+	job->interval = interval;
+	job->time = time;
+	job->fun_ptr = fun_ptr;
+	job->priority = priority;
+	job->type = type;
+	
+	
+}
+
+int drv_sched_once(void (*fun_ptr)(void), enum drv_sched_pri_e priority, lib_datetime_interval_t delay_ms) {
+	if (delay_ms > LIB_DATETIME_MS_IN_DAY) return -1; //failed to schedule, interval is longer than one day
+	return schedule(fun_ptr, JOB_TYPE_ONCE, priority, 0, lib_datetime_addIntervalToTime(drv_gps_getTime(), delay_ms));
+}
+
+int drv_sched_repeating(void (*fun_ptr)(void), enum drv_sched_pri_e priority, lib_datetime_interval_t interval_ms) {
+	if (interval_ms > LIB_DATETIME_MS_IN_DAY) return -1; //failed to schedule, interval is longer than one day
+	return schedule(fun_ptr, JOB_TYPE_REPEAT, priority, interval_ms, lib_datetime_addIntervalToTime(drv_gps_getTime(), interval_ms));
+}
+
+int drv_sched_at(void (*fun_ptr)(void), enum drv_sched_pri_e priority, lib_datetime_time_t time) {
+	return schedule(fun_ptr, JOB_TYPE_AT, priority, 0, time);
 }
 
 /*
