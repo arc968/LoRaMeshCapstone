@@ -1,7 +1,5 @@
-extern "C" {
 //#include "../drivers/sched/drv_sched.h"
 #include "../drivers/drv.h"
-}
 
 void testing(void) {
 	

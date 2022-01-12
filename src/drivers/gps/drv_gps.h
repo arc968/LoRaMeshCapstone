@@ -14,6 +14,8 @@ void drv_gps_init(drv_gps_baud_t baud);
 
 lib_datetime_time_t drv_gps_getTime();
 
+struct lib_datetime_s drv_gps_getDateTime();
+
 #if defined (__cplusplus)
 }
 #endif
