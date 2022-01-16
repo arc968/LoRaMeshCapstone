@@ -4,28 +4,25 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
-
 #include "../../lib/ip/lib_ip.h"
 
-#define DRV_MESH_PACKET_SIZE_MAX 256
+#include <stdint.h>
+
+#define DRV_MESH__PACKET_SIZE_MAX 256
+
+enum drv_mesh_error_e {
+	DRV_MESH_ERR__NONE = 0,
+	DRV_MESH_ERR__MESSAGE_TOO_LARGE,
+	DRV_MESH_ERR__BUFFER_FULL,
+};
 
 struct drv_mesh_packet_s {
 	ip_t ip;
 	uint16_t len;
-	uint8_t buf[DRV_MESH_PACKET_SIZE_MAX];
+	uint8_t buf[DRV_MESH__PACKET_SIZE_MAX];
 };
 
-enum drv_mesh_error_e {
-	OK = 0,
-	NONE = 0,
-	ERR_MESSAGE_TOO_LARGE,
-	ERR_BUFFER_FULL,
-};
-
-void drv_mesh_init(void);
-
-void drv_mesh_setRecvHandler(void (*fun_ptr)(ip_t *));
+void drv_mesh_init(void (*func_onRecv_ptr)(ip_t *));
 
 enum drv_mesh_error_e drv_mesh_send(uint32_t ip, uint16_t len, uint8_t * buf);
 

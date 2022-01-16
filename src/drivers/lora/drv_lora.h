@@ -4,6 +4,47 @@
 extern "C" {
 #endif
 
+#include "../../hal/hal_common.h"
+
+enum drv_lora_bandwidth_e {
+	DRV_LORA_BW__62_5kHz,
+	DRV_LORA_BW__125kHz,
+	DRV_LORA_BW__250kHz,
+	DRV_LORA_BW__500kHz,
+};
+
+enum drv_lora_spreadingFactor_e {
+	DRV_LORA_SF__6 = 6,
+	DRV_LORA_SF__7 = 7,
+	DRV_LORA_SF__8 = 8,
+	DRV_LORA_SF__9 = 9,
+	DRV_LORA_SF__10 = 10,
+	DRV_LORA_SF__11 = 11,
+	DRV_LORA_SF__12 = 12,
+};
+
+enum drv_lora_codingRate_e {
+	DRV_LORA_CR__4_5 = 1, // 4/5
+	DRV_LORA_CR__4_6 = 2, // 4/6
+	DRV_LORA_CR__4_7 = 3, // 4/7
+	DRV_LORA_CR__4_8 = 4, // 4/8
+};
+
+struct drv_lora_s {
+	
+};
+
+void drv_lora_init(struct drv_lora_s * handle, pin_t pin);
+
+void drv_lora_setBandwidth(struct drv_lora_s * handle, enum drv_lora_bandwidth_e);
+enum drv_lora_bandwidth_e drv_lora_getBandwidth(struct drv_lora_s * handle);
+
+void drv_lora_setSpreadingFactor(struct drv_lora_s * handle, enum drv_lora_spreadingFactor_e);
+enum drv_lora_spreadingFactor_e drv_lora_getSpreadingFactor(struct drv_lora_s * handle);
+
+void drv_lora_setCodingRate(struct drv_lora_s * handle, enum drv_lora_codingRate_e);
+enum drv_lora_codingRate_e drv_lora_getCodingRate(struct drv_lora_s * handle);
+
 #if defined (__cplusplus)
 }
 #endif

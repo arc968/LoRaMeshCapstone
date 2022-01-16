@@ -15,7 +15,7 @@ enum lib_datetime_err_e {
 
 typedef uint32_t lib_datetime_time_t; //time of day in ms, there are 24h*60m*60s*1000ms = 86,400,000ms in a day
 
-typedef uint32_t lib_datetime_interval_t; //time interval in ms
+typedef uint64_t lib_datetime_interval_t; //time interval in ms
 
 #define LIB_DATETIME__MS_IN_DAY 86400000 //(24*60*60*1000)
 
@@ -48,13 +48,15 @@ struct lib_datetime_s {
 };
 #endif
 
+enum lib_datetime_err_e lib_datetime_validateTime(lib_datetime_time_t time);
+
 int lib_datetime_cmp(struct lib_datetime_s * a, struct lib_datetime_s * b);
 
 //returns -1 if conversion failed
-enum lib_datetime_err_e lib_datetime_timeToDatetime(lib_datetime_time_t time, struct lib_datetime_s * dt);
+enum lib_datetime_err_e lib_datetime_convertTimeToDatetime(lib_datetime_time_t time, struct lib_datetime_s * dt);
 
 //returns -1 if conversion failed
-enum lib_datetime_err_e lib_datetime_datetimeToTime(struct lib_datetime_s * dt, lib_datetime_time_t * time);
+enum lib_datetime_err_e lib_datetime_convertDatetimeToTime(struct lib_datetime_s * dt, lib_datetime_time_t * time);
 
 //adds an interval to a time, wrapping around as necessary
 lib_datetime_time_t lib_datetime_addIntervalToTime(lib_datetime_time_t time, lib_datetime_interval_t interval);

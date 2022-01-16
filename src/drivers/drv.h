@@ -6,6 +6,7 @@
 #include "lora/drv_lora.h"
 #include "mesh/drv_mesh.h"
 #include "sched/drv_sched.h"
+#include "timer/drv_timer.h"
 
 //Sensor Drivers
 #include "sd/drv_sd.h"

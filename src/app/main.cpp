@@ -6,7 +6,7 @@ void testing(void) {
 }
 
 int main(void) {
-	drv_sched_init();
-	drv_sched_once(&testing, PRI_NORMAL, 0);
+	drv_sched_init(NULL, NULL);
+	drv_sched_once(&testing, DRV_SCHED_PRI__NORMAL, 0);
 	return 0;
 }

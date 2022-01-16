@@ -8,7 +8,3 @@ void drv_gps_init(drv_gps_baud_t baud) {
 	
 	//enable interrupts on GPS pulse GPIO pin
 }
-
-lib_datetime_time_t drv_gps_getTime() {
-	return 0;
-}

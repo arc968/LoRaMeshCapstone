@@ -1,21 +1,21 @@
 #include "../../hal/hal.h"
 #include "drv_sched.h"
 
-#include "../gps/drv_gps.h"
-
-#define DRV_SCHED_MAX_JOBS 16 //must be >=1
+#include "../timer/drv_timer.h"
 
 enum job_type_e {
-	JOB_TYPE__ONCE = 0,
-	JOB_TYPE__REPEAT = 1,
-	JOB_TYPE__AT = 2,
+	JOB_TYPE__NONE = 0,
+	JOB_TYPE__ONCE,
+	JOB_TYPE__REPEAT,
+	JOB_TYPE__ONCE_AT,
+	JOB_TYPE__REPEAT_AT,
 };
 
 struct job_s {
 	struct job_s * next;
 	lib_datetime_interval_t interval;
-	lib_datetime_time_t time;
-	void (*fun_ptr)(void);
+	lib_datetime_interval_t time;
+	void (*func_ptr)(void);
 	enum drv_sched_pri_e priority;
 	enum job_type_e type;
 };
@@ -23,36 +23,46 @@ struct job_s {
 struct state_s {
 	struct job_s * head_ready;
 	struct job_s * head_empty;
-	lib_datetime_time_t lastRunTime;;
-	struct job_s jobs[DRV_SCHED_MAX_JOBS];
+	void (*func_onSleep_ptr)(void);
+	void (*func_onWake_ptr)(void);
+	lib_datetime_interval_t lastRunTime;
+	struct job_s jobs[DRV_SCHED__MAX_JOBS];
 } state;
 
-void drv_sched_init(void) {
+static void stubFunc(void) {
+	return; //do nothing
+}
+
+void drv_sched_init(void (*func_onSleep_ptr)(void), void (*func_onWake_ptr)(void)) {
+	state.func_onSleep_ptr = (func_onSleep_ptr != NULL) ? func_onSleep_ptr : stubFunc;
+	state.func_onWake_ptr = (func_onWake_ptr != NULL) ? func_onWake_ptr : stubFunc;
 	state.head_ready = NULL;
 	state.head_empty = &(state.jobs[0]);
 	state.lastRunTime = 0;
-	for (int i=0; i<DRV_SCHED_MAX_JOBS; i++) {
-		if (i == DRV_SCHED_MAX_JOBS-1) {
+	for (int i=0; i<DRV_SCHED__MAX_JOBS; i++) {
+		if (i == DRV_SCHED__MAX_JOBS-1) {
 			state.jobs[i].next = NULL;
 		} else {
 			state.jobs[i].next = &(state.jobs[i+1]);
 		}
 		state.jobs[i].interval = 0;
 		state.jobs[i].time = 0;
-		state.jobs[i].fun_ptr = NULL;
+		state.jobs[i].func_ptr = NULL;
 		state.jobs[i].priority = DRV_SCHED_PRI__IDLE;
-		state.jobs[i].type = JOB_TYPE__ONCE;
+		state.jobs[i].type = JOB_TYPE__NONE;
 	}
 }
 
-static int schedule(void (*fun_ptr)(void), enum job_type_e type, enum drv_sched_pri_e priority, lib_datetime_interval_t interval, lib_datetime_time_t time, lib_datetime_time_t currentTime) {
-	if (state.head_empty == NULL) return -1; //failed to schedule, no job slots remaining
+//TODO: not yet done
+static enum drv_sched_err_e schedule(void (*func_ptr)(void), enum job_type_e type, enum drv_sched_pri_e priority, lib_datetime_interval_t delay_or_timeOfDay, lib_datetime_interval_t interval_ms) {
+	lib_datetime_interval_t currentTime = drv_timer_getMonotonicTime();
+	if (state.head_empty == NULL) return DRV_SCHED_ERR__NO_JOB_SLOTS; //failed to schedule, no job slots remaining
 	struct job_s * job = state.head_empty; //get empty job slot
 	state.head_empty = job->next; //remove from linked list of empty jobs
 	
-	job->interval = interval;
-	job->time = time;
-	job->fun_ptr = fun_ptr;
+	job->interval = interval_ms;
+	job->time = delay_or_timeOfDay;
+	job->func_ptr = func_ptr;
 	job->priority = priority;
 	job->type = type;
 	
@@ -69,21 +79,28 @@ static int schedule(void (*fun_ptr)(void), enum job_type_e type, enum drv_sched_
 	return 0;
 }
 
-int drv_sched_once(void (*fun_ptr)(void), enum drv_sched_pri_e priority, lib_datetime_interval_t delay_ms) {
-	lib_datetime_time_t currentTime = drv_gps_getTime();
-	if (delay_ms > LIB_DATETIME__MS_IN_DAY) return -1; //failed to schedule, interval is longer than one day
-	return schedule(fun_ptr, JOB_TYPE__ONCE, priority, 0, lib_datetime_addIntervalToTime(currentTime, delay_ms), currentTime);
+//schedule once after specified delay
+enum drv_sched_err_e drv_sched_once(void (*func_ptr)(void), enum drv_sched_pri_e priority, lib_datetime_interval_t delay_ms) {
+	return schedule(func_ptr, JOB_TYPE__ONCE, priority, delay_ms, 0);
 }
 
-int drv_sched_repeating(void (*fun_ptr)(void), enum drv_sched_pri_e priority, lib_datetime_interval_t interval_ms) {
-	lib_datetime_time_t currentTime = drv_gps_getTime();
-	if (interval_ms > LIB_DATETIME__MS_IN_DAY) return -1; //failed to schedule, interval is longer than one day
-	return schedule(fun_ptr, JOB_TYPE__REPEAT, priority, interval_ms, lib_datetime_addIntervalToTime(currentTime, interval_ms), currentTime);
+//schedule after specified delay, repeating at regular intervals afterward
+enum drv_sched_err_e drv_sched_repeating(void (*func_ptr)(void), enum drv_sched_pri_e priority, lib_datetime_interval_t delay_ms, lib_datetime_interval_t interval_ms) {
+	return schedule(func_ptr, JOB_TYPE__REPEAT, priority, delay_ms, interval_ms);
 }
 
-int drv_sched_at(void (*fun_ptr)(void), enum drv_sched_pri_e priority, lib_datetime_time_t time) {
-	lib_datetime_time_t currentTime = drv_gps_getTime();
-	return schedule(fun_ptr, JOB_TYPE__AT, priority, 0, time, currentTime);
+//schedule at particular time of day
+enum drv_sched_err_e drv_sched_once_at(void (*func_ptr)(void), enum drv_sched_pri_e priority, lib_datetime_time_t time) {
+	if (!drv_timer_absoluteIsAvailable()) return DRV_SCHED_ERR__ABSOLUTE_SCHED_TMP_UNAVAILABLE;
+	if (lib_datetime_validateTime(time) != LIB_DATETIME_ERR__NONE) return DRV_SCHED_ERR__INVALID_TIME;
+	return schedule(func_ptr, JOB_TYPE__ONCE_AT, priority, (lib_datetime_interval_t) time, 0);
+}
+
+//schedule at particular time of day, repeating at regular intervals afterward
+enum drv_sched_err_e drv_sched_repeating_at(void (*func_ptr)(void), enum drv_sched_pri_e priority, lib_datetime_time_t time, lib_datetime_interval_t interval_ms) {
+	if (!drv_timer_absoluteIsAvailable()) return DRV_SCHED_ERR__ABSOLUTE_SCHED_TMP_UNAVAILABLE;
+	if (lib_datetime_validateTime(time) != LIB_DATETIME_ERR__NONE) return DRV_SCHED_ERR__INVALID_TIME;
+	return schedule(func_ptr, JOB_TYPE__REPEAT_AT, priority, (lib_datetime_interval_t) time, interval_ms);
 }
 
 /*
