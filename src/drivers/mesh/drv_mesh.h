@@ -22,7 +22,8 @@ struct drv_mesh_packet_s {
 	uint8_t buf[DRV_MESH__PACKET_SIZE_MAX];
 };
 
-void drv_mesh_init(void (*func_onRecv_ptr)(ip_t *));
+//void drv_mesh_init(void (*func_onRecv_ptr)(ip_t *));
+void drv_mesh_init(void);
 
 enum drv_mesh_error_e drv_mesh_send(uint32_t ip, uint16_t len, uint8_t * buf);
 

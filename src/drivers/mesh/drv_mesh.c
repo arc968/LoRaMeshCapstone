@@ -1,3 +1,13 @@
+#include "../../hardware/hardware.h"
+
+#ifndef HW_GPS
+	#error "drv_mesh requires supported GPS module."
+#endif
+
+#ifndef HW_LORA
+	//#error "drv_mesh requires supported LoRa module."
+#endif
+
 #include "../../hal/hal.h"
 #include "../gps/drv_gps.h"
 #include "../lora/drv_lora.h"

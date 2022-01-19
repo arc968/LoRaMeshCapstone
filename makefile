@@ -21,6 +21,8 @@ PATH_SRC = src
 PATH_SRC_BINARY = app
 PATH_BUILD = build
 
+CONFIG_FILES = src/hardware/hw_config.h
+
 C_AND_CPP_FLAGS = -DIBUG -g -Wall -Os -Wno-unused-variable -Wno-unused-function -ffunction-sections -fdata-sections
 C_AND_CPP_INCLUDES =
 C_AND_CPP_LFLAGS =
@@ -198,11 +200,11 @@ pre-build: $(MAKEFILE_MONITOR)
 build: pre-build $(UNIX_OBJS) $(UNIX_OBJS_BINARY) $(MAKEFILE_MONITOR)
 
 #C
-$(UNIX_PATH_BUILD_BINARY)/%.d: $(PATH_SRC_BINARY)/%.c $(PATH_SRC_BINARY)/%.h 
+$(UNIX_PATH_BUILD_BINARY)/%.d: $(PATH_SRC_BINARY)/%.c $(PATH_SRC_BINARY)/%.h $(UNIX_DEPS)
 	@mkdir -p $(@D)
 	$(UNIX_C_CC) $(UNIX_C_FLAGS) $(UNIX_C_INCLUDES) -MM -MF $@ $<
 	
-$(UNIX_PATH_BUILD_BINARY)/%.d: $(PATH_SRC_BINARY)/%.c 
+$(UNIX_PATH_BUILD_BINARY)/%.d: $(PATH_SRC_BINARY)/%.c $(UNIX_DEPS)
 	@mkdir -p $(@D)
 	$(UNIX_C_CC) $(UNIX_C_FLAGS) $(UNIX_C_INCLUDES) -MM -MF $@ $<
 
@@ -215,11 +217,11 @@ $(UNIX_PATH_BUILD)/%.d: $(PATH_SRC)/%.c
 	$(UNIX_C_CC) $(UNIX_C_FLAGS) -MM -MF $@ -c $<
 
 #C++
-$(UNIX_PATH_BUILD_BINARY)/%.d: $(PATH_SRC_BINARY)/%.cpp $(PATH_SRC_BINARY)/%.h 
+$(UNIX_PATH_BUILD_BINARY)/%.d: $(PATH_SRC_BINARY)/%.cpp $(PATH_SRC_BINARY)/%.h  $(UNIX_DEPS)
 	@mkdir -p $(@D)
 	$(UNIX_CPP_CC) $(UNIX_CPP_FLAGS) $(UNIX_CPP_INCLUDES) -MM -MF $@ $< 
 	
-$(UNIX_PATH_BUILD_BINARY)/%.d: $(PATH_SRC_BINARY)/%.cpp 
+$(UNIX_PATH_BUILD_BINARY)/%.d: $(PATH_SRC_BINARY)/%.cpp $(UNIX_DEPS)
 	@mkdir -p $(@D)
 	$(UNIX_CPP_CC) $(UNIX_CPP_FLAGS) $(UNIX_CPP_INCLUDES) -MM -MF $@ $< 
 	
@@ -268,7 +270,7 @@ $(UNIX_PATH_BUILD)/%.o: $(PATH_SRC)/%.cpp $(PATH_SRC)/%.h $(MAKEFILE_MONITOR)
 $(UNIX_PATH_BUILD)/%.o: $(PATH_SRC)/%.cpp $(MAKEFILE_MONITOR)
 	$(UNIX_CPP_CC) $(UNIX_CPP_FLAGS) -c $< -o $@
 
-$(MAKEFILE_MONITOR): makefile
+$(MAKEFILE_MONITOR): makefile $(CONFIG_FILES)
 	@echo makefile changed, cleaning...
 	@-rm -rf $(PATH_BUILD) 2>/dev/null
 	@-rm -rf $(PATH_DOCS) 2>/dev/null

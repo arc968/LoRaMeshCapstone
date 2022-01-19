@@ -2,11 +2,17 @@
 #define DRV_H
 
 //LoRa Drivers
-#include "gps/drv_gps.h"
-#include "lora/drv_lora.h"
-#include "mesh/drv_mesh.h"
-#include "sched/drv_sched.h"
+#if !defined(GPS_NONE)
+	#include "gps/drv_gps.h"
+#endif
+#if !defined(LORA_NONE)
+	#include "lora/drv_lora.h"
+#endif
+#if !defined(GPS_NONE) && !defined(LORA_NONE)
+	#include "mesh/drv_mesh.h"
+#endif
 #include "timer/drv_timer.h"
+#include "sched/drv_sched.h"
 
 //Sensor Drivers
 #include "sd/drv_sd.h"
