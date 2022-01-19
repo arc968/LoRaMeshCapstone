@@ -30,6 +30,9 @@
 //#define GPS_NONE
 #define GPS_UBLOX_NEO6
 
+//#define LORA_NONE
+#define LORA_SEMTECH_SX1276
+
 #endif // HW_CONFIG_H
 
 /** @} */ // end of hwlayer group

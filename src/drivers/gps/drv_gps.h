@@ -4,19 +4,10 @@
 extern "C" {
 #endif
 
-#include "../../hardware/hardware.h"
-
-#ifdef GPS_NONE
-	#error "GPS_NONE is defined. This header file should not be included."
-#endif
-
-#ifndef HW_GPS_H
-	#error "No GPS hardware defined."
-#endif
+#include <stdint.h>
 
 #include "../../lib/datetime/lib_datetime.h"
-
-#include <stdint.h>
+#include "../../hardware/hardware.h"
 
 typedef uint32_t drv_gps_baud_t;
 

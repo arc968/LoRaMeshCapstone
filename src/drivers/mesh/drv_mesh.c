@@ -1,12 +1,8 @@
 #include "../../hardware/hardware.h"
 
-#ifndef HW_GPS
-	#error "drv_mesh requires supported GPS module."
-#endif
-
-#ifndef HW_LORA
-	//#error "drv_mesh requires supported LoRa module."
-#endif
+#if !defined(HW_GPS) || !defined(HW_LORA)
+	#warning "HW_GPS and/or HW_LORA is undefined. Linking to drv_mesh.c will fail."
+#else
 
 #include "../../hal/hal.h"
 #include "../gps/drv_gps.h"
@@ -74,3 +70,5 @@ static uint64_t getCenterFrequency(uint16_t channel, uint16_t bandwidth) {
 static uint16_t getChannel() {
 	return 0;
 }
+
+#endif

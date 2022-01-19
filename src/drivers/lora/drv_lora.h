@@ -5,6 +5,7 @@ extern "C" {
 #endif
 
 #include "../../hal/hal_common.h"
+#include "../../hardware/hardware.h"
 
 enum drv_lora_bandwidth_e {
 	DRV_LORA_BW__62_5kHz,
