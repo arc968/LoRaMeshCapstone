@@ -1,3 +1,9 @@
+#include "../../hardware/hardware.h"
+
+#if !defined(HW_GPS) || !defined(HW_LORA)
+	#warning "HW_GPS and/or HW_LORA is undefined. Linking to drv_mesh.c will fail."
+#else
+
 #include "../../hal/hal.h"
 #include "../gps/drv_gps.h"
 #include "../lora/drv_lora.h"
@@ -64,3 +70,5 @@ static uint64_t getCenterFrequency(uint16_t channel, uint16_t bandwidth) {
 static uint16_t getChannel() {
 	return 0;
 }
+
+#endif

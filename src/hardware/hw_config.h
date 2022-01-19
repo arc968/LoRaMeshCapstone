@@ -17,8 +17,18 @@
 #ifndef HW_CONFIG_H
 #define HW_CONFIG_H
 
+#ifndef HARDWARE_H_SCOPE
+	#error "Do not directly include this header file, include hardware.h instead."
+#endif
+
 //#define MKRWAN1300
 //#define IBUG
+
+//#define GPS_NONE
+#define GPS_UBLOX_NEO6
+
+//#define LORA_NONE
+#define LORA_SEMTECH_SX1276
 
 #endif // HW_CONFIG_H
 
