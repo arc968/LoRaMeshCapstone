@@ -9,6 +9,13 @@
 extern "C" {
 #endif
 
+#if defined(HW_ARDUINO)
+const void * hal_serial0 = &Serial;
+const void * hal_serial1 = &Serial1;
+const void * hal_serial2 = &Serial2;
+const void * hal_serial3 = &Serial3;
+#endif
+
 bool hal_serial_ready(void) {
 	#if defined(HW_ARDUINO)
 		return (Serial);
