@@ -11,7 +11,7 @@
  * 
  * This file defines all the necissary defines the hardware.h file uses to set the library
  * code up properly to compile for the mkrwan1300 hardware should the user uncomment the 
- * define IBUG in the hw_config file. It also impliments necissary
+ * define MKRWAN1300 in the hw_config file. It also impliments necissary
  * define if else guards to prevent more than one hardware from being selected.
  */
 
@@ -28,3 +28,5 @@
 	#endif // HAL_LIB
 
 #endif // HW_H MKRWAN1300_H
+
+/** @} */ // end of MKRWAN1300group
