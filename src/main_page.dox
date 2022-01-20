@@ -1,6 +1,9 @@
 /**
  * \mainpage LoRa Mesh
  * 
+ * This library is an open source library that creates a low matinance mesh network of nodes using the 
+ * LoRaPHY standard communication protocol and a global positioning system (GPS).
+ * 
  * \version 1.0
  * 
  * \author Josh Lariviere
