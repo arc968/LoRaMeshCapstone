@@ -32,7 +32,7 @@
 #elif defined(GPS_NONE)
 	#include "gps/hw_gps.h"
 #else
-	#error "No GPS hardware defined. Explicitly define GPS_NONE if no GPS module is used."
+	#error "No GPS hardware defined. Explicitly define GPS_NONE in hw_config.h if no GPS module is used."
 #endif
 
 #if defined(LORA_SEMTECH_SX1276)
@@ -40,7 +40,7 @@
 #elif defined(LORA_NONE)
 	#include "lora/hw_lora.h"
 #else
-	#error "No LoRa hardware defined. Explicitly define LORA_NONE if no LoRa module is used."
+	#error "No LoRa hardware defined. Explicitly define LORA_NONE in hw_config.h if no LoRa module is used."
 #endif
 
 #undef HARDWARE_H_SCOPE
