@@ -33,7 +33,7 @@ struct lib_datetime_s {
 }
 //packed attribute is used to remove 2 byte padding (6->8 bytes)
 #if defined(__GNUC__) && defined(PACK_STRUCTS)
-__attribute__ ((__packed__))
+	__attribute__((packed))
 #endif
 ;
 #else
