@@ -25,19 +25,20 @@ inline uint32_t lib_misc_fastrange32(uint32_t word, uint32_t p) {
 }
 
 inline uint32_t lib_misc_XORshiftLFSR32(uint32_t seed) {
-  if (seed == 0) seed = 0xFFFFFFFF;
-  seed ^= seed << 13;
-  seed ^= seed >> 17;
-  seed ^= seed << 5;
-  return seed;
+	seed ^= 0xB16B00B5;
+	seed ^= seed << 13;
+	seed ^= seed >> 17;
+	seed ^= seed << 5;
+	return seed;
 }
 
 inline uint16_t lib_misc_XORshiftLFSR16(uint16_t seed) {
-  if (seed == 0) seed = 0xFFFF;
-  seed ^= seed << 7;
-  seed ^= seed >> 9;
-  seed ^= seed << 8;
-  return seed;
+	//if (seed == 0) seed = 0xFFFF;
+	seed ^= 0x6042;
+	seed ^= seed << 7;
+	seed ^= seed >> 9;
+	seed ^= seed << 8;
+	return seed;
 }
 
 void shuffleArrU8(uint8_t * arr, uint16_t len, uint32_t seed);
