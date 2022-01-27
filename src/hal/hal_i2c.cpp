@@ -94,9 +94,9 @@ void hal_i2c_setClock(uint32_t freq) {
 	#endif
 }
 
-void hal_i2c_onReceive(uint16_t * numBytes) {
+void hal_i2c_onReceive() {
 	#if defined(HW_ARDUINO)
-		Wire.onReceive((int *)numBytes);
+		Wire.onReceive(hal_i2c_received);
 	#elif defined(HW_IBUG_H)
 	
 	#else
@@ -114,6 +114,9 @@ void hal_i2c_onRequest(void (*handler)(void)) {
 	#endif
 }
 
+void hal_i2c_received(int numBytes) {
+	//TODO
+}
 
 #ifdef __cplusplus
 }

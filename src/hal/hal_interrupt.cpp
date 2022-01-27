@@ -21,9 +21,9 @@ void hal_interrupt_disable(void) {
 	#endif
 }
 
-void hal_interrupt_attachPin(pin_t pin, void (*isr)(void), uint8_t mode) {
+void hal_interrupt_attachPin(pin_t pin, void (isr)(void), enum hal_interrupt_mode_e mode) {
 	#if defined(HW_ARDUINO)
-		attachInterrupt(digitalPinToInterrupt(pin), isr, mode);
+		attachInterrupt(digitalPinToInterrupt(pin), isr, (PinStatus) mode);
 	#elif defined(HW_IBUG_H)
 	
 	#else

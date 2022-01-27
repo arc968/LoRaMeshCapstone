@@ -33,13 +33,24 @@ enum hal_interrupt_mode_e {
 enum hal_interrupt_type_e {
 	TODO = 0
 };
+#else
+enum hal_interrupt_mode_e {
+	INTERRUPT_LOW = LOW,
+	INTERRUPT_HIGH = HIGH,
+	INTERRUPT_CHANGE = CHANGE,
+	INTERRUPT_RISING = RISING,
+	INTERRUPT_FALLING = FALLING
+};
+
 #endif // HW_ARDUINO
+
+
 
 void hal_interrupt_enable(void);
 
 void hal_interrupt_disable(void);
 
-void hal_interrupt_attachPin(pin_t pin, void (*isr)(void), uint8_t mode);
+void hal_interrupt_attachPin(pin_t pin, void (*isr)(void), enum hal_interrupt_mode_e mode);
 
 void hal_interrupt_detachPin(pin_t pin);
 
