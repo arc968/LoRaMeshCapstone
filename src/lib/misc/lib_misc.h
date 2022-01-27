@@ -20,6 +20,7 @@ inline uint16_t lib_misc_fastrange16(uint16_t w, uint16_t p) {
 * through all possible values of "word", then you will generate all
 * possible outputs as uniformly as possible.
 */
+// Adapted from: https://github.com/lemire/fastrange
 inline uint32_t lib_misc_fastrange32(uint32_t word, uint32_t p) {
 	return (uint32_t)(((uint64_t)word * (uint64_t)p) >> 32);
 }
@@ -47,7 +48,7 @@ inline uint64_t lib_misc_XORshiftLFSR64(uint64_t seed) {
 
 //THESE CONSTANTS ARE NOT VALIDATED
 uint16_t lib_misc_mix16(uint16_t val) {
-	val ^= 0xd27a; //arbitrary
+	if (val == 0) val = 0xFFFF;
 	val ^= val >> 7;
 	val *= 0x37f4;
 	val ^= val >> 5;
@@ -57,7 +58,7 @@ uint16_t lib_misc_mix16(uint16_t val) {
 }
 
 uint32_t lib_misc_mix32(uint32_t val) {
-	val ^= 0x8d0f937d; //arbitrary
+	if (val == 0) val = 0xFFFFFFFF;
 	val ^= val >> 16;
 	val *= 0x85ebca6b;
 	val ^= val >> 13;
@@ -67,7 +68,7 @@ uint32_t lib_misc_mix32(uint32_t val) {
 }
 
 uint64_t lib_misc_mix64(uint64_t val) {
-	val ^= 0x976ab62cda174f88; //arbitrary
+	if (val == 0) val = 0xFFFFFFFFFFFFFFFF;
 	val ^= val >> 30;
 	val *= 0xbf58476d1ce4e5b9;
 	val ^= val >> 27;
