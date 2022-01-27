@@ -35,9 +35,9 @@ void hal_spi_end(void) {
 	#endif
 }
 
-void hal_spi_beginTransaction(uint32_t speedmax, uint8_t dataorder, uint8_t datamode) {
+void hal_spi_beginTransaction(uint32_t speedmax, enum hal_spi_bit_order_e dataorder, uint8_t datamode) {
 	#if defined(HW_ARDUINO)
-		SPI.beginTransaction(SPISettings(speedmax, dataorder, datamode));
+		SPI.beginTransaction(SPISettings(speedmax, (BitOrder) dataorder, datamode));
 	#elif defined(HW_IBUG_H)
 	
 	#else
