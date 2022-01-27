@@ -58,7 +58,7 @@ void hal_serial_write(uint8_t *buff, uint16_t length) {
 
 size_t hal_serial_readBytes(uint8_t *buf, uint16_t length) {
 	#if defined(HW_ARDUINO)
-		return Serial.readBytes(buf, length);
+		return Serial.readBytes((char*)buf, length);
 	#elif defined(HW_IBUG_H)
 		return 0; //TODO
 	#else

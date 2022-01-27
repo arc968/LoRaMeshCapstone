@@ -27,7 +27,7 @@ void hal_i2c_write(uint8_t *buf, uint16_t length);
 uint16_t hal_i2c_available(void);
 uint8_t hal_i2c_read(void);
 void hal_i2c_setClock(uint32_t freq);
-void hal_i2c_onReceive(uint32_t numBytes);
+void hal_i2c_onReceive(uint16_t * numBytes);
 void hal_i2c_onRequest(void (*handler)(void));
 
 #ifdef __cplusplus
