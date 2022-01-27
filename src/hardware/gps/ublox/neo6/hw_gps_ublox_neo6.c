@@ -77,7 +77,9 @@ struct ubx_msg__CFG_MSG__SetMessageRates_s {
 	} payload;
 	struct ubx_msg_footer_s footer;
 } __attribute__((packed, aligned(1))) const ubx_msg__CFG_MSG__SetMessageRates_s_default = {
-	.sync = ubx_msg_sync_s_default,
+	.sync = {
+		.syncChars = UBX_SYNC_CHARS,
+	},
 	.header = {
 		.ID = UBX_MSG_ID__CFG_MSG,
 		.length = LIB_BYTEORDER_HTON_U16(8),

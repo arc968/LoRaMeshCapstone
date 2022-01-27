@@ -16,12 +16,15 @@
 
 #ifndef HW_CONFIG_H
 #define HW_CONFIG_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef HARDWARE_H_SCOPE
 	#error "Do not directly include this header file, include hardware.h instead."
 #endif
 
-//#define MKRWAN1300
+#define MKRWAN1300
 //#define IBUG
 
 //#define GPS_NONE
@@ -30,6 +33,9 @@
 //#define LORA_NONE
 #define LORA_SEMTECH_SX1276
 
+#ifdef __cplusplus
+}
+#endif
 #endif // HW_CONFIG_H
 
 /** @} */ // end of hwlayer group

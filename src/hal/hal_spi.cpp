@@ -66,7 +66,7 @@ uint8_t hal_spi_transfer(uint8_t data) {
 
 void hal_spi_transferBuf(uint8_t* buf, uint16_t length) {
 	#if defined(HW_ARDUINO)
-		SPI.transfer(buff, length);
+		SPI.transfer(buf, length);
 	#elif defined(HW_IBUG_H)
 	
 	#else

@@ -14,11 +14,12 @@
 
 #ifndef HAL_GPIO_H
 #define HAL_GPIO_H
+
+#include "hal_common.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "hal_common.h"
 
 #ifndef HW_ARDUINO
 enum hal_gpio_pinmode_e {
@@ -37,8 +38,8 @@ enum hal_gpio_output_e {
 enum hal_gpio_pinmode_e {
 	GPIO_INPUT = INPUT,
 	GPIO_OUTPUT = OUTPUT,
-	GPIO_INPUT_PULLUP = PULLUP,
-	GPIO_INPUT_PULLDOWN = PULLDOWN
+	GPIO_INPUT_PULLUP = INPUT_PULLUP,
+	//GPIO_INPUT_PULLDOWN = 
 };
 
 enum hal_gpio_output_e {

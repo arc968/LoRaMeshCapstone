@@ -12,11 +12,12 @@
 
 #ifndef HAL_POWER_H
 #define HAL_POWER_H
+
+#include "hal_common.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "hal_common.h"
 
 #ifdef __cplusplus
 }

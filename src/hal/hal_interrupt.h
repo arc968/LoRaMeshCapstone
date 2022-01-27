@@ -14,11 +14,12 @@
 
 #ifndef HAL_INTERRUPT_H
 #define HAL_INTERRUPT_H
+
+#include "hal_common.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "hal_common.h"
 
 #ifndef HW_ARDUINO
 enum hal_interrupt_mode_e {

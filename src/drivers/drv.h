@@ -3,6 +3,12 @@
 
 #include "../hardware/hardware.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+
 //LoRa Drivers
 #if defined(GPS_NONE)
 	#warning "'gps/drv_gps.h' not included because GPS_NONE is defined."
@@ -29,4 +35,7 @@
 #include "sensor/gas_sensor/drv_gas_sensor.h"
 #include "sensor/co2_sensor/drv_co2_sensor.h"
 
+#ifdef __cplusplus
+}
+#endif
 #endif //DRV_H

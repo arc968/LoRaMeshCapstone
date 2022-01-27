@@ -14,19 +14,27 @@
  * define MKRWAN1300 in the hw_config file. It also impliments necissary
  * define if else guards to prevent more than one hardware from being selected.
  */
-
+ 
 #if defined(HW_H) && !defined(HW_MKRWAN1300_H)
 	#error "Multiple hardware definitions."
 #elif !defined(HW_H) && !defined(HW_MKRWAN1300_H)
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 	#define HW_H
 	#define HW_ARDUINO
 	#define HW_MKRWAN1300_H
-	#if defined(HAL_LIB)
-		#include "Arduino.h"
+	//#if defined(HAL_LIB)
+		//#include "Arduino.h"
 		#include "hw_mkrwan1300_registers.h"
-	#endif // HAL_LIB
+	//#endif // HAL_LIB
 
+#ifdef __cplusplus
+}
+#endif
 #endif // HW_H MKRWAN1300_H
+
+
 
 /** @} */ // end of MKRWAN1300group

@@ -12,11 +12,12 @@
 
 #ifndef HAL_SPI_H
 #define HAL_SPI_H
+
+#include "hal_common.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "hal_common.h"
 
 #ifndef HW_ARDUINO
 enum hal_spi_mode_e {

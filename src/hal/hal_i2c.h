@@ -12,15 +12,16 @@
 
 #ifndef HAL_I2C_H
 #define HAL_I2C_H
+
+#include "hal_common.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "hal_common.h"
-
 void hal_i2c_begin(void);
 void hal_i2c_requestFrom(uint16_t address, uint16_t quantity, bool stop);
-void hal_i2c_beginTransmission(uint16_t address);
+void hal_i2c_beginTransmission(uint8_t address);
 uint8_t hal_i2c_endTransmission(bool stop);
 void hal_i2c_write(uint8_t *buf, uint16_t length);
 uint16_t hal_i2c_available(void);

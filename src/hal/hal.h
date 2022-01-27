@@ -14,9 +14,6 @@
 
 #ifndef HAL_H
 #define HAL_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include "hal_gpio.h"
 #include "hal_i2c.h"
@@ -26,9 +23,6 @@ extern "C" {
 #include "hal_timer.h"
 #include "hal_power.h"
 
-#ifdef __cplusplus
-}
-#endif
 #endif // HAL_H
 
 /** @} */ // end of hallayer

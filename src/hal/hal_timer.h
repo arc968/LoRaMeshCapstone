@@ -15,11 +15,12 @@
 
 #ifndef HAL_TIMER_H
 #define HAL_TIMER_H
+
+#include "hal_common.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "hal_common.h"
 
 void hal_timer_delay(uint16_t msdelay);
 

@@ -16,16 +16,22 @@
 
 #ifndef HAL_COMMON_H
 #define HAL_COMMON_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include "../hardware/hardware.h"
 
 #ifdef __cplusplus
-	#include <cstdint>
-	#include <cstdbool>
-	#include <cstdlib>
+extern "C" {
+#endif
+
+
+
+#ifdef __cplusplus
+	//#include <cstdint>
+	//#include <cstdbool>
+	//#include <cstdlib>
+	#include <stdint.h>
+	#include <stdbool.h>
+	#include <stdlib.h>
 #else
 	#include <stdint.h>
 	#include <stdbool.h>
