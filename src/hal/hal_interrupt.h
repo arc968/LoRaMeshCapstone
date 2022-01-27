@@ -1,3 +1,17 @@
+/**
+ * \addtogroup hallayer Hardware Abstraction Layer
+ * @{
+ */
+
+/**
+ * \file hal_interrupt.h
+ * \brief This file provides interupt functionality for the library based on
+ * the selected hardware in the hardware layer.
+ * 
+ * This file allows for the use of interupts for the defined hardware in the
+ * hardware layer. It also creates the enums for user ease of use of the functions.
+ */
+
 #ifndef HAL_INTERRUPT_H
 #define HAL_INTERRUPT_H
 #ifdef __cplusplus
@@ -40,3 +54,5 @@ void hal_interrupt_detach(enum hal_interrupt_type_e trigger);
 }
 #endif
 #endif // HAL_INTERRUPT_H
+
+/** @} */ // end of hallayer

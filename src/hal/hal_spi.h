@@ -1,3 +1,15 @@
+/**
+ * \addtogroup hallayer Hardware Abstraction Layer
+ * @{
+ */
+
+/**
+ * \file hal_spi.h
+ * \brief 
+ * 
+ * 
+ */
+
 #ifndef HAL_SPI_H
 #define HAL_SPI_H
 #ifdef __cplusplus
@@ -32,3 +44,5 @@ void hal_spi_usingInterrupt(uint16_t interuptnum);
 }
 #endif
 #endif // HAL_SPI_H
+
+/** @} */ // end of hallayer

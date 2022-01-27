@@ -1,3 +1,15 @@
+/**
+ * \addtogroup hallayer Hardware Abstraction Layer
+ * @{
+ */
+
+/**
+ * \file hal_i2c.h
+ * \brief 
+ * 
+ * 
+ */
+
 #ifndef HAL_I2C_H
 #define HAL_I2C_H
 #ifdef __cplusplus
@@ -21,3 +33,5 @@ void hal_i2c_onRequest(void (*handler)(void));
 }
 #endif
 #endif // HAL_I2C_H
+
+/** @} */ // end of hallayer

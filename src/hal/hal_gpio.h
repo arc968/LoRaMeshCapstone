@@ -1,3 +1,17 @@
+/**
+ * \addtogroup hallayer Hardware Abstraction Layer
+ * @{
+ */
+
+/**
+ * \file hal_gpio.h
+ * \brief This file sets up the pins on the selected hardware in the hardware layer for input and output.
+ * 
+ * Based on the selected hardware in the hardware layer this file sets up the functionality of the gpio pins
+ * of the hard ware to configure them and read and write digital and analog signals on appropriate pins.
+ * This file aditionaly sets up enums to provide ease of use when using the functions for the user.
+ */
+
 #ifndef HAL_GPIO_H
 #define HAL_GPIO_H
 #ifdef __cplusplus
@@ -46,3 +60,5 @@ uint16_t hal_gpio_analogRead(pin_t pin);
 }
 #endif
 #endif // HAL_GPIO_H
+
+/** @} */ // end of hallayer

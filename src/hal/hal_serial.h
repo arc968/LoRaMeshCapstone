@@ -1,3 +1,17 @@
+/**
+ * \addtogroup hallayer Hardware Abstraction Layer
+ * @{
+ */
+
+/**
+ * \file hal_serial.h
+ * \brief This file provides the underlying functionality for serial communications for the library
+ * based on the selected hardware in the Hardware layer.
+ * 
+ * Based on the selected hardware defined in the hardware layer, this file sets up serial communications
+ * for the library.
+ */
+
 #ifndef HAL_SERIAL_H
 #define HAL_SERIAL_H
 #ifdef __cplusplus
@@ -23,3 +37,5 @@ void hal_serial_setTimeout(uint32_t mstime);
 }
 #endif
 #endif // HAL_SERIAL_H
+
+/** @} */ // end of hallayer

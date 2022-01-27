@@ -1,3 +1,18 @@
+/**
+ * \addtogroup hallayer Hardware Abstraction Layer
+ * @{
+ */
+
+/**
+ * \file hal_timer.h
+ * \brief This file provides the underlying timer functionalies and delays for the library
+ * based on the defined hardware in the hardware layer.
+ *
+ * Based on the selected hardware in the hardware layer this file sets up the timers for this
+ * library. Aditionally this file provides the time of opperation in milliseconds, and a delay 
+ * function for the library.
+ */
+
 #ifndef HAL_TIMER_H
 #define HAL_TIMER_H
 #ifdef __cplusplus
@@ -18,3 +33,5 @@ uint32_t hal_timer_millis(void);
 }
 #endif
 #endif // HAL_TIMER_H
+
+/** @} */ // end of hallayer
