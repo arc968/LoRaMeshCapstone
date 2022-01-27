@@ -3,6 +3,10 @@
 #elif defined(HW_GPS_H) && !defined(HW_GPS_UBLOX_NEO6_H)
 	#error "Multiple GPS hardware definitions."
 #elif !defined(HW_GPS_UBLOX_NEO6_H)
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 	#define HW_GPS_UBLOX_SCOPE
 
 	#define HW_GPS_UBLOX
@@ -10,4 +14,9 @@
 	#include "../hw_gps_ublox.h"
 
 	#undef HW_GPS_UBLOX_SCOPE
+	
+#ifdef __cplusplus
+}
+#endif
+
 #endif // HW_GPS_UBLOX_NEO6_H

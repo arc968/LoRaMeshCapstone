@@ -18,10 +18,17 @@
 #if defined(HW_H) && !defined(HW_IBUG_H)
 	#error "Multiple hardware definitions."
 #elif !defined(HW_H) && !defined(HW_IBUG_H)
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 	#define HW_H
 	#define HW_IBUG_H
 	#include "hw_ibug_registers.h"
+	
+#ifdef __cplusplus
+}
+#endif
 
 #endif // HW_H IBUG_H
 
