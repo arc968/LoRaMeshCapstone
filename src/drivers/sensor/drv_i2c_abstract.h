@@ -24,6 +24,9 @@ class drv_i2c_abstract : drv_sensor_abstract{
 	virtual void begin(void);
 	virtual void end(void);
 	
+	virtual void write(uint8_t * buf, uint16_t byteLength);
+	virtual bool read(uint8_t* buf, uint16_t buflength);
+	
 	void setAddress(uint8_t addr) {drv_address = addr;}
 	uint8_t getAddress(void) {return drv_address;}
 	

@@ -11,7 +11,7 @@ class drv_accelerometer : drv_i2c_abstract {
 		
 	public:
 		
-		
+		void setPowerMode(uint8_t mode);
 		
 };
 
