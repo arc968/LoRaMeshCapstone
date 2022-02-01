@@ -3,13 +3,17 @@
 
 static volatile lib_datetime_interval_t monotonic_ms = 0;
 
+static volatile lib_datetime_interval_t timestamp = 0;
+
+static volatile bool absoluteDateInitialized = false;
+static volatile bool absoluteTimeInitialized = false;
+static volatile bool initialized = false;
+
+struct lib_datetime_s absoluteTime = {0};
+
 void isr_incrementMonotonic(void) {
 	monotonic_ms++;
 }
-
-static bool absoluteDateInitialized = false;
-static bool absoluteTimeInitialized = false;
-static bool initialized = false;
 
 void drv_timer_init(void) {
 	if (!initialized) {
@@ -31,18 +35,21 @@ bool drv_timer_absoluteTimeIsAvailable(void) {
 }
 
 void drv_timer_setAbsoluteDateTime(struct lib_datetime_s * dt) {
-	
+	timestamp = monotonic_ms;
+	lib_datetime_copy(dt, &absoluteTime);
 	absoluteDateInitialized = true;
 	absoluteTimeInitialized = true;
 }
 
 void drv_timer_setAbsoluteDate(struct lib_datetime_s * dt) {
-	
+	timestamp = monotonic_ms;
+	lib_datetime_copyDate(dt, &absoluteTime);
 	absoluteDateInitialized = true;
 }
 
 void drv_timer_setAbsoluteTime(lib_datetime_time_t time) {
-	
+	timestamp = monotonic_ms;
+	lib_datetime_copyTime(dt, &absoluteTime);
 	absoluteTimeInitialized = true;
 }
 
