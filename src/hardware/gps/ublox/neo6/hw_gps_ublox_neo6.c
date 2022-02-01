@@ -66,12 +66,12 @@ struct ubx_msg__CFG_MSG__SetMessageRates_s {
 		union {
 			uint8_t rate[6];
 			struct {
-				uint8_t DDC:1; // 1=enable, 0=disable
-				uint8_t SerialPort1:1; // 1=enable, 0=disable
-				uint8_t SerialPort2:1; // 1=enable, 0=disable
-				uint8_t USB:1; // 1=enable, 0=disable
-				uint8_t SPI:1; // 1=enable, 0=disable
-				uint8_t reserved:1; // 1=enable, 0=disable
+				uint8_t if_DDC:1; // 1=enable, 0=disable
+				uint8_t if_SerialPort1:1; // 1=enable, 0=disable
+				uint8_t if_SerialPort2:1; // 1=enable, 0=disable
+				uint8_t if_USB:1; // 1=enable, 0=disable
+				uint8_t if_SPI:1; // 1=enable, 0=disable
+				uint8_t if_reserved:1; // 1=enable, 0=disable
 			};
 		};
 	} payload;

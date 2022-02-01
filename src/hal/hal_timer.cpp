@@ -5,7 +5,7 @@
 
 #if defined(HW_MKRWAN1300_H)
 
-SAMDTimer ITimer0(TIMER_TC3);
+SAMDTimer ITimer(TIMER_TC3);
 
 #elif defined(HW_IBUG_H)
 
