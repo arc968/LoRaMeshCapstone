@@ -22,7 +22,7 @@ void drv_i2c_abstract :: write(uint8_t * buf, uint16_t byteLength) {
 		
 		hal_i2c_beginTransmission(drv_address);
 		hal_i2c_write(buf, byteLength);
-		hal_i2c_endTransmission(true)
+		hal_i2c_endTransmission(true);
 		
 	}
 	

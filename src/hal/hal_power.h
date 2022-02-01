@@ -26,9 +26,9 @@ enum hw_power_pwrmodes_e {
 	PWR_LOW_POWER = 2,
 	PWR_ULTRA_LOW_POWER = 3,
 	
-}
+};
 
-void hal_power_mode(hw_power_pwrmodes_e pwrmode, uint16_t millis);
+void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, uint16_t millis);
 
 void hal_power_wake(void);
 

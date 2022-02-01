@@ -11,7 +11,7 @@
 
 
 
-void hal_power_mode(hw_power_pwrmodes_e pwrmode, uint16_t millis) {
+void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, uint16_t millis) {
 
 #if defined(HW_ARDUINO)
 	
