@@ -26,7 +26,12 @@
 extern "C" {
 #endif
  
+ #define TC3 * 		0x0x42002C00
  
+ #define CTRLA_H 		0x00
+ #define CTRLA_L 		0x01
+
+ #define READREQ 	0x
  
  
  
