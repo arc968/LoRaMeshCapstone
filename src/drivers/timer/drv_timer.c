@@ -49,7 +49,7 @@ void drv_timer_setAbsoluteDate(struct lib_datetime_s * dt) {
 
 void drv_timer_setAbsoluteTime(lib_datetime_time_t time) {
 	timestamp = monotonic_ms;
-	lib_datetime_copyTime(dt, &absoluteTime);
+	//lib_datetime_copyTime(dt, &absoluteTime);
 	absoluteTimeInitialized = true;
 }
 
