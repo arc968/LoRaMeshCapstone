@@ -7,7 +7,7 @@ void drv_co2_sensor :: setPowerMode(uint8_t mode) {
 		
 		
 	#else
-		#error Co2 sensor hardware not defined
+		#error CO2 sensor hardware not defined
 	#endif
 	
 }
