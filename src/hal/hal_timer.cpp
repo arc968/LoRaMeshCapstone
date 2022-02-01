@@ -8,19 +8,17 @@
 // SAMD51 Hardware Timer only TC3
 SAMDTimer ITimer(TIMER_TC3);
 
-// Init SAMD_ISR_Timer
-// Each SAMD_ISR_Timer can service 16 different ISR-based timers
-ISR_Timer SAMD_ISR_Timer;
-
-void hal_timer_handler(void) {
-  SAMD_ISR_Timer.run();
-}
-
 #elif defined(HW_IBUG_H)
 
 #else
 	#error "Hardware not yet implemented"
-#endif	
+#endif
+
+ISR_Timer hal_ISR_Timer;
+
+void isr_hal_timer_handler(void) {
+  hal_ISR_Timer.run();
+}	
 
 static bool timerIsInitialized = false;
 
@@ -28,7 +26,7 @@ void hal_timer_init(void){
 	
 	if (!timerIsInitialized) {
 		
-		ITimer.attachInterruptInterval(1000 * 1000, hal_timer_handler);
+		ITimer.attachInterruptInterval(1000 * 1000, isr_hal_timer_handler);
 		timerIsInitialized = true;
 	
 	}
@@ -61,7 +59,7 @@ uint32_t hal_timer_millis(void) {
 
 void hal_timer_setInterruptInterval(void (*isr)(void), uint32_t interval) {
 	
-	SAMD_ISR_Timer.setInterval(interval, isr);
+	hal_ISR_Timer.setInterval(interval, isr);
 	
 }
 

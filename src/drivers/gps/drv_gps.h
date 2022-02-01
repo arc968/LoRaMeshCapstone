@@ -17,8 +17,6 @@ void drv_gps_init(void);
 
 enum drv_gps_error_e drv_gps_sendCommand(const char * cmd);
 
-enum drv_gps_error_e drv_gps_getTime(lib_datetime_realtime_t * rt);
-
 #if defined (__cplusplus)
 }
 #endif
