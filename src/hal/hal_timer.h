@@ -25,17 +25,11 @@ extern "C" {
 
 void hal_timer_init(void);
 
-void hal_timer_handler(void);
-
 void hal_timer_delay(uint16_t msdelay);
 
 uint32_t hal_timer_millis(void);
 
 void hal_timer_setInterruptInterval(void (*isr)(void), uint32_t interval);
-
-//void hal_timer_reset(struct hal_timer_handle_s handle);
-
-//uint32_t hal_timer_getTime(hal_timer_handle_t handle);
 
 #ifdef __cplusplus
 }

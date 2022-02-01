@@ -1,4 +1,3 @@
-#include "TimerInterrupt_Generic.h"
 #include "LoRaMeshCapstone.h"
 
 void setup() {

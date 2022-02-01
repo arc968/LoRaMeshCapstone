@@ -17,17 +17,21 @@ void drv_timer_init(void);
 
 lib_datetime_interval_t drv_timer_getMonotonicTime(void); //cannot fail, ms since drv_timer was initialized
 
-enum drv_timer_err_e drv_timer_getAbsoluteDateTime(struct lib_datetime_s * dt);
+bool drv_timer_absoluteDateIsAvailable(void);
+
+bool drv_timer_absoluteTimeIsAvailable(void);
 
 void drv_timer_setAbsoluteDateTime(struct lib_datetime_s * dt);
 
 void drv_timer_setAbsoluteDate(struct lib_datetime_s * dt);
 
-bool drv_timer_absoluteIsAvailable(void);
+void drv_timer_setAbsoluteTime(lib_datetime_time_t time);
+
+enum drv_timer_err_e drv_timer_getAbsoluteDateTime(struct lib_datetime_s * dt);
+
+enum drv_timer_err_e drv_timer_getAbsoluteDate(struct lib_datetime_s * dt);
 
 enum drv_timer_err_e drv_timer_getAbsoluteTime(lib_datetime_time_t * time);
-
-void drv_timer_setAbsoluteTime(lib_datetime_time_t time);
 
 #if defined (__cplusplus)
 }

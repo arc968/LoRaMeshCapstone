@@ -50,6 +50,12 @@ struct lib_datetime_s {
 };
 #endif
 
+void lib_datetime_copy(struct lib_datetime_s * src, struct lib_datetime_s * dst);
+
+void lib_datetime_copyDate(struct lib_datetime_s * src, struct lib_datetime_s * dst);
+
+void lib_datetime_copyTime(struct lib_datetime_s * src, struct lib_datetime_s * dst);
+
 enum lib_datetime_err_e lib_datetime_validateTime(lib_datetime_time_t time);
 
 int lib_datetime_cmp(struct lib_datetime_s * a, struct lib_datetime_s * b);
