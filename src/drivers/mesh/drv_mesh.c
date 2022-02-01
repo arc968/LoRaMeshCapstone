@@ -92,7 +92,7 @@ static struct state_s {
 } state;
 
 //TODO: only works in US, no error handling
-static uint64_t getCenterFrequency(channel_t channel, enum drv_mesh_bandwidth_e bandwidth) {
+static uint64_t getCenterFrequency(channel_t channel, enum drv_lora_bandwidth_e bandwidth) {
 	if (bandwidth == DRV_LORA_BW__500kHz) {
 		return LORA_US_FREQ_MIN + LORA_US_PADDING_500kHz + (channel * FREQ_500kHz) + (channel * LORA_US_PADDING_500kHz) + (FREQ_500kHz / 2);
 	}
@@ -124,7 +124,7 @@ struct appointment_s {
  *  Peer receive channel(s) - determined by time and UID. A node tells each of it's peers when it can be reached. It does not need to tell all of them the same time.
  */
 
-static struct channel_settings_s getChannelConfiguration(struct lib_datetime_s dt, uid_t uid) {
+static void getChannelConfiguration(struct channel_settings_s * settings, struct lib_datetime_s dt, uid_t uid) {
 	
 	lib_datetime_realtime_t realtime = 0;
 	dt.sec = 0;
