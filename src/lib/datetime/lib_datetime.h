@@ -56,6 +56,10 @@ void lib_datetime_copyDate(struct lib_datetime_s * src, struct lib_datetime_s * 
 
 void lib_datetime_copyTime(struct lib_datetime_s * src, struct lib_datetime_s * dst);
 
+void lib_datetime_clearDate(struct lib_datetime_s * dt);
+
+void lib_datetime_clearTime(struct lib_datetime_s * dt);
+
 enum lib_datetime_err_e lib_datetime_validateTime(lib_datetime_time_t time);
 
 int lib_datetime_cmp(struct lib_datetime_s * a, struct lib_datetime_s * b);
@@ -74,6 +78,9 @@ enum lib_datetime_err_e lib_datetime_convertDatetimeToRealtime(struct lib_dateti
 
 //adds an interval to a time, wrapping around as necessary
 lib_datetime_time_t lib_datetime_addIntervalToTime(lib_datetime_time_t time, lib_datetime_interval_t interval);
+
+//adds an interval to a datetime
+void lib_datetime_addIntervalToDateTime(struct lib_datetime_s * dt, lib_datetime_interval_t interval);
 
 #if defined (__cplusplus)
 }

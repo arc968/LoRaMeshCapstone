@@ -22,3 +22,16 @@ void lib_datetime_copyTime(struct lib_datetime_s * src, struct lib_datetime_s * 
 	dst->sec = src->sec;
 	dst->ms = src->ms;
 }
+
+void lib_datetime_clearDate(struct lib_datetime_s * dt) {
+	dt->year = 0;
+	dt->month = 0;
+	dt->day = 0;
+}
+
+void lib_datetime_clearTime(struct lib_datetime_s * dt) {
+	dt->hour = 0;
+	dt->min = 0;
+	dt->sec = 0;
+	dt->ms = 0;
+}
