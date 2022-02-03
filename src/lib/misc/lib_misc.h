@@ -13,7 +13,7 @@ extern "C" {
 * possible outputs as uniformly as possible.
 */
 // Adapted from: https://github.com/lemire/fastrange
-inline uint16_t lib_misc_fastrange16(uint16_t w, uint16_t p) {
+static inline uint16_t lib_misc_fastrange16(uint16_t w, uint16_t p) {
   return (uint16_t)(((uint32_t)w * (uint32_t)p) >> 16);
 }
 
@@ -24,25 +24,25 @@ inline uint16_t lib_misc_fastrange16(uint16_t w, uint16_t p) {
 * possible outputs as uniformly as possible.
 */
 // Adapted from: https://github.com/lemire/fastrange
-inline uint32_t lib_misc_fastrange32(uint32_t word, uint32_t p) {
+static inline uint32_t lib_misc_fastrange32(uint32_t word, uint32_t p) {
 	return (uint32_t)(((uint64_t)word * (uint64_t)p) >> 32);
 }
 
-inline uint16_t lib_misc_XORshiftLFSR16(uint16_t seed) {
+static inline uint16_t lib_misc_XORshiftLFSR16(uint16_t seed) {
 	seed ^= seed << 7;
 	seed ^= seed >> 9;
 	seed ^= seed << 8;
 	return seed;
 }
 
-inline uint32_t lib_misc_XORshiftLFSR32(uint32_t seed) {
+static inline uint32_t lib_misc_XORshiftLFSR32(uint32_t seed) {
 	seed ^= seed << 13;
 	seed ^= seed >> 17;
 	seed ^= seed << 5;
 	return seed;
 }
 
-inline uint64_t lib_misc_XORshiftLFSR64(uint64_t seed) {
+static inline uint64_t lib_misc_XORshiftLFSR64(uint64_t seed) {
 	seed ^= seed << 12;
 	seed ^= seed >> 25;
 	seed ^= seed << 27;
@@ -50,7 +50,7 @@ inline uint64_t lib_misc_XORshiftLFSR64(uint64_t seed) {
 }
 
 //THESE CONSTANTS ARE NOT VALIDATED
-uint16_t lib_misc_mix16(uint16_t val) {
+static inline uint16_t lib_misc_mix16(uint16_t val) {
 	if (val == 0) val = 0xFFFF;
 	val ^= val >> 7;
 	val *= 0x37f4;
@@ -60,7 +60,7 @@ uint16_t lib_misc_mix16(uint16_t val) {
 	return val;
 }
 
-uint32_t lib_misc_mix32(uint32_t val) {
+static inline uint32_t lib_misc_mix32(uint32_t val) {
 	if (val == 0) val = 0xFFFFFFFF;
 	val ^= val >> 16;
 	val *= 0x85ebca6b;
@@ -70,7 +70,7 @@ uint32_t lib_misc_mix32(uint32_t val) {
 	return val;
 }
 
-uint64_t lib_misc_mix64(uint64_t val) {
+static inline uint64_t lib_misc_mix64(uint64_t val) {
 	if (val == 0) val = 0xFFFFFFFFFFFFFFFF;
 	val ^= val >> 30;
 	val *= 0xbf58476d1ce4e5b9;
