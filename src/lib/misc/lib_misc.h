@@ -1,5 +1,8 @@
 #ifndef LIB_MISC_H
 #define LIB_MISC_H
+#if defined (__cplusplus)
+extern "C" {
+#endif
 
 #include <stdint.h>
 
@@ -77,6 +80,9 @@ uint64_t lib_misc_mix64(uint64_t val) {
 	return val;
 }
 
-void shuffleArrU8(uint8_t * arr, uint16_t len, uint32_t seed);
+void shuffleArrU8(uint8_t * arr, uint16_t len, uint16_t seed);
 
+#if defined (__cplusplus)
+}
+#endif
 #endif // LIB_MISC_H
