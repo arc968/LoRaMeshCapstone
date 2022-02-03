@@ -86,6 +86,16 @@ void hal_serial_setTimeout(uint32_t mstime) {
 	#endif
 }
 
+uint16_t hal_serial_available(void) {
+	#if defined(HW_ARDUINO)
+		Serial.available();
+	#elif defined(HW_IBUG_H)
+	
+	#else
+		#error "Hardware not yet implemented"
+	#endif
+}
+
 
 
 #ifdef __cplusplus

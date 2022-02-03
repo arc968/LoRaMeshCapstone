@@ -33,6 +33,7 @@ void hal_serial_write(uint8_t *buff, uint16_t length);
 size_t hal_serial_readBytes(uint8_t *buf, uint16_t length);
 void hal_serial_flush(void);
 void hal_serial_setTimeout(uint32_t mstime);
+uint16_t hal_serial_available(void);
 
 #ifdef __cplusplus
 }
