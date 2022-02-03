@@ -16,9 +16,9 @@ const void * hal_serial1 = &Serial1;
 //const void * hal_serial3 = &Serial3;
 #endif
 
-bool hal_serial_ready(void) {
+bool hal_serial_ready(void *handle) {
 	#if defined(HW_ARDUINO)
-		return (Serial);
+		return true;//((HardwareSerial) handle);
 	#elif defined(HW_IBUG_H)
 		return 0; //TODO
 	#else
@@ -26,9 +26,9 @@ bool hal_serial_ready(void) {
 	#endif
 }
 
-void hal_serial_begin(uint16_t baud) {
+void hal_serial_begin(void *handle, uint16_t baud) {
 	#if defined(HW_ARDUINO)
-		Serial.begin(baud);
+		static_cast<HardwareSerial*>(handle)->begin(baud);
 	#elif defined(HW_IBUG_H)
 	
 	#else
@@ -36,9 +36,9 @@ void hal_serial_begin(uint16_t baud) {
 	#endif
 }
 
-void hal_serial_end(void) {
+void hal_serial_end(void *handle) {
 	#if defined(HW_ARDUINO)
-		Serial.end();
+		static_cast<HardwareSerial*>(handle)->end();
 	#elif defined(HW_IBUG_H)
 	
 	#else
@@ -46,9 +46,9 @@ void hal_serial_end(void) {
 	#endif
 }
 
-void hal_serial_write(uint8_t *buff, uint16_t length) {
+void hal_serial_write(void *handle,uint8_t *buf, uint16_t length) {
 	#if defined(HW_ARDUINO)
-		Serial.write(buff, length);
+		static_cast<HardwareSerial*>(handle)->write(buf, length);
 	#elif defined(HW_IBUG_H)
 	
 	#else
@@ -56,9 +56,9 @@ void hal_serial_write(uint8_t *buff, uint16_t length) {
 	#endif
 }
 
-size_t hal_serial_readBytes(uint8_t *buf, uint16_t length) {
+size_t hal_serial_readBytes(void *handle, uint8_t *buf, uint16_t length) {
 	#if defined(HW_ARDUINO)
-		return Serial.readBytes((char*)buf, length);
+		return static_cast<HardwareSerial*>(handle)->readBytes((char*)buf, length);
 	#elif defined(HW_IBUG_H)
 		return 0; //TODO
 	#else
@@ -66,9 +66,9 @@ size_t hal_serial_readBytes(uint8_t *buf, uint16_t length) {
 	#endif
 }
 
-void hal_serial_flush(void) {
+void hal_serial_flush(void *handle) {
 	#if defined(HW_ARDUINO)
-		Serial.flush();
+		static_cast<HardwareSerial*>(handle)->flush();
 	#elif defined(HW_IBUG_H)
 	
 	#else
@@ -76,9 +76,9 @@ void hal_serial_flush(void) {
 	#endif
 }
 
-void hal_serial_setTimeout(uint32_t mstime) {
+void hal_serial_setTimeout(void *handle, uint32_t mstime) {
 	#if defined(HW_ARDUINO)
-		Serial.setTimeout(mstime);
+		static_cast<HardwareSerial*>(handle)->setTimeout(mstime);
 	#elif defined(HW_IBUG_H)
 	
 	#else
@@ -86,9 +86,9 @@ void hal_serial_setTimeout(uint32_t mstime) {
 	#endif
 }
 
-uint16_t hal_serial_available(void) {
+uint16_t hal_serial_available(void *handle) {
 	#if defined(HW_ARDUINO)
-		Serial.available();
+		static_cast<HardwareSerial*>(handle)->available();
 	#elif defined(HW_IBUG_H)
 	
 	#else
