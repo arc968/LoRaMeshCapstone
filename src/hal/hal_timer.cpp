@@ -4,11 +4,9 @@
 #include "ISR_Timer_Generic.h"
 
 #if defined(HW_MKRWAN1300_H)
-
-SAMDTimer ITimer(TIMER_TC3);
-
+	SAMDTimer ITimer(TIMER_TC3);
 #elif defined(HW_IBUG_H)
-
+	NRF52Timer ITimer(NRF_TIMER_1);
 #else
 	#error "Hardware not yet implemented"
 #endif	
