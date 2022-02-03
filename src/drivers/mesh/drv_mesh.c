@@ -115,7 +115,7 @@ struct appointment_s {
  *  Peer-specific discovery channel - determined by discovery broadcast, DISC contains list of settings that peer will listen on
  *  Peer receive channel(s) - determined by time and UID. A node tells each of it's peers when it can be reached. It does not need to tell all of them the same time.
  */
-
+/*
 static void getChannelConfiguration(struct channel_settings_s * settings, struct lib_datetime_s dt, uid_t uid) {
 	
 	lib_datetime_realtime_t realtime = 0;
@@ -129,7 +129,7 @@ static void getChannelConfiguration(struct channel_settings_s * settings, struct
 	
 	return 0;
 }
-
+*/
 void drv_mesh_worker_send(void) {
 	
 }

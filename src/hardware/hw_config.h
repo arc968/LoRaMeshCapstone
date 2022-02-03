@@ -27,11 +27,11 @@ extern "C" {
 #define MKRWAN1300
 //#define IBUG
 
-//#define GPS_NONE
-#define GPS_UBLOX_NEO6
+#define GPS_NONE
+//#define GPS_UBLOX_NEO6
 
-//#define LORA_NONE
-#define LORA_SEMTECH_SX1276
+#define LORA_NONE
+//#define LORA_SEMTECH_SX1276
 
 #ifdef __cplusplus
 }

@@ -80,7 +80,7 @@ enum lib_datetime_err_e lib_datetime_convertDatetimeToRealtime(struct lib_dateti
 lib_datetime_time_t lib_datetime_addIntervalToTime(lib_datetime_time_t time, lib_datetime_interval_t interval);
 
 //adds an interval to a datetime
-void lib_datetime_addIntervalToDateTime(struct lib_datetime_s * dt, lib_datetime_interval_t interval);
+void lib_datetime_addIntervalToDatetime(struct lib_datetime_s * dt, lib_datetime_interval_t interval);
 
 #if defined (__cplusplus)
 }

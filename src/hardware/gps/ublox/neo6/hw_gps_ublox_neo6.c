@@ -92,7 +92,7 @@ struct ubx_msg__CFG_MSG__SetMessageRates_s {
 static void ubx_checksum(struct ubx_msg_header_s * header, struct ubx_msg_footer_s * footer) {
 	footer->ck_a = 0;
 	footer->ck_b = 0;
-	for (size_t i=0; i<(((void *)footer)-((void *)header)); i++) {
+	for (size_t i=0; i<(size_t)(((void *)footer)-((void *)header)); i++) { //TODO fix this, signed/unsigned integer comparison warning
 		footer->ck_a += ((uint8_t *)header)[i];
 		footer->ck_b += footer->ck_a;
 	}

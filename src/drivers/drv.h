@@ -8,7 +8,6 @@ extern "C" {
 #endif
 
 
-
 //LoRa Drivers
 #if defined(GPS_NONE)
 	#warning "'gps/drv_gps.h' not included because GPS_NONE is defined."
@@ -25,8 +24,10 @@ extern "C" {
 #else
 	#include "mesh/drv_mesh.h"
 #endif
+
 #include "timer/drv_timer.h"
 #include "sched/drv_sched.h"
+
 
 //Sensor Drivers
 #include "sd/drv_sd.h"
@@ -34,6 +35,7 @@ extern "C" {
 #include "sensor/accelerometer/drv_accelerometer.h"
 #include "sensor/gas_sensor/drv_gas_sensor.h"
 #include "sensor/co2_sensor/drv_co2_sensor.h"
+
 
 #ifdef __cplusplus
 }
