@@ -18,7 +18,7 @@ const void * hal_serial1 = &Serial1;
 
 bool hal_serial_ready(void *handle) {
 	#if defined(HW_ARDUINO)
-		return true;//((HardwareSerial) handle);
+		return static_cast<HardwareSerial*>(handle);
 	#elif defined(HW_IBUG_H)
 		return 0; //TODO
 	#else
