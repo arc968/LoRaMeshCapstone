@@ -26,7 +26,7 @@ void hal_timer_init(void (*isr)(void), uint32_t interval_us) {
 	if (!timerIsInitialized) {
 		timerIsInitialized = true;
 		//ITimer.attachInterruptInterval(1000, hal_timer_handler);
-		ITimer.attachInterruptInterval(interval, isr);
+		ITimer.attachInterruptInterval(interval_us, isr);
 	}
 	
 }
