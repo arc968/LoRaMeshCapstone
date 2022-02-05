@@ -17,8 +17,8 @@ void isr_incrementMonotonic(void) {
 
 void drv_timer_init(void) {
 	if (!initialized) {
-		hal_timer_init();
-		hal_timer_setInterruptInterval(isr_incrementMonotonic, 1000); //once every ms
+		hal_timer_init(isr_incrementMonotonic, 1000);
+		//hal_timer_setInterruptInterval(isr_incrementMonotonic, 1000); //once every ms
 	}
 }
 

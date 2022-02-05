@@ -22,6 +22,7 @@ struct job_s {
 
 struct state_s {
 	struct job_s * head_ready;
+	struct job_s * head_timed;
 	struct job_s * head_empty;
 	void (*func_onSleep_ptr)(void);
 	void (*func_onWake_ptr)(void);
@@ -34,9 +35,11 @@ static void stubFunc(void) {
 }
 
 void drv_sched_init(void (*func_onSleep_ptr)(void), void (*func_onWake_ptr)(void)) {
+	drv_timer_init();
 	state.func_onSleep_ptr = (func_onSleep_ptr != NULL) ? func_onSleep_ptr : stubFunc;
 	state.func_onWake_ptr = (func_onWake_ptr != NULL) ? func_onWake_ptr : stubFunc;
 	state.head_ready = NULL;
+	state.head_timed = NULL;
 	state.head_empty = &(state.jobs[0]);
 	state.lastRunTime = 0;
 	for (int i=0; i<DRV_SCHED__MAX_JOBS; i++) {
@@ -62,22 +65,40 @@ static enum drv_sched_err_e schedule(void (*func_ptr)(void), enum job_type_e typ
 	
 	job->next = NULL;
 	job->interval = interval_ms;
-	job->time = currentTime + delay_or_timeOfDay; //more logic needed
 	job->func_ptr = func_ptr;
 	job->priority = priority;
 	job->type = type;
 	
-	if (state.head_ready == NULL) {
-		state.head_ready = job;
-		state.lastRunTime = currentTime;
+	if (type == JOB_TYPE__ONCE || type == JOB_TYPE__REPEAT) {
+		
+		job->time = currentTime + delay_or_timeOfDay;
+		
+		if (state.head_ready == NULL) {
+			state.head_ready = job;
+			//state.lastRunTime = currentTime;
+		} else {
+			//while (insertJobPtr->time >= state.lastRunTime) insertJobPtr = insertJobPtr->next; //what was I trying to do here?????
+			if (state.head_ready->time >= job->time) {
+				job->next = state.head_ready;
+				state.head_ready = job;
+			} else {
+				struct job_s * insertJobPtr = state.head_ready;
+				while (insertJobPtr->next != NULL && insertJobPtr->next->time < job->time) insertJobPtr = insertJobPtr->next;
+				job->next = insertJobPtr->next;
+				insertJobPtr->next = job;
+			}
+		}
+		
+	} else if (type == JOB_TYPE__ONCE_AT || type == JOB_TYPE__REPEAT_AT) {
+		job->time = currentTime + delay_or_timeOfDay;
+		
+		//TODO
+		
 	} else {
-		struct job_s * insertJobPtr = state.head_ready;
-		//while (insertJobPtr->time >= state.lastRunTime) insertJobPtr = insertJobPtr->next;
-		while (insertJobPtr->next != NULL && insertJobPtr->next->time < job->time) insertJobPtr = insertJobPtr->next;
-		job->next = insertJobPtr->next;
-		insertJobPtr->next = job;
+		//shouldn't be possible
 	}
-	return 0;
+	
+	return DRV_SCHED_ERR__NONE;
 }
 
 //schedule once after specified delay
@@ -107,26 +128,44 @@ enum drv_sched_err_e drv_sched_repeating_at(void (*func_ptr)(void), enum drv_sch
 /*
 Will attempt to sleep for as long as possible, only waking for scheduled jobs
 */
-/*
 #ifdef __GNUC__
 __attribute__((noreturn))
 #endif
-*/
 void drv_sched_start(void) {
 	while (1) {
-		struct job_s * job = state.head_ready; //check if NULL
-		state.head_ready = job->next;
-		job->next = NULL;
+		//if (drv_timer_getMonotonicTime() > 2000) digitalWrite(LED_BUILTIN, HIGH);
 		
-		(*(job->func_ptr))();
+		struct job_s * job = state.head_ready;
+		if (job != NULL && job->time <= drv_timer_getMonotonicTime()) {
+			state.head_ready = job->next;
+			job->next = NULL;
+			
+			(*(job->func_ptr))();
+			
+			if (job->type == JOB_TYPE__ONCE) {
+				struct job_s * insertJobPtr = state.head_empty;
+				while (insertJobPtr->next != NULL) insertJobPtr = insertJobPtr->next;
+				insertJobPtr->next = job;
+			} else if (job->type == JOB_TYPE__REPEAT) {
+				//schedule(job->func_ptr, job->type, job->priority, job->time, job->interval);
+				job->time += job->interval;
+				if (state.head_ready == NULL) {
+					state.head_ready = job;
+					//state.lastRunTime = currentTime;
+				} else {
+					//while (insertJobPtr->time >= state.lastRunTime) insertJobPtr = insertJobPtr->next; //what was I trying to do here?????
+					if (state.head_ready->time >= job->time) {
+						job->next = state.head_ready;
+						state.head_ready = job;
+					} else {
+						struct job_s * insertJobPtr = state.head_ready;
+						while (insertJobPtr->next != NULL && insertJobPtr->next->time < job->time) insertJobPtr = insertJobPtr->next;
+						job->next = insertJobPtr->next;
+						insertJobPtr->next = job;
+					}
+				}
+			}
+		}
 		
-		struct job_s * insertJobPtr = state.head_empty;
-		while (insertJobPtr->next != NULL) insertJobPtr = insertJobPtr->next;
-		insertJobPtr->next = job;
-		
-		delay(job->interval);
-		
-		schedule(job->func_ptr, job->type, job->priority, job->time, job->interval);
-		//sleep
 	}
 }
