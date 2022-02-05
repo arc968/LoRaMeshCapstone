@@ -55,7 +55,6 @@ void drv_timer_setAbsoluteTime(lib_datetime_time_t time) {
 	absoluteTimeInitialized = true;
 }
 
-//TODO add error checking
 enum drv_timer_err_e drv_timer_getAbsoluteDateTime(struct lib_datetime_s * dt) {
 	lib_datetime_interval_t offset = monotonic_ms - timestamp;
 	if (!absoluteTimeInitialized) return DRV_TIMER_ERR__ABSOLUTE_TIME_TMP_UNAVAILABLE;
@@ -65,7 +64,6 @@ enum drv_timer_err_e drv_timer_getAbsoluteDateTime(struct lib_datetime_s * dt) {
 	return DRV_TIMER_ERR__NONE;
 }
 
-//TODO add error checking
 enum drv_timer_err_e drv_timer_getAbsoluteDate(struct lib_datetime_s * dt) {
 	lib_datetime_interval_t offset = monotonic_ms - timestamp;
 	if (!absoluteDateInitialized) return DRV_TIMER_ERR__ABSOLUTE_DATE_TMP_UNAVAILABLE;
@@ -75,7 +73,6 @@ enum drv_timer_err_e drv_timer_getAbsoluteDate(struct lib_datetime_s * dt) {
 	return DRV_TIMER_ERR__NONE;
 }
 
-//TODO add error checking
 enum drv_timer_err_e drv_timer_getAbsoluteTime(lib_datetime_time_t * time) {
 	lib_datetime_interval_t offset = monotonic_ms - timestamp;
 	if (!absoluteTimeInitialized) return DRV_TIMER_ERR__ABSOLUTE_TIME_TMP_UNAVAILABLE;

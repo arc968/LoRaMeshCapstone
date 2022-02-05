@@ -36,6 +36,17 @@ enum lib_datetime_err_e lib_datetime_validateTime(lib_datetime_time_t time) {
 	return LIB_DATETIME_ERR__NONE;
 }
 
+//TODO: validate days in different months
+enum lib_datetime_err_e lib_datetime_validateDatetime(struct lib_datetime_s * dt) {
+	if (dt->month < 1 || dt->month > 12) return LIB_DATETIME_ERR__DATETIME_OUT_OF_RANGE;
+	if (dt->day < 1 || dt->day > 31) return LIB_DATETIME_ERR__DATETIME_OUT_OF_RANGE;
+	if (dt->hour > 23) return LIB_DATETIME_ERR__DATETIME_OUT_OF_RANGE;
+	if (dt->min > 59) return LIB_DATETIME_ERR__DATETIME_OUT_OF_RANGE;
+	if (dt->sec > 59) return LIB_DATETIME_ERR__DATETIME_OUT_OF_RANGE;
+	if (dt->ms > 999) return LIB_DATETIME_ERR__DATETIME_OUT_OF_RANGE;
+	return LIB_DATETIME_ERR__NONE;
+}
+
 int lib_datetime_cmp(struct lib_datetime_s * a, struct lib_datetime_s * b) {
 	if (a->year > b->year) return 1;
 	if (a->year < b->year) return -1;
@@ -59,9 +70,7 @@ void lib_datetime_convertTimeToDatetime(lib_datetime_time_t time, struct lib_dat
 }
 
 void lib_datetime_convertDatetimeToTime(struct lib_datetime_s * dt, lib_datetime_time_t * time) {
-	struct lib_datetime_s tmp = *dt;
-	lib_datetime_clearDate(&tmp);
-	lib_datetime_convertDatetimeToRealtime(&tmp, (lib_datetime_realtime_t *)time);
+	*time = (3600000*dt->hour) + (60000*dt->min) + (1000*dt->sec) + dt->ms;
 }
 
 //adapted from https://www.oryx-embedded.com/doc/date__time_8c_source.html

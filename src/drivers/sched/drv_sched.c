@@ -84,7 +84,19 @@ static void insertNormalJob(struct job_s * job) {
 }
 
 static void insertTimedJob(struct job_s * job) {
-	
+	if (state.head_timed == NULL) {
+		state.head_timed = job;
+	} else {
+		if (state.head_timed->time >= job->time) {
+			job->next = state.head_timed;
+			state.head_timed = job;
+		} else {
+			struct job_s * insertJobPtr = state.head_timed;
+			while (insertJobPtr->next != NULL && insertJobPtr->next->time < job->time) insertJobPtr = insertJobPtr->next;
+			job->next = insertJobPtr->next;
+			insertJobPtr->next = job;
+		}
+	}
 }
 
 //TODO: not yet done
@@ -103,8 +115,8 @@ static enum drv_sched_err_e schedule(void (*func_ptr)(void), enum job_type_e typ
 		job->time = currentTime + delay_or_timeOfDay;
 		insertNormalJob(job);
 	} else if (type == JOB_TYPE__ONCE_AT || type == JOB_TYPE__REPEAT_AT) {
-		job->time = 0; //lib_datetime_addIntervalToTime(currentTime delay_or_timeOfDay; //TODO
-		//TODO
+		job->time = delay_or_timeOfDay; //lib_datetime_addIntervalToTime(currentTime delay_or_timeOfDay; //TODO
+		insertTimedJob(job);
 	} else {
 		//shouldn't be possible
 	}
@@ -149,24 +161,49 @@ __attribute__((noreturn))
 #endif
 void drv_sched_start(void) {
 	while (1) {
-		struct job_s * job = state.head_ready;
-		if (job != NULL && job->time <= drv_timer_getMonotonicTime()) {
-			if (powerState == STATE_SLEEP) (*(state.func_onWake_ptr))(), powerState = STATE_AWAKE;;
-			
-			state.head_ready = job->next;
-			job->next = NULL;
-			
-			(*(job->func_ptr))(); //run job
-			
-			if (job->type == JOB_TYPE__ONCE) {
-				insertEmptyJob(job);
-			} else if (job->type == JOB_TYPE__REPEAT) {
-				job->time += job->interval;
-				insertNormalJob(job);
+		{
+			lib_datetime_interval_t curTime = drv_timer_getMonotonicTime();
+			struct job_s * job = state.head_ready;
+			if (job != NULL && job->time <= curTime) {
+				state.head_ready = job->next;
+				job->next = NULL;
+				
+				(*(job->func_ptr))(); //run job
+				
+				if (job->type == JOB_TYPE__ONCE) {
+					insertEmptyJob(job);
+				} else if (job->type == JOB_TYPE__REPEAT) {
+					job->time += job->interval;
+					insertNormalJob(job);
+				}
 			}
-		} else if (powerState == STATE_AWAKE) { //TODO: add logic for sleeping if nothing scheduled in certain amount of time
+		}
+		
+		{
+			lib_datetime_time_t curTime;
+			if (drv_timer_getAbsoluteTime(&curTime) == DRV_TIMER_ERR__NONE) {
+				struct job_s * job = state.head_timed;
+				if (job != NULL && job->time <= curTime) {
+					state.head_timed = job->next;
+					job->next = NULL;
+					
+					(*(job->func_ptr))(); //run job
+					
+					if (job->type == JOB_TYPE__ONCE_AT) {
+						insertEmptyJob(job);
+					} else if (job->type == JOB_TYPE__REPEAT_AT) {
+						//job->time = lib_datetime_addIntervalToTime(job->time, job->interval);
+						insertTimedJob(job);
+					}
+				}
+			}
+		}
+		/*
+		//if (powerState == STATE_SLEEP) (*(state.func_onWake_ptr))(), powerState = STATE_AWAKE;
+		 else if (powerState == STATE_AWAKE) { //TODO: add logic for sleeping if nothing scheduled in certain amount of time
 			(*(state.func_onSleep_ptr))();
 			powerState = STATE_SLEEP;
 		}
+		*/
 	}
 }
