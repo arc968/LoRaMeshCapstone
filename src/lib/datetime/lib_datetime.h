@@ -9,7 +9,6 @@ extern "C" {
 enum lib_datetime_err_e {
 	LIB_DATETIME_ERR__NONE = 0, //no error, operation was successful
 	LIB_DATETIME_ERR__TIME_OUT_OF_RANGE,
-	//LIB_DATETIME_ERR__INTERVAL_OUT_OF_RANGE,
 	LIB_DATETIME_ERR__DATETIME_OUT_OF_RANGE,
 };
 
@@ -64,17 +63,13 @@ enum lib_datetime_err_e lib_datetime_validateTime(lib_datetime_time_t time);
 
 int lib_datetime_cmp(struct lib_datetime_s * a, struct lib_datetime_s * b);
 
-//returns -1 if conversion failed
-enum lib_datetime_err_e lib_datetime_convertTimeToDatetime(lib_datetime_time_t time, struct lib_datetime_s * dt);
+void lib_datetime_convertTimeToDatetime(lib_datetime_time_t time, struct lib_datetime_s * dt);
 
-//returns -1 if conversion failed
-enum lib_datetime_err_e lib_datetime_convertDatetimeToTime(struct lib_datetime_s * dt, lib_datetime_time_t * time);
+void lib_datetime_convertDatetimeToTime(struct lib_datetime_s * dt, lib_datetime_time_t * time);
 
-//returns -1 if conversion failed
-enum lib_datetime_err_e lib_datetime_convertRealtimeToDatetime(lib_datetime_realtime_t realtime, struct lib_datetime_s * dt);
+void lib_datetime_convertRealtimeToDatetime(lib_datetime_realtime_t realtime, struct lib_datetime_s * dt);
 
-//returns -1 if conversion failed
-enum lib_datetime_err_e lib_datetime_convertDatetimeToRealtime(struct lib_datetime_s * dt, lib_datetime_realtime_t * realtime);
+void lib_datetime_convertDatetimeToRealtime(struct lib_datetime_s * dt, lib_datetime_realtime_t * realtime);
 
 //adds an interval to a time, wrapping around as necessary
 lib_datetime_time_t lib_datetime_addIntervalToTime(lib_datetime_time_t time, lib_datetime_interval_t interval);
