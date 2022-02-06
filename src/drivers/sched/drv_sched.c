@@ -171,7 +171,7 @@ Will attempt to sleep for as long as possible, only waking for scheduled jobs
 #ifdef __GNUC__
 __attribute__((noreturn))
 #endif
-void drv_sched_start(void) {
+void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle edge cases well, such as GPS time going back slightly. Also priority does nothing.
 	while (1) {
 		{
 			lib_datetime_interval_t curTime = drv_timer_getMonotonicTime();

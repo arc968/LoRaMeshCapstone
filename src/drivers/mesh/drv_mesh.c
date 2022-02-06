@@ -145,11 +145,11 @@ void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *)) {
 	
 	//configure GPS for timekeeping mode as appropriate
 	
-	//enable PPS interrupt handler (schedules mesh handler a few seconds before next run time
-	
 	//initialize LoRa radio
 	
 	//configure LoRa radio
+	
+	//schedule mesh handler a few seconds before next run time
 }
 
 enum drv_mesh_error_e drv_mesh_send(ip_t ip, uint16_t len, uint8_t * buf) {
