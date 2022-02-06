@@ -33,6 +33,8 @@ enum drv_timer_err_e drv_timer_getAbsoluteDate(struct lib_datetime_s * dt);
 
 enum drv_timer_err_e drv_timer_getAbsoluteTime(lib_datetime_time_t * time);
 
+enum drv_timer_err_e drv_timer_getRealtime(lib_datetime_realtime_t * realtime);
+
 #if defined (__cplusplus)
 }
 #endif

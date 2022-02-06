@@ -80,3 +80,11 @@ enum drv_timer_err_e drv_timer_getAbsoluteTime(lib_datetime_time_t * time) {
 	*time = lib_datetime_addIntervalToTime(*time, offset);
 	return DRV_TIMER_ERR__NONE;
 }
+
+enum drv_timer_err_e drv_timer_getRealtime(lib_datetime_realtime_t * realtime) {
+	struct lib_datetime_s dt;
+	enum drv_timer_err_e err = drv_timer_getAbsoluteDateTime(&dt);
+	if (err != DRV_TIMER_ERR__NONE) return err;
+	lib_datetime_convertDatetimeToRealtime(&dt, realtime);
+	return DRV_TIMER_ERR__NONE;
+}

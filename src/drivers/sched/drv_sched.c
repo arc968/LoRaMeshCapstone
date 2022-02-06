@@ -23,10 +23,11 @@ struct job_s {
 struct state_s {
 	struct job_s * head_ready;
 	struct job_s * head_timed;
+	struct job_s * head_later;
 	struct job_s * head_empty;
 	void (*func_onSleep_ptr)(void);
 	void (*func_onWake_ptr)(void);
-	lib_datetime_interval_t lastRunTime;
+	lib_datetime_time_t lastRunTime;
 	struct job_s jobs[DRV_SCHED__MAX_JOBS];
 } state;
 
@@ -67,6 +68,11 @@ static void insertEmptyJob(struct job_s * job) {
 	state.head_empty = job;
 }
 
+static void insertLaterJob(struct job_s * job) {
+	job->next = state.head_later;
+	state.head_later = job;
+}
+
 static void insertNormalJob(struct job_s * job) {
 	if (state.head_ready == NULL) {
 		state.head_ready = job;
@@ -102,6 +108,7 @@ static void insertTimedJob(struct job_s * job) {
 //TODO: not yet done
 static enum drv_sched_err_e schedule(void (*func_ptr)(void), enum job_type_e type, enum drv_sched_pri_e priority, lib_datetime_interval_t delay_or_timeOfDay, lib_datetime_interval_t interval_ms) {
 	lib_datetime_interval_t currentTime = drv_timer_getMonotonicTime();
+	lib_datetime_time_t curTime; drv_timer_getAbsoluteTime(&curTime);
 	struct job_s * job = popEmptyJob();
 	if (job == NULL) return DRV_SCHED_ERR__NO_JOB_SLOTS; //failed to schedule, no job slots remaining
 	
@@ -115,8 +122,13 @@ static enum drv_sched_err_e schedule(void (*func_ptr)(void), enum job_type_e typ
 		job->time = currentTime + delay_or_timeOfDay;
 		insertNormalJob(job);
 	} else if (type == JOB_TYPE__ONCE_AT || type == JOB_TYPE__REPEAT_AT) {
-		job->time = delay_or_timeOfDay; //lib_datetime_addIntervalToTime(currentTime delay_or_timeOfDay; //TODO
-		insertTimedJob(job);
+		job->time = delay_or_timeOfDay;
+		
+		if (curTime < job->time) {
+			insertTimedJob(job);
+		} else {
+			insertLaterJob(job);
+		}
 	} else {
 		//shouldn't be possible
 	}
@@ -182,6 +194,37 @@ void drv_sched_start(void) {
 		{
 			lib_datetime_time_t curTime;
 			if (drv_timer_getAbsoluteTime(&curTime) == DRV_TIMER_ERR__NONE) {
+				
+				if (curTime < state.lastRunTime) {
+					struct job_s * old_later = state.head_later;
+					state.head_later = NULL;
+					//flush timed jobs
+					{
+						struct job_s * job = state.head_timed;
+						while (job != NULL) {
+							state.head_timed = job->next;
+							job->next = NULL;
+							
+							(*(job->func_ptr))(); //run job
+							
+							if (job->type == JOB_TYPE__ONCE_AT) {
+								insertEmptyJob(job);
+							} else if (job->type == JOB_TYPE__REPEAT_AT) {
+								insertLaterJob(job);
+							}
+						}
+					}
+					
+					while (state.head_later != NULL) {
+						struct job_s * job = old_later; //get empty job slot
+						old_later = job->next; //remove from linked list of empty jobs
+						job->next = NULL;
+						insertTimedJob(job);
+					}
+					state.lastRunTime = curTime;
+				}
+				
+				
 				struct job_s * job = state.head_timed;
 				if (job != NULL && job->time <= curTime) {
 					state.head_timed = job->next;
@@ -192,9 +235,9 @@ void drv_sched_start(void) {
 					if (job->type == JOB_TYPE__ONCE_AT) {
 						insertEmptyJob(job);
 					} else if (job->type == JOB_TYPE__REPEAT_AT) {
-						//job->time = lib_datetime_addIntervalToTime(job->time, job->interval);
-						insertTimedJob(job);
+						insertLaterJob(job);
 					}
+					state.lastRunTime = curTime;
 				}
 			}
 		}
