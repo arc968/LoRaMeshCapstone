@@ -25,8 +25,6 @@ class drv_sensor_abstract {
 		virtual bool isInitialized(void) {return drv_initalized;}
 		bool isEnabled(void);
 		
-		virtual void setPowerMode(uint8_t mode) = 0;
-		
 		virtual bool read() = 0;
 		virtual void write() = 0;
 	

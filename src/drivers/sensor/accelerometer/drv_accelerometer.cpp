@@ -1,1 +1,0 @@
-#include "drv_accelerometer.h"
