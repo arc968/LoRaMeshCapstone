@@ -12,21 +12,22 @@
 	#error "Hardware not yet implemented"
 #endif	
 
-ISR_Timer hal_ISR_Timer;
+//ISR_Timer hal_ISR_Timer;
 
+/*
 void hal_timer_handler(void) {
-  hal_ISR_Timer.run();
+	hal_ISR_Timer.run();
 }
+*/
 
 static bool timerIsInitialized = false;
 
-void hal_timer_init(void){
+void hal_timer_init(void (*isr)(void), uint32_t interval_us) {
 	
 	if (!timerIsInitialized) {
-		
-		ITimer.attachInterruptInterval(1000 * 1000, hal_timer_handler);
 		timerIsInitialized = true;
-	
+		//ITimer.attachInterruptInterval(1000, hal_timer_handler);
+		ITimer.attachInterruptInterval(interval_us, isr);
 	}
 	
 }
@@ -55,9 +56,11 @@ uint32_t hal_timer_millis(void) {
 	
 }
 
+/*
 void hal_timer_setInterruptInterval(void (*isr)(void), uint32_t interval) {
 	
-	hal_ISR_Timer.setInterval(interval, isr);
+	//hal_ISR_Timer.setInterval(interval, isr);
 	
 }
+*/
 

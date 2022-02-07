@@ -17,8 +17,8 @@ void isr_incrementMonotonic(void) {
 
 void drv_timer_init(void) {
 	if (!initialized) {
-		hal_timer_init();
-		hal_timer_setInterruptInterval(isr_incrementMonotonic, 1000); //once every ms
+		hal_timer_init(isr_incrementMonotonic, 1000);
+		//hal_timer_setInterruptInterval(isr_incrementMonotonic, 1000); //once every ms
 	}
 }
 
@@ -55,7 +55,6 @@ void drv_timer_setAbsoluteTime(lib_datetime_time_t time) {
 	absoluteTimeInitialized = true;
 }
 
-//TODO add error checking
 enum drv_timer_err_e drv_timer_getAbsoluteDateTime(struct lib_datetime_s * dt) {
 	lib_datetime_interval_t offset = monotonic_ms - timestamp;
 	if (!absoluteTimeInitialized) return DRV_TIMER_ERR__ABSOLUTE_TIME_TMP_UNAVAILABLE;
@@ -65,7 +64,6 @@ enum drv_timer_err_e drv_timer_getAbsoluteDateTime(struct lib_datetime_s * dt) {
 	return DRV_TIMER_ERR__NONE;
 }
 
-//TODO add error checking
 enum drv_timer_err_e drv_timer_getAbsoluteDate(struct lib_datetime_s * dt) {
 	lib_datetime_interval_t offset = monotonic_ms - timestamp;
 	if (!absoluteDateInitialized) return DRV_TIMER_ERR__ABSOLUTE_DATE_TMP_UNAVAILABLE;
@@ -75,11 +73,18 @@ enum drv_timer_err_e drv_timer_getAbsoluteDate(struct lib_datetime_s * dt) {
 	return DRV_TIMER_ERR__NONE;
 }
 
-//TODO add error checking
 enum drv_timer_err_e drv_timer_getAbsoluteTime(lib_datetime_time_t * time) {
 	lib_datetime_interval_t offset = monotonic_ms - timestamp;
 	if (!absoluteTimeInitialized) return DRV_TIMER_ERR__ABSOLUTE_TIME_TMP_UNAVAILABLE;
 	lib_datetime_convertDatetimeToTime(&absoluteTime, time);
 	*time = lib_datetime_addIntervalToTime(*time, offset);
+	return DRV_TIMER_ERR__NONE;
+}
+
+enum drv_timer_err_e drv_timer_getRealtime(lib_datetime_realtime_t * realtime) {
+	struct lib_datetime_s dt;
+	enum drv_timer_err_e err = drv_timer_getAbsoluteDateTime(&dt);
+	if (err != DRV_TIMER_ERR__NONE) return err;
+	lib_datetime_convertDatetimeToRealtime(&dt, realtime);
 	return DRV_TIMER_ERR__NONE;
 }

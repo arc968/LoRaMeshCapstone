@@ -9,7 +9,6 @@ extern "C" {
 enum lib_datetime_err_e {
 	LIB_DATETIME_ERR__NONE = 0, //no error, operation was successful
 	LIB_DATETIME_ERR__TIME_OUT_OF_RANGE,
-	//LIB_DATETIME_ERR__INTERVAL_OUT_OF_RANGE,
 	LIB_DATETIME_ERR__DATETIME_OUT_OF_RANGE,
 };
 
@@ -21,6 +20,8 @@ typedef uint64_t lib_datetime_interval_t; //time interval in ms
 
 #define LIB_DATETIME__MS_IN_DAY 86400000 //(24*60*60*1000)
 
+#define PACK_STRUCTS
+#define USE_BITFIELDS
 #if defined(USE_BITFIELDS)
 //bitfields are used to reduce the struct down to 6 bytes
 //this will increase binary size by quite a bit, but saves a lot of memory
@@ -62,19 +63,17 @@ void lib_datetime_clearTime(struct lib_datetime_s * dt);
 
 enum lib_datetime_err_e lib_datetime_validateTime(lib_datetime_time_t time);
 
+enum lib_datetime_err_e lib_datetime_validateDatetime(struct lib_datetime_s * dt);
+
 int lib_datetime_cmp(struct lib_datetime_s * a, struct lib_datetime_s * b);
 
-//returns -1 if conversion failed
-enum lib_datetime_err_e lib_datetime_convertTimeToDatetime(lib_datetime_time_t time, struct lib_datetime_s * dt);
+void lib_datetime_convertTimeToDatetime(lib_datetime_time_t time, struct lib_datetime_s * dt);
 
-//returns -1 if conversion failed
-enum lib_datetime_err_e lib_datetime_convertDatetimeToTime(struct lib_datetime_s * dt, lib_datetime_time_t * time);
+void lib_datetime_convertDatetimeToTime(struct lib_datetime_s * dt, lib_datetime_time_t * time);
 
-//returns -1 if conversion failed
-enum lib_datetime_err_e lib_datetime_convertRealtimeToDatetime(lib_datetime_realtime_t realtime, struct lib_datetime_s * dt);
+void lib_datetime_convertRealtimeToDatetime(lib_datetime_realtime_t realtime, struct lib_datetime_s * dt);
 
-//returns -1 if conversion failed
-enum lib_datetime_err_e lib_datetime_convertDatetimeToRealtime(struct lib_datetime_s * dt, lib_datetime_realtime_t * realtime);
+void lib_datetime_convertDatetimeToRealtime(struct lib_datetime_s * dt, lib_datetime_realtime_t * realtime);
 
 //adds an interval to a time, wrapping around as necessary
 lib_datetime_time_t lib_datetime_addIntervalToTime(lib_datetime_time_t time, lib_datetime_interval_t interval);
