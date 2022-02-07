@@ -6,6 +6,7 @@
 #if defined(HW_MKRWAN1300_H)
 	SAMDTimer ITimer(TIMER_TC3);
 #elif defined(HW_IBUG_H)
+	#include "NRF52TimerInterrupt_Generic.h"
 	NRF52Timer ITimer(NRF_TIMER_1);
 #else
 	#error "Hardware not yet implemented"
