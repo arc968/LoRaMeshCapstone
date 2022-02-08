@@ -33,13 +33,15 @@ __attribute__((noreturn))
 #endif
 void drv_sched_start(void);
 
-enum drv_sched_err_e drv_sched_once(void (*func_ptr)(void), enum drv_sched_pri_e priority, lib_datetime_interval_t delay_ms);
+enum drv_sched_err_e drv_sched_once(void (*func_ptr)(void*), void * func_arg, enum drv_sched_pri_e priority, lib_datetime_interval_t delay_ms);
 
-enum drv_sched_err_e drv_sched_repeating(void (*func_ptr)(void), enum drv_sched_pri_e priority, lib_datetime_interval_t delay_ms, lib_datetime_interval_t interval_ms);
+enum drv_sched_err_e drv_sched_repeating(void (*func_ptr)(void*), void * func_arg, enum drv_sched_pri_e priority, lib_datetime_interval_t delay_ms, lib_datetime_interval_t interval_ms);
 
-enum drv_sched_err_e drv_sched_once_at(void (*func_ptr)(void), enum drv_sched_pri_e priority, lib_datetime_time_t time);
+enum drv_sched_err_e drv_sched_once_at(void (*func_ptr)(void*), void * func_arg, enum drv_sched_pri_e priority, lib_datetime_time_t time);
 
-enum drv_sched_err_e drv_sched_repeating_at(void (*func_ptr)(void), enum drv_sched_pri_e priority, lib_datetime_time_t time, lib_datetime_interval_t interval_ms);
+enum drv_sched_err_e drv_sched_repeating_at(void (*func_ptr)(void*), void * func_arg, enum drv_sched_pri_e priority, lib_datetime_time_t time, lib_datetime_interval_t interval_ms);
+
+enum drv_sched_err_e drv_sched_onAbsoluteAvailable(void (*func_ptr)(void*), void * func_arg);
 
 #if defined (__cplusplus)
 }

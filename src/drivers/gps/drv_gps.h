@@ -13,7 +13,11 @@ enum drv_gps_error_e {
 	DRV_GPS_ERR__NONE,
 };
 
-void drv_gps_init(void);
+struct drv_gps_s {
+	
+};
+
+void drv_gps_init(struct drv_gps_s * handle);
 
 enum drv_gps_error_e drv_gps_sendCommand(const char * cmd);
 

@@ -9,7 +9,10 @@ static volatile bool absoluteDateInitialized = false;
 static volatile bool absoluteTimeInitialized = false;
 static volatile bool initialized = false;
 
-struct lib_datetime_s absoluteTime = {0};
+static struct lib_datetime_s absoluteTime = {0}; //does not handle volatile properly
+
+static void (* volatile cb_onAbsoluteTimeAvailable)(void) = NULL;
+static void (* volatile cb_onAbsoluteDateAvailable)(void) = NULL;
 
 void isr_incrementMonotonic(void) {
 	monotonic_ms++;
@@ -34,17 +37,34 @@ bool drv_timer_absoluteTimeIsAvailable(void) {
 	return absoluteTimeInitialized;
 }
 
+void drv_timer_setCallbackOnAbsoluteTimeAvailable(void (*func_ptr)(void)) {
+	cb_onAbsoluteTimeAvailable = func_ptr;
+}
+
+void drv_timer_setCallbackOnAbsoluteDateAvailable(void (*func_ptr)(void)) {
+	cb_onAbsoluteDateAvailable = func_ptr;
+}
+
 void drv_timer_setAbsoluteDateTime(struct lib_datetime_s * dt) {
 	timestamp = monotonic_ms;
 	lib_datetime_copy(dt, &absoluteTime);
-	absoluteDateInitialized = true;
-	absoluteTimeInitialized = true;
+	if (!absoluteTimeInitialized) {
+		absoluteTimeInitialized = true;
+		if (cb_onAbsoluteTimeAvailable != NULL) (*cb_onAbsoluteTimeAvailable)();
+	}
+	if (!absoluteDateInitialized) {
+		absoluteDateInitialized = true;
+		if (cb_onAbsoluteDateAvailable != NULL) (*cb_onAbsoluteDateAvailable)();
+	}
 }
 
 void drv_timer_setAbsoluteDate(struct lib_datetime_s * dt) {
 	timestamp = monotonic_ms;
 	lib_datetime_copyDate(dt, &absoluteTime);
-	absoluteDateInitialized = true;
+	if (!absoluteDateInitialized) {
+		absoluteDateInitialized = true;
+		if (cb_onAbsoluteDateAvailable != NULL) (*cb_onAbsoluteDateAvailable)();
+	}
 }
 
 void drv_timer_setAbsoluteTime(lib_datetime_time_t time) {
@@ -52,7 +72,10 @@ void drv_timer_setAbsoluteTime(lib_datetime_time_t time) {
 	struct lib_datetime_s dt;
 	lib_datetime_convertTimeToDatetime(time, &dt); //TODO error checking
 	lib_datetime_copyTime(&dt, &absoluteTime);
-	absoluteTimeInitialized = true;
+	if (!absoluteTimeInitialized) {
+		absoluteTimeInitialized = true;
+		if (cb_onAbsoluteTimeAvailable != NULL) (*cb_onAbsoluteTimeAvailable)();
+	}
 }
 
 enum drv_timer_err_e drv_timer_getAbsoluteDateTime(struct lib_datetime_s * dt) {
@@ -88,3 +111,4 @@ enum drv_timer_err_e drv_timer_getRealtime(lib_datetime_realtime_t * realtime) {
 	lib_datetime_convertDatetimeToRealtime(&dt, realtime);
 	return DRV_TIMER_ERR__NONE;
 }
+

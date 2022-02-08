@@ -98,7 +98,7 @@ static void ubx_checksum(struct ubx_msg_header_s * header, struct ubx_msg_footer
 	}
 }
 
-void drv_gps_init(void) {
+void drv_gps_init(struct drv_gps_s * handle) {
 	
 	//initialize serial1 port for communicating with GPS
 	

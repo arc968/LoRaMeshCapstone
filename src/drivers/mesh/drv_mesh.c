@@ -22,11 +22,13 @@
 #include "../../lib/misc/lib_misc.h"
 #include "../../lib/datetime/lib_datetime.h"
 #include "drv_mesh.h"
+#include "drv_mesh_private.h"
 
 #define PEER_COUNT_MAX 16
 #define BUFFER_RELAY_SIZE 10
 #define BUFFER_INBOUND_SIZE 3
 #define BUFFER_OUTBOUND_SIZE 3
+#define BUFFER_APPOINTMENTS_SIZE 16
 
 #define FREQ_500kHz 500000
 #define FREQ_250kHz 250000
@@ -46,34 +48,6 @@
 #define LORA_US_PADDING_125kHz ((uint64_t)(((LORA_US_FREQ_WIDTH - (LORA_US_CHANNELCOUNT_125kHz * FREQ_125kHz)) / LORA_US_CHANNELCOUNT_125kHz) / 2))
 #define LORA_US_PADDING_62_5kHz ((uint64_t)(((LORA_US_FREQ_WIDTH - (LORA_US_CHANNELCOUNT_62_5kHz * FREQ_62_5kHz)) / LORA_US_CHANNELCOUNT_62_5kHz) / 2))
 
-typedef uint16_t channel_t;
-
-typedef uint32_t uid_t;
-
-enum packet_status_e {
-	PACKET_FREE,
-	PACKET_READY
-};
-
-/*
-enum drv_mesh_bandwidth_e {
-	BW__500kHz,
-	BW__250kHz,
-	BW__125kHz,
-	BW__62_5kHz,
-};
-*/
-
-struct peer_s {
-	ip_t ip;
-	uid_t uid;
-};
-
-struct packet_ext_s {
-	enum packet_status_e status;
-	struct drv_mesh_packet_s packet;
-};
-
 static struct state_s {
 	ip_t ip;
 	struct peer_s peers[PEER_COUNT_MAX];
@@ -89,6 +63,8 @@ static struct state_s {
 	uint8_t buf_outbound_head;
 	uint8_t buf_outbound_tail;
 	struct packet_ext_s buf_outbound[BUFFER_OUTBOUND_SIZE];
+
+	struct appointment_s appointments[BUFFER_APPOINTMENTS_SIZE];
 } state;
 
 //TODO: only works in US, no error handling
@@ -99,15 +75,6 @@ static uint64_t getCenterFrequency(channel_t channel, enum drv_lora_bandwidth_e 
 	if (bandwidth == DRV_LORA_BW__62_5kHz) return LORA_US_FREQ_MIN + LORA_US_PADDING_62_5kHz + (channel * FREQ_62_5kHz) + (channel * LORA_US_PADDING_62_5kHz) + (FREQ_62_5kHz / 2);
 	return 0;
 }
-
-struct appointment_s {
-	lib_datetime_realtime_t realtime;
-	
-	channel_t channel;
-	enum drv_lora_bandwidth_e bandwidth;
-	enum drv_lora_spreadingFactor_e spreadingFactor;
-	enum drv_lora_codingRate_e codingRate;
-} __attribute__((packed));
 
 /*
  *  Global discovery channel - determined by time
@@ -130,12 +97,31 @@ static void getChannelConfiguration(struct channel_settings_s * settings, struct
 	return 0;
 }
 */
-void drv_mesh_worker_send(void) {
+
+static struct appointment_s * getNextDiscoveryChannelAppointment(void) {
+	return NULL;
+}
+
+static void drv_mesh_worker_disc_listener(void * arg) {
 	
 }
 
-void drv_mesh_worker_receive(void) {
+static void drv_mesh_worker_disc_broadcaster(void * arg) {
 	
+}
+
+static void drv_mesh_worker_data_recv(void * arg) {
+	
+}
+
+static void drv_mesh_worker_data_send(void * arg) {
+	
+}
+
+//runs once absolute scheduling is available
+static void drv_mesh_start(void * arg __attribute__((unused))) {
+	struct appointment_s * appt = getNextDiscoveryChannelAppointment();
+	drv_sched_once_at(drv_mesh_worker_disc_listener, appt, DRV_SCHED_PRI__REALTIME, lib_datetime_convertRealtimeToTime(appt->realtime));
 }
 
 void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *)) {
@@ -149,7 +135,7 @@ void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *)) {
 	
 	//configure LoRa radio
 	
-	//schedule mesh handler a few seconds before next run time
+	drv_sched_onAbsoluteAvailable(drv_mesh_start, NULL);
 }
 
 enum drv_mesh_error_e drv_mesh_send(ip_t ip, uint16_t len, uint8_t * buf) {

@@ -75,6 +75,8 @@ void lib_datetime_convertRealtimeToDatetime(lib_datetime_realtime_t realtime, st
 
 void lib_datetime_convertDatetimeToRealtime(struct lib_datetime_s * dt, lib_datetime_realtime_t * realtime);
 
+lib_datetime_time_t lib_datetime_convertRealtimeToTime(lib_datetime_realtime_t realtime);
+
 //adds an interval to a time, wrapping around as necessary
 lib_datetime_time_t lib_datetime_addIntervalToTime(lib_datetime_time_t time, lib_datetime_interval_t interval);
 
