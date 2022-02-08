@@ -23,7 +23,11 @@ void hal_interrupt_disable(void) {
 
 void hal_interrupt_attachPin(pin_t pin, void (*isr)(void), enum hal_interrupt_mode_e mode) {
 	#if defined(HW_ARDUINO)
-		attachInterrupt(digitalPinToInterrupt(pin), isr, (PinStatus) mode);
+		#if defined(HW_MKRWAN1300_H)
+			attachInterrupt(digitalPinToInterrupt(pin), isr, (PinStatus) mode);
+		#else
+			attachInterrupt(digitalPinToInterrupt(pin), isr, mode);
+		#endif
 	#elif defined(HW_IBUG_H)
 	
 	#else
