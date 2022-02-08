@@ -12,13 +12,12 @@
 #if defined(HW_MKRWAN1300_H)
 	SAMDTimer ITimer(TIMER_TC3);
 #elif defined(HW_IBUG_H)
-	//#include "NRF52TimerInterrupt_Generic.h"
 	NRF52Timer ITimer(NRF_TIMER_1);
 #else
 	#error "Hardware not yet implemented"
 #endif	
 
-ISR_Timer hal_ISR_Timer;
+//ISR_Timer hal_ISR_Timer;
 
 
 void hal_timer_handler(void) {
@@ -62,11 +61,11 @@ uint32_t hal_timer_millis(void) {
 	
 }
 
-
+/*
 void hal_timer_setInterruptInterval(void (*isr)(void), uint32_t interval) {
 	
 	hal_ISR_Timer.setInterval(interval, isr);
 	
 }
-
+*/
 
