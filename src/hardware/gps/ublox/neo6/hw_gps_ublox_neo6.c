@@ -11,6 +11,7 @@
 #include "../../../../lib/byteorder/lib_byteorder.h"
 #include "../../../../drivers/gps/drv_gps.h"
 
+/*
 #if defined __has_attribute
 	#if !(__has_attribute(packed))
 		#error "'__attribute__((packed))' is unavailable."
@@ -21,6 +22,7 @@
 #else
 	#error "'__has_attribute()' is unavailable."
 #endif
+*/
 
 struct ubx_msg_sync_s {
 	const union {

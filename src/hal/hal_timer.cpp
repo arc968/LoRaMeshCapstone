@@ -1,28 +1,23 @@
 #define HAL_LIB
 #include "hal_timer.h"
 
-#if defined(HW_IBUG_H)
-	#define NRF52_SERIES
-	#define TIMER_INTERRUPT_USING_NRF52
-#endif
-
-#include "TimerInterrupt_Generic.h"
-#include "ISR_Timer_Generic.h"
-
 #if defined(HW_MKRWAN1300_H)
+	#include "TimerInterrupt_Generic.h"
+	#include "ISR_Timer_Generic.h"
 	SAMDTimer ITimer(TIMER_TC3);
 #elif defined(HW_IBUG_H)
-	NRF52Timer ITimer(NRF_TIMER_1);
+	//NRF52Timer ITimer(NRF_TIMER_1);
 #else
 	#error "Hardware not yet implemented"
 #endif	
 
 //ISR_Timer hal_ISR_Timer;
 
-
+#if defined(HW_MKRWAN1300_H)
 void hal_timer_handler(void) {
 	hal_ISR_Timer.run();
 }
+#endif
 
 
 static bool timerIsInitialized = false;
@@ -32,7 +27,9 @@ void hal_timer_init(void (*isr)(void), uint32_t interval_us) {
 	if (!timerIsInitialized) {
 		timerIsInitialized = true;
 		//ITimer.attachInterruptInterval(1000, hal_timer_handler);
+		#if defined(HW_MKRWAN1300_H)
 		ITimer.attachInterruptInterval(interval_us, isr);
+		#endif
 	}
 	
 }
