@@ -90,7 +90,7 @@ uint16_t hal_serial_available(void *handle) {
 	#if defined(HW_ARDUINO)
 		static_cast<HardwareSerial*>(handle)->available();
 	#elif defined(HW_IBUG_H)
-		return 0 //TODO
+		return 0; //TODO
 	#else
 		#error "Hardware not yet implemented"
 	#endif

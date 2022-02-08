@@ -28,14 +28,14 @@ extern "C" {
 #include "timer/drv_timer.h"
 #include "sched/drv_sched.h"
 
-/*
+
 //Sensor Drivers
 #include "sd/drv_sd.h"
 #include "sensor/rtc/drv_rtc_RV8803C7.h"
 #include "sensor/accelerometer/drv_accelerometer_LIS3DH.h"
 #include "sensor/gas_sensor/drv_gas_BME688.h"
 #include "sensor/co2_sensor/drv_co2_CCS811.h"
-*/
+
 
 #ifdef __cplusplus
 }
