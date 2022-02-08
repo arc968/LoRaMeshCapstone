@@ -9,7 +9,7 @@ class drv_sensor_abstract {
 	protected:
 		bool drv_initalized;
 		bool drv_enabled;
-		uint8_t pwr_mode;
+		//uint8_t pwr_mode;
 		
 	public:
 	

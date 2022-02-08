@@ -3,7 +3,7 @@
 
 #include "drv_sensor_abstract.h"
 
-class drv_i2c_abstract : drv_sensor_abstract{
+class drv_i2c_abstract : public drv_sensor_abstract{
 	
 	protected:
 		
@@ -11,12 +11,12 @@ class drv_i2c_abstract : drv_sensor_abstract{
 		
 	public:
 	
-	drv_i2c_abstract(uint16_t address, uint8_t sda, uint8_t scl) {
+	drv_i2c_abstract(uint8_t address, uint8_t sda, uint8_t scl)/* : drv_sensor_abstract()*/{
 			drv_address = address;
 			drv_sda = sda;
 			drv_scl = scl;
-			drv_initalized = false; 
-			drv_enabled = false;
+			//drv_initalized = false; 
+			//drv_enabled = false;
 	}
 	
 	~drv_i2c_abstract(void) {}
