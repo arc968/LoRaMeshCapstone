@@ -10,3 +10,9 @@ this will open the document as a website to navigate in your web browser of choi
 
 
 ## How to Implement The Library
+
+### Arduino Libraries needed
+
+1. Arduino Low Power - by Arduino LLC
+2. TimmerInterrupt_Generic - by Khoi Hoang
+3. 
