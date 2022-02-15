@@ -24,6 +24,7 @@ extern "C" {
 
 	#define HW_H
 	#define HW_IBUG_H
+	#define HW_ARDUINO_H
 	#include "hw_ibug_registers.h"
 	
 #ifdef __cplusplus
