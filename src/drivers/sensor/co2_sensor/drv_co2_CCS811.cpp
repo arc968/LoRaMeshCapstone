@@ -1,8 +1,5 @@
 #include "drv_co2_CCS811.h"
-#include "../src/hal/hal_gpio.h"
-#include "../src/hal/hal_i2c.h"
-#include "../src/hal/hal_interrupt.h"
-
+#include "../src/hal/hal.h"
 
 drv_co2_CCS811 :: drv_co2_CCS811(uint8_t sda, uint8_t scl, uint8_t nreset, uint8_t nwake, uint8_t addrselect, uint8_t nint, uint8_t pwmsense, uint8_t aux) : drv_i2c_abstract(drv_address_low, sda, scl) {
 	//drv_address = drv_address_low;

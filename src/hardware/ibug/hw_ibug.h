@@ -30,6 +30,6 @@ extern "C" {
 }
 #endif
 
-#endif // HW_H IBUG_H
+#endif // HW_H HW_IBUG_H
 
 /** @} */ // end of IBUGgroup

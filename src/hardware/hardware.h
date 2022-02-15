@@ -26,6 +26,8 @@ extern "C" {
 	#include "mkrwan1300/hw_mkrwan1300.h"
 #elif defined(IBUG)
 	#include "ibug/hw_ibug.h"
+#elif defined(RAK4600)
+	#include"rak4600/hw_rak4600.h"
 #else
 	#error "No hardware defined."
 #endif

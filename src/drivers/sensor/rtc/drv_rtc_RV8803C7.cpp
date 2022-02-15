@@ -1,5 +1,5 @@
 #include "drv_rtc_RV8803C7.h"
-#include "../src/hal/hal_gpio.h"
+#include "../src/hal/hal.h"
 
 drv_rtc_RV8803C7 :: drv_rtc_RV8803C7(uint8_t address, uint8_t sda, uint8_t scl, uint8_t nint, uint8_t evi, uint8_t clkout, uint8_t clkoe) : drv_i2c_abstract(address, sda, scl)  {
 	

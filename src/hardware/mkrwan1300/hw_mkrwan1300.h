@@ -33,7 +33,7 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif // HW_H MKRWAN1300_H
+#endif // HW_H HW_MKRWAN1300_H
 
 
 
