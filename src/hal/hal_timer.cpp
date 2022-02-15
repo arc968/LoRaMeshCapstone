@@ -1,13 +1,12 @@
 #define HAL_LIB
 #include "hal_timer.h"
 
-#include "TimerInterrupt_Generic.h"
-#include "ISR_Timer_Generic.h"
-
 #if defined(HW_MKRWAN1300_H)
-	SAMDTimer ITimer(TIMER_TC3);
+	//#include "TimerInterrupt_Generic.h"
+	//#include "ISR_Timer_Generic.h"
+	//SAMDTimer ITimer(TIMER_TC3);
 #elif defined(HW_IBUG_H)
-	SAMDTimer ITimer(TIMER_TC3);
+	
 #else
 	#error "Hardware not yet implemented"
 #endif	
@@ -27,11 +26,10 @@ void hal_timer_init(void (*isr)(void), uint32_t interval_us) {
 	
 	if (!timerIsInitialized) {
 		timerIsInitialized = true;
-		//ITimer.attachInterruptInterval(1000, hal_timer_handler);
 		#if defined(HW_MKRWAN1300_H)
-			ITimer.attachInterruptInterval(interval_us, isr);
+			//ITimer.attachInterruptInterval(interval_us, isr);
 		#elif defined(HW_IBUG_H)
-			ITimer.attachInterruptInterval(interval_us, isr);
+			
 		#else
 			#error "Hardware not yet implemented"
 		#endif	
