@@ -1,5 +1,12 @@
 Compilation:
-
+	Boards:
+		Arduino SAMD
+	Libraries:
+		Arduino Low Power
+		TimerInterrupt_Generic (deps: RTClib)
+	External Libraries:
+		Monocypher
+		xxHash
 
 Documentation generation:
 	doxygen

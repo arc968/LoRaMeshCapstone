@@ -24,6 +24,16 @@
 #include "drv_mesh.h"
 #include "drv_mesh_private.h"
 
+#include "../../lib/monocypher/monocypher.h"
+
+#define XXH_NO_STREAM
+#define XXH_NO_LONG_LONG
+#define XXH_CPU_LITTLE_ENDIAN
+#define XXH_NO_STDLIB
+#define XXH_NO_INLINE_HINTS
+#define XXH_FORCE_ALIGN_CHECK
+#include "../../lib/xxhash/xxhash.h"
+
 #define PEER_COUNT_MAX 16
 #define BUFFER_RELAY_SIZE 10
 #define BUFFER_INBOUND_SIZE 3
