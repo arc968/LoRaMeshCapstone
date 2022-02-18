@@ -91,6 +91,33 @@ struct ubx_msg__CFG_MSG__SetMessageRates_s {
 	.footer = {0},
 };
 
+struct ubx_msg__CFG_TP__SetTimePulse_s {
+	struct ubx_msg_sync_s sync;
+	struct ubx_msg_header_s header;
+	struct {
+		uint32_t interval_us;
+		uint32_t length_us;
+		int8_t status;
+		uint8_t timeRef;
+		uint8_t flags;
+		uint8_t reserved1;
+		int16_t antennaCableDelay_ns;
+		int16_t rfGroupDelay_ns;
+		int32_t userDelay_ns;
+	} payload;
+	struct ubx_msg_footer_s footer;
+} __attribute__((packed, aligned(1))) const ubx_msg__CFG_TP__SetTimePulse_default = {
+	.sync = {
+		.syncChars = UBX_SYNC_CHARS,
+	},
+	.header = {
+		.ID = UBX_MSG_ID__CFG_TP,
+		.length = LIB_BYTEORDER_HTON_U16(20),
+	},
+	.payload = {0},
+	.footer = {0},
+};
+
 static void ubx_checksum(struct ubx_msg_header_s * header, struct ubx_msg_footer_s * footer) {
 	footer->ck_a = 0;
 	footer->ck_b = 0;
@@ -101,12 +128,12 @@ static void ubx_checksum(struct ubx_msg_header_s * header, struct ubx_msg_footer
 }
 
 void drv_gps_init(struct drv_gps_s * handle) {
-	
 	//initialize serial1 port for communicating with GPS
 	
-	//add ISR to vector table
+	//configure GPS for timepulse
 	
 	//enable interrupts on GPS pulse GPIO pin
+	
 }
 
 #endif // HW_GPS_UBLOX_NEO6_H
