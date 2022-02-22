@@ -24,8 +24,8 @@ extern "C" {
 
 #if defined(MKRWAN1300)
 	#include "mkrwan1300/hw_mkrwan1300.h"
-#elif defined(IBUG)
-	#include "ibug/hw_ibug.h"
+#elif defined(RAK4260)
+	#include "ra4260k/hw_rak4260.h"
 #elif defined(RAK4600)
 	#include"rak4600/hw_rak4600.h"
 #else

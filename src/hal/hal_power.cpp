@@ -1,13 +1,9 @@
 #define HAL_LIB
 #include "hal_power.h"
 
-#if defined(HW_ARDUINO)
-	#include <avr/wdt.h>
-#endif
-
 #if defined(HW_MKRWAN1300_H)
 	#include "ArduinoLowPower.h"
-#elif defined(HW_IBUG_H)
+#elif defined(HW_RAK4260_H)
 
 #elif defined(HW_RAK4600_H)
 
@@ -18,7 +14,7 @@
 void hal_power_wake(void) {	
 #if defined(HW_MKRWAN1300_H)
 	
-#elif defined(HW_IBUG_H)
+#elif defined(HW_RAK4260_H)
 	
 #elif defined(HW_RAK4600_H)
 	
@@ -30,7 +26,7 @@ void hal_power_wake(void) {
 void hal_power_idle(uint16_t millis) {
 #if defined(HW_MKRWAN1300_H)
 	LowPower.idle(millis);
-#elif defined(HW_IBUG_H)
+#elif defined(HW_RAK4260_H)
 
 #elif defined(HW_RAK4600_H)
 	
@@ -56,7 +52,7 @@ void hal_power_idle(uint16_t millis) {
 void hal_power_sleep(uint16_t millis) {
 #if defined(HW_MKRWAN1300_H)
 	LowPower.sleep(millis);
-#elif defined(HW_IBUG_H)
+#elif defined(HW_RAK4260_H)
 
 #elif defined(HW_RAK4600_H)
 	
@@ -82,7 +78,7 @@ void hal_power_sleep(uint16_t millis) {
 void hal_power_deepSleep(uint16_t millis) {
 #if defined(HW_MKRWAN1300_H)
 	LowPower.deepSleep(millis);
-#elif defined(HW_IBUG_H)
+#elif defined(HW_RAK4260_H)
 
 #elif defined(HW_RAK4600_H)
 	
@@ -127,9 +123,10 @@ void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, uint16_t millis) {
 
 void hal_power_softReset(void) {
 #if defined(HW_ARDUINO) && defined(HW_MKRWAN1300_H)
-	wdt_enable(WDTO_15MS);
+	WDOGCONTROL  = WDOGCONTROL | 0x0x00000003;
+	WDOGLOAD 	 = 0x0x00000001;
 	while(1) {/* wait until reset */};
-#elif defined(HW_IBUG_H)
+#elif defined(HW_RAK4260_H)
 	HW_POWER_AIRCR = 0x05FA0006;
 	while(1) {/* wait until reset */}
 #elif defined(HW_RAK4600_H)

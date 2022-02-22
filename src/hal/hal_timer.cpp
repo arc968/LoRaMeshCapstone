@@ -5,7 +5,7 @@
 	//#include "TimerInterrupt_Generic.h"
 	//#include "ISR_Timer_Generic.h"
 	//SAMDTimer ITimer(TIMER_TC3);
-#elif defined(HW_IBUG_H)
+#elif defined(HW_RAK4260_H)
 	
 #else
 	#error "Hardware not yet implemented"
@@ -15,7 +15,7 @@
 
 #if defined(HW_MKRWAN1300_H)
 void hal_timer_handler(void) {
-	hal_ISR_Timer.run();
+	//hal_ISR_Timer.run();
 }
 #endif
 
@@ -28,7 +28,7 @@ void hal_timer_init(void (*isr)(void), uint32_t interval_us) {
 		timerIsInitialized = true;
 		#if defined(HW_MKRWAN1300_H)
 			//ITimer.attachInterruptInterval(interval_us, isr);
-		#elif defined(HW_IBUG_H)
+		#elif defined(HW_RAK4260_H)
 			
 		#else
 			#error "Hardware not yet implemented"
@@ -41,7 +41,7 @@ void hal_timer_delay(uint16_t msdelay) {
 	
 	#if defined(HW_ARDUINO)
 		delay(msdelay);	
-	#elif defined(HW_IBUG_H)
+	#elif defined(HW_RAK4260_H)
 		
 	#else
 		#error "Hardware not yet implemented"
@@ -53,7 +53,7 @@ uint32_t hal_timer_millis(void) {
 	
 	#if defined(HW_ARDUINO)
 		return millis();	
-	#elif defined(HW_IBUG_H)
+	#elif defined(HW_RAK4260_H)
 		return 0; //TODO
 	#else
 		#error "Hardware not yet implemented"

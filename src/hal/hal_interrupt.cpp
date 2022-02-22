@@ -4,7 +4,7 @@
 void hal_interrupt_enable(void) {
 	#if defined(HW_ARDUINO)
 		interrupts();
-	#elif defined(HW_IBUG_H)
+	#elif defined(HW_RAK4260_H)
 	
 	#else
 		#error "Hardware not yet implemented"
@@ -14,7 +14,7 @@ void hal_interrupt_enable(void) {
 void hal_interrupt_disable(void) {
 	#if defined(HW_ARDUINO)
 		noInterrupts();
-	#elif defined(HW_IBUG_H)
+	#elif defined(HW_RAK4260_H)
 	
 	#else
 		#error "Hardware not yet implemented"
@@ -28,7 +28,7 @@ void hal_interrupt_attachPin(pin_t pin, void (*isr)(void), enum hal_interrupt_mo
 		#else
 			attachInterrupt(digitalPinToInterrupt(pin), isr, mode);
 		#endif
-	#elif defined(HW_IBUG_H)
+	#elif defined(HW_RAK4260_H)
 	
 	#else
 		#error "Hardware not yet implemented"
@@ -38,7 +38,7 @@ void hal_interrupt_attachPin(pin_t pin, void (*isr)(void), enum hal_interrupt_mo
 void hal_interrupt_detachPin(pin_t pin) {
 	#if defined(HW_ARDUINO)
 		detachInterrupt(digitalPinToInterrupt(pin));
-	#elif defined(HW_IBUG_H)
+	#elif defined(HW_RAK4260_H)
 	
 	#else
 		#error "Hardware not yet implemented"
@@ -47,7 +47,7 @@ void hal_interrupt_detachPin(pin_t pin) {
 
 #ifndef HW_ARDUINO
 void hal_interrupt_attach(enum hal_interrupt_type_e trigger, void (*isr)(void)) {
-	#if defined(HW_IBUG_H)
+	#if defined(HW_RAK4260_H)
 	
 	#else
 		#error "Hardware not yet implemented"
@@ -57,7 +57,7 @@ void hal_interrupt_attach(enum hal_interrupt_type_e trigger, void (*isr)(void)) 
 
 #ifndef HW_ARDUINO
 void hal_interrupt_detach(enum hal_interrupt_type_e trigger) {
-	#if defined(HW_IBUG_H)
+	#if defined(HW_RAK4260_H)
 	
 	#else
 		#error "Hardware not yet implemented"
