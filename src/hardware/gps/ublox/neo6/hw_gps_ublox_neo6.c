@@ -41,12 +41,26 @@ void drv_gps_init(struct drv_gps_s * handle) {
 		hal_serial_begin(hal_serial1, 9600);
 	//disable NMEA
 		struct ubx_msg__CFG_PRT__SetPortConfigurationForUART_s ubx_cfg_prt = ubx_msg__CFG_PRT__SetPortConfigurationForUART_s_default;
-		ubx_cfg_prt.payload.mode.charLen = 0b11;
+		ubx_cfg_prt.payload = (typeof(ubx_cfg_prt.payload)) {
+			.portID = 1,
+			.mode.reserved1 = 1,
+			.mode.charLen = 0b11,
+			.mode.parity = 0b100,
+			.baudRate = 9600,
+			.inProtoMask.ubx = 1,
+			.outProtoMask.ubx = 1
+		};
+		/*ubx_cfg_prt.payload.mode.charLen = 0b11;
 		ubx_cfg_prt.payload.mode.parity = 0b100;
 		ubx_cfg_prt.payload.baudRate = 9600;
 		ubx_cfg_prt.payload.inProtoMask.ubx = 1;
-		ubx_cfg_prt.payload.outProtoMask.ubx = 1;
-		ubx_checksum(ubx_cfg_prt.body, sizeof(ubx_cfg_prt.body), &(ubx_cfg_prt.checksum));
+		ubx_cfg_prt.payload.outProtoMask.ubx = 1;*/
+		
+		//TODO: make this a macro and test it
+		UBX_CHECKSUM(ubx_cfg_prt);
+		//ubx_checksum(&(ubx_cfg_prt.header), offsetof(typeof(ubx_cfg_prt), checksum) - offsetof(typeof(ubx_cfg_prt), header), &(ubx_cfg_prt.checksum));
+		
+		//ubx_checksum(ubx_cfg_prt.body, sizeof(ubx_cfg_prt.body), &(ubx_cfg_prt.checksum));
 		
 		hal_serial_flush(hal_serial1);
 		hal_serial_write(hal_serial1, (uint8_t *)&ubx_cfg_prt, sizeof(struct ubx_msg__CFG_PRT__SetPortConfigurationForUART_s));
@@ -58,15 +72,16 @@ void drv_gps_init(struct drv_gps_s * handle) {
 	//enable interrupts on GPS pulse GPIO pin
 		hal_interrupt_attachPin(0, isr_pps, INTERRUPT_FALLING);
 	//configure GPS for timepulse
-		struct ubx_msg__CFG_TP5__SetTimePulse_s tp_ubx = ubx_msg__CFG_TP5__SetTimePulse_default;
-		tp_ubx.payload.freqPeriod = LIB_BYTEORDER_HTOL_U32(1000000);
-		tp_ubx.payload.pulseLenRatio = LIB_BYTEORDER_HTOL_U32(100000);
+		struct ubx_msg__CFG_TP5__SetTimePulse_s tp_ubx = ubx_msg__CFG_TP5__SetTimePulse_s_default;
+		tp_ubx.payload.freqPeriod = 1000000;
+		tp_ubx.payload.pulseLenRatio = 100000;
 		tp_ubx.payload.Active = 1;
 		tp_ubx.payload.LockGpsFreq = 1;
 		tp_ubx.payload.isLength = 1;
 		tp_ubx.payload.alignToTow = 1;
 		tp_ubx.payload.polarity = 0;
-		ubx_checksum(tp_ubx.body, sizeof(tp_ubx.body), &(tp_ubx.checksum));
+		//ubx_checksum(tp_ubx.body, sizeof(tp_ubx.body), &(tp_ubx.checksum));
+		UBX_CHECKSUM(tp_ubx);
 
 		hal_serial_flush(hal_serial1);
 		hal_serial_write(hal_serial1, (uint8_t *)&tp_ubx, sizeof(struct ubx_msg__CFG_TP5__SetTimePulse_s));
