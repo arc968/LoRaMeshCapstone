@@ -1,6 +1,7 @@
 #include "../../hal/hal.h"
 #include "drv_sched.h"
 
+#include <stdbool.h>
 #include "../timer/drv_timer.h"
 
 enum job_type_e {
@@ -33,28 +34,41 @@ struct state_s {
 	struct job_s jobs[DRV_SCHED__MAX_JOBS];
 } state;
 
+static volatile bool initialized = false;
+
 static void worker_onAbsoluteAvailable(void);
-void drv_sched_init(void (*func_onSleep_ptr)(void), void (*func_onWake_ptr)(void)) {
-	drv_timer_init();
-	state.func_onSleep_ptr = func_onSleep_ptr;
-	state.func_onWake_ptr = func_onWake_ptr;
-	state.head_ready = NULL;
-	state.head_timed = NULL;
-	state.head_empty = &(state.jobs[0]);
-	state.lastRunTime = 0;
-	for (int i=0; i<DRV_SCHED__MAX_JOBS; i++) {
-		if (i == DRV_SCHED__MAX_JOBS-1) {
-			state.jobs[i].next = NULL;
-		} else {
-			state.jobs[i].next = &(state.jobs[i+1]);
+void drv_sched_init(void) {
+	if (!initialized) {
+		drv_timer_init();
+		state.func_onSleep_ptr = NULL;
+		state.func_onWake_ptr = NULL;
+		state.head_ready = NULL;
+		state.head_timed = NULL;
+		state.head_empty = &(state.jobs[0]);
+		state.lastRunTime = 0;
+		for (int i=0; i<DRV_SCHED__MAX_JOBS; i++) {
+			if (i == DRV_SCHED__MAX_JOBS-1) {
+				state.jobs[i].next = NULL;
+			} else {
+				state.jobs[i].next = &(state.jobs[i+1]);
+			}
+			state.jobs[i].interval = 0;
+			state.jobs[i].time = 0;
+			state.jobs[i].func_ptr = NULL;
+			state.jobs[i].priority = DRV_SCHED_PRI__IDLE;
+			state.jobs[i].type = JOB_TYPE__NONE;
 		}
-		state.jobs[i].interval = 0;
-		state.jobs[i].time = 0;
-		state.jobs[i].func_ptr = NULL;
-		state.jobs[i].priority = DRV_SCHED_PRI__IDLE;
-		state.jobs[i].type = JOB_TYPE__NONE;
+		drv_timer_setCallbackOnAbsoluteTimeAvailable(worker_onAbsoluteAvailable);
+		initialized = true;
 	}
-	drv_timer_setCallbackOnAbsoluteTimeAvailable(worker_onAbsoluteAvailable);
+}
+
+void drv_sched_setOnSleepCallback(void (*func_onSleep_ptr)(void)) {
+	state.func_onSleep_ptr = func_onSleep_ptr;
+}
+
+void drv_sched_setOnWakeCallback(void (*func_onWake_ptr)(void)) {
+	state.func_onWake_ptr = func_onWake_ptr;
 }
 
 static struct job_s * popEmptyJob(void) {

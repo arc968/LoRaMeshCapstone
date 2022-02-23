@@ -3,6 +3,10 @@
 #elif !defined(HW_GPS_UBLOX_NEO6_UBX_H)
 	#define HW_GPS_UBLOX_NEO6_UBX_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include "../../../../lib/byteorder/lib_byteorder.h"
 
@@ -21,7 +25,6 @@
 
 typedef uint8_t U1;
 typedef int8_t I1;
-//typedef uint8_t X1[1];
 typedef uint8_t X1;
 typedef uint16_t U2;
 typedef int16_t I2;
@@ -32,8 +35,6 @@ typedef uint8_t X4[4];
 typedef float R4;
 typedef double R8;
 typedef uint8_t CH;
-
-//#pragma scalar_storage_order big-endian
 
 struct ubx_msg_sync_s {
 	union {
@@ -110,7 +111,7 @@ struct ubx_msg__CFG_MSG__SetMessageRates_s {
 };
 */
 
-#define UBX_MSG__CFG_PRT__SetPortConfigurationForUART_SIZE 20
+#define UBX_MSG__CFG_PRT__SetPortConfigurationForUART_PAYLOAD_SIZE 20
 struct ubx_msg__CFG_PRT__SetPortConfigurationForUART_s {
 	struct ubx_msg_sync_s sync;
 	union {
@@ -137,21 +138,21 @@ struct ubx_msg__CFG_PRT__SetPortConfigurationForUART_s {
 				U2 reserved4;
 				U2 reserved5;
 			} payload;
-		} body;
-		uint8_t raw[UBX_MSG_HEADER_SIZE+UBX_MSG__CFG_PRT__SetPortConfigurationForUART_SIZE];
+		};
+		uint8_t body[UBX_MSG_HEADER_SIZE+UBX_MSG__CFG_PRT__SetPortConfigurationForUART_PAYLOAD_SIZE];
 	};
 	struct ubx_msg_checksum_s checksum;
 } __attribute__((packed, aligned(1))) const ubx_msg__CFG_PRT__SetPortConfigurationForUART_s_default = {
 	.sync = {
 		.syncChars = UBX_SYNC_CHARS,
 	},
-	.body.header = {
+	.header = {
 		.ID = UBX_MSG_ID__CFG_PRT,
-		.length = (UBX_MSG__CFG_PRT__SetPortConfigurationForUART_SIZE),
+		.length = UBX_MSG__CFG_PRT__SetPortConfigurationForUART_PAYLOAD_SIZE,
 	},
-	.body.payload = {0},
-	.body.payload.portID = 1,
-	.body.payload.mode.reserved1 = 1,
+	.payload = {0},
+	.payload.portID = 1,
+	.payload.mode.reserved1 = 1,
 	.checksum = {0},
 };
 
@@ -227,7 +228,7 @@ struct ubx_msg__CFG_TP__SetTimePulse_s {
 };
 */
 
-#define UBX_MSG__CFG_TP5__SetTimePulse_SIZE 32
+#define UBX_MSG__CFG_TP5__SetTimePulse_PAYLOAD_SIZE 32
 struct ubx_msg__CFG_TP5__SetTimePulse_s {
 	struct ubx_msg_sync_s sync;
 	union {
@@ -256,21 +257,24 @@ struct ubx_msg__CFG_TP5__SetTimePulse_s {
 					X1 :8; X1 :8; X1 :8; //3 byte padding
 				} __attribute__((scalar_storage_order("big-endian")));
 			} payload;
-		} body;
-		uint8_t raw[UBX_MSG_HEADER_SIZE+UBX_MSG__CFG_TP5__SetTimePulse_SIZE];
+		};
+		uint8_t body[UBX_MSG_HEADER_SIZE+UBX_MSG__CFG_TP5__SetTimePulse_PAYLOAD_SIZE];
 	};
 	struct ubx_msg_checksum_s checksum;
 } __attribute__((packed, aligned(1))) const ubx_msg__CFG_TP5__SetTimePulse_default = {
 	.sync = {
 		.syncChars = UBX_SYNC_CHARS,
 	},
-	.body.header = {
+	.header = {
 		.ID = UBX_MSG_ID__CFG_TP5,
-		.length = (UBX_MSG__CFG_TP5__SetTimePulse_SIZE),
+		.length = UBX_MSG__CFG_TP5__SetTimePulse_PAYLOAD_SIZE,
 	},
-	.body.payload = {0},
+	.payload = {0},
 	.checksum = {0},
 };
 
-//#pragma scalar_storage_order default
+#ifdef __cplusplus
+}
+#endif
+
 #endif // HW_GPS_UBLOX_NEO6_UBX_H

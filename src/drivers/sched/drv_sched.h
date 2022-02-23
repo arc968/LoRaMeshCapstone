@@ -26,12 +26,16 @@ enum drv_sched_err_e {
 	DRV_SCHED_ERR__INVALID_TIME, //invalid time of day
 };
 
-void drv_sched_init(void (*func_onSleep_ptr)(void), void (*func_onWake_ptr)(void));
+void drv_sched_init(void);
 
 #ifdef __GNUC__
 __attribute__((noreturn))
 #endif
 void drv_sched_start(void);
+
+void drv_sched_setOnSleepCallback(void (*func_onSleep_ptr)(void));
+
+void drv_sched_setOnWakeCallback(void (*func_onWake_ptr)(void));
 
 enum drv_sched_err_e drv_sched_once(void (*func_ptr)(void*), void * func_arg, enum drv_sched_pri_e priority, lib_datetime_interval_t delay_ms);
 
