@@ -55,6 +55,14 @@ extern "C" {
 	#define LIB_BYTEORDER_NTOH_U32(data) ( (uint32_t)(data) )
 	#define LIB_BYTEORDER_NTOH_U64(data) ( (uint64_t)(data) )
 
+	#define LIB_BYTEORDER_HTOL_U16(data) ( ((uint16_t) LIB_BYTEORDER_SWAP_2((uint16_t)(data))) )
+	#define LIB_BYTEORDER_HTOL_U32(data) ( ((uint32_t) LIB_BYTEORDER_SWAP_4((uint32_t)(data))) )
+	#define LIB_BYTEORDER_HTOL_U64(data) ( ((uint64_t) LIB_BYTEORDER_SWAP_8((uint64_t)(data))) )
+
+	#define LIB_BYTEORDER_LTON_U16(data) ( ((uint16_t) LIB_BYTEORDER_SWAP_2((uint16_t)(data))) )
+	#define LIB_BYTEORDER_LTON_U32(data) ( ((uint32_t) LIB_BYTEORDER_SWAP_4((uint32_t)(data))) )
+	#define LIB_BYTEORDER_LTON_U64(data) ( ((uint64_t) LIB_BYTEORDER_SWAP_8((uint64_t)(data))) )
+
 #endif
 
 #ifdef LIB_BYTEORDER__LITTLE_ENDIAN
@@ -66,6 +74,14 @@ extern "C" {
 	#define LIB_BYTEORDER_NTOH_U16(data) ( ((uint16_t) LIB_BYTEORDER_SWAP_2((uint16_t)(data))) )
 	#define LIB_BYTEORDER_NTOH_U32(data) ( ((uint32_t) LIB_BYTEORDER_SWAP_4((uint32_t)(data))) )
 	#define LIB_BYTEORDER_NTOH_U64(data) ( ((uint64_t) LIB_BYTEORDER_SWAP_8((uint64_t)(data))) )
+
+	#define LIB_BYTEORDER_HTOL_U16(data) ( (uint16_t)(data) )
+	#define LIB_BYTEORDER_HTOL_U32(data) ( (uint32_t)(data) )
+	#define LIB_BYTEORDER_HTOL_U64(data) ( (uint64_t)(data) )
+
+	#define LIB_BYTEORDER_LTOH_U16(data) ( (uint16_t)(data) )
+	#define LIB_BYTEORDER_LTOH_U32(data) ( (uint32_t)(data) )
+	#define LIB_BYTEORDER_LTOH_U64(data) ( (uint64_t)(data) )
 
 #endif
 

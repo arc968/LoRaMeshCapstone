@@ -21,19 +21,19 @@
 extern "C" {
 #endif
 
-extern const void * hal_serial0;
-extern const void * hal_serial1;
+extern void * const hal_serial0;
+extern void * const hal_serial1;
 //extern const void * hal_serial2;
 //extern const void * hal_serial3;
 
-bool hal_serial_ready(void *handle);
-void hal_serial_begin(void *handle, uint16_t baud);
-void hal_serial_end(void *handle);
-void hal_serial_write(void *handle, uint8_t *buf, uint16_t length);
-size_t hal_serial_readBytes(void *handle, uint8_t *buf, uint16_t length);
-void hal_serial_flush(void *handle);
-void hal_serial_setTimeout(void *handle, uint32_t mstime);
-uint16_t hal_serial_available(void *handle);
+bool hal_serial_ready(void * const handle);
+void hal_serial_begin(void * const handle, uint16_t baud);
+void hal_serial_end(void * const handle);
+void hal_serial_write(void * const handle, uint8_t *buf, uint16_t length);
+size_t hal_serial_readBytes(void * const handle, uint8_t *buf, uint16_t length);
+void hal_serial_flush(void * const handle);
+void hal_serial_setTimeout(void * const handle, uint32_t mstime);
+uint16_t hal_serial_available(void * const handle);
 
 #ifdef __cplusplus
 }

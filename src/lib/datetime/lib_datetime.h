@@ -23,6 +23,7 @@ typedef uint64_t lib_datetime_interval_t; //time interval in ms
 #define PACK_STRUCTS
 #define USE_BITFIELDS
 #if defined(USE_BITFIELDS)
+#pragma scalar_storage_order big-endian
 //bitfields are used to reduce the struct down to 6 bytes
 //this will increase binary size by quite a bit, but saves a lot of memory
 struct lib_datetime_s {
@@ -39,6 +40,7 @@ struct lib_datetime_s {
 	__attribute__((packed))
 #endif
 ;
+#pragma scalar_storage_order default
 #else
 struct lib_datetime_s {
 	uint16_t year; //yyyy
