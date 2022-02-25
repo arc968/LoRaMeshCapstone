@@ -27,6 +27,7 @@ extern "C" {
 #define MKRWAN1300
 //#define RAK4260
 //#define RAK4600
+//#define RAK11300
 
 #define GPS_NONE
 //#define GPS_UBLOX_NEO6

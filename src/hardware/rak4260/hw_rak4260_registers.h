@@ -5,7 +5,7 @@
  */
  
  /**
- * \file hw_ibug_registers.h
+ * \file hw_rak4260_registers.h
  * \brief This file is used to define all the specific RAK4260 hardware register adresses and macros
  * for the library code to use for compiling to work with. 
  * 

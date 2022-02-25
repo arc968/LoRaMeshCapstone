@@ -28,6 +28,8 @@ extern "C" {
 	#include "ra4260k/hw_rak4260.h"
 #elif defined(RAK4600)
 	#include"rak4600/hw_rak4600.h"
+#elif defined(RAK11300)
+	#include"rak11300/hw_rak11300.h"
 #else
 	#error "No hardware defined."
 #endif
