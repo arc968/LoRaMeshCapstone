@@ -123,8 +123,8 @@ void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, uint16_t millis) {
 
 void hal_power_softReset(void) {
 #if defined(HW_ARDUINO) && defined(HW_MKRWAN1300_H)
-	WDOGCONTROL  = WDOGCONTROL | 0x0x00000003;
-	WDOGLOAD 	 = 0x0x00000001;
+	//WDOGCONTROL  = WDOGCONTROL | 0x0x00000003;
+	//WDOGLOAD 	 = 0x0x00000001;
 	while(1) {/* wait until reset */};
 #elif defined(HW_RAK4260_H)
 	HW_POWER_AIRCR = 0x05FA0006;

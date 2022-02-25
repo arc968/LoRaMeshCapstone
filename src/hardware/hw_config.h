@@ -29,11 +29,11 @@ extern "C" {
 //#define RAK4600
 //#define RAK11300
 
-#define GPS_NONE
-//#define GPS_UBLOX_NEO6
+//#define GPS_NONE
+#define GPS_UBLOX_NEO6
 
-#define LORA_NONE
-//#define LORA_SEMTECH_SX1276
+//#define LORA_NONE
+#define LORA_SEMTECH_SX1276
 
 #ifdef __cplusplus
 }

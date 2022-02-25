@@ -8,8 +8,11 @@
 
 #include "hw_gps_ublox_neo6_UBX.h"
 #include "hw_gps_ublox_neo6_NMEA.h"
+#include "../../../../hal/hal.h"
 #include "../../../../lib/byteorder/lib_byteorder.h"
 #include "../../../../drivers/gps/drv_gps.h"
+#include "../../../../drivers/timer/drv_timer.h"
+#include "../../../../drivers/sched/drv_sched.h"
 
 /*
 #if defined __has_attribute
@@ -24,116 +27,76 @@
 #endif
 */
 
-struct ubx_msg_sync_s {
-	const union {
-		uint8_t syncChars[2];
-		struct {
-			uint8_t syncChar1;
-			uint8_t syncChar2;
-		};
-	};
-} __attribute__((packed, aligned(1))) const ubx_msg_sync_s_default = {
-	.syncChars = UBX_SYNC_CHARS,
-};
 
-struct ubx_msg_header_s {
-	const union {
-		uint8_t ID[2];
-		struct {
-			uint8_t msgClass;
-			uint8_t msgID;
-		};
-	};
-	const union {
-		uint16_t length; //must be little-endian
-		uint8_t len[2];
-		struct {
-			uint8_t lenLSB;
-			uint8_t lenMSB;
-		};
-	};
-} __attribute__((packed, aligned(1)));
-
-struct ubx_msg_footer_s {
-	uint8_t ck_a;
-	uint8_t ck_b;
-} __attribute__((packed, aligned(1)));
-
-struct ubx_msg__CFG_MSG__SetMessageRates_s {
-	struct ubx_msg_sync_s sync;
-	struct ubx_msg_header_s header;
-	struct {
-		uint8_t msgClass;
-		uint8_t msgID;
-		union {
-			uint8_t rate[6];
-			struct {
-				uint8_t if_DDC:1; // 1=enable, 0=disable
-				uint8_t if_SerialPort1:1; // 1=enable, 0=disable
-				uint8_t if_SerialPort2:1; // 1=enable, 0=disable
-				uint8_t if_USB:1; // 1=enable, 0=disable
-				uint8_t if_SPI:1; // 1=enable, 0=disable
-				uint8_t if_reserved:1; // 1=enable, 0=disable
-			};
-		};
-	} payload;
-	struct ubx_msg_footer_s footer;
-} __attribute__((packed, aligned(1))) const ubx_msg__CFG_MSG__SetMessageRates_s_default = {
-	.sync = {
-		.syncChars = UBX_SYNC_CHARS,
-	},
-	.header = {
-		.ID = UBX_MSG_ID__CFG_MSG,
-		.length = LIB_BYTEORDER_HTON_U16(8),
-		//.length = LIB_BYTEORDER_HTON_U16(sizeof(((struct ubx_msg__CFG_MSG__SetMessageRates_s*)NULL)->payload)),
-	},
-	.payload = {0},
-	.footer = {0},
-};
-
-struct ubx_msg__CFG_TP__SetTimePulse_s {
-	struct ubx_msg_sync_s sync;
-	struct ubx_msg_header_s header;
-	struct {
-		uint32_t interval_us;
-		uint32_t length_us;
-		int8_t status;
-		uint8_t timeRef;
-		uint8_t flags;
-		uint8_t reserved1;
-		int16_t antennaCableDelay_ns;
-		int16_t rfGroupDelay_ns;
-		int32_t userDelay_ns;
-	} payload;
-	struct ubx_msg_footer_s footer;
-} __attribute__((packed, aligned(1))) const ubx_msg__CFG_TP__SetTimePulse_default = {
-	.sync = {
-		.syncChars = UBX_SYNC_CHARS,
-	},
-	.header = {
-		.ID = UBX_MSG_ID__CFG_TP,
-		.length = LIB_BYTEORDER_HTON_U16(20),
-	},
-	.payload = {0},
-	.footer = {0},
-};
-
-static void ubx_checksum(struct ubx_msg_header_s * header, struct ubx_msg_footer_s * footer) {
-	footer->ck_a = 0;
-	footer->ck_b = 0;
-	for (size_t i=0; i<(size_t)(((void *)footer)-((void *)header)); i++) { //TODO fix this, signed/unsigned integer comparison warning
-		footer->ck_a += ((uint8_t *)header)[i];
-		footer->ck_b += footer->ck_a;
-	}
+static volatile lib_datetime_interval_t timestamp = 0;
+static void isr_pps(void) {
+	timestamp = drv_timer_getMonotonicTime();
 }
 
 void drv_gps_init(struct drv_gps_s * handle) {
+	//initialize dependencies
+		drv_sched_init();
+		drv_timer_init();
 	//initialize serial1 port for communicating with GPS
-	
-	//configure GPS for timepulse
-	
+		hal_serial_begin(hal_serial1, 9600);
+	//disable NMEA
+		struct ubx_msg__CFG_PRT__SetPortConfigurationForUART_s ubx_cfg_prt = ubx_msg__CFG_PRT__SetPortConfigurationForUART_s_default;
+		ubx_cfg_prt.payload = (typeof(ubx_cfg_prt.payload)) {
+			.portID = 1,
+			.mode.reserved1 = 1,
+			.mode.charLen = 0b11,
+			.mode.parity = 0b100,
+			.baudRate = 9600,
+			.inProtoMask.ubx = 1,
+			.outProtoMask.ubx = 1
+		};
+		/*ubx_cfg_prt.payload.mode.charLen = 0b11;
+		ubx_cfg_prt.payload.mode.parity = 0b100;
+		ubx_cfg_prt.payload.baudRate = 9600;
+		ubx_cfg_prt.payload.inProtoMask.ubx = 1;
+		ubx_cfg_prt.payload.outProtoMask.ubx = 1;*/
+		
+		//TODO: make this a macro and test it
+		UBX_CHECKSUM(ubx_cfg_prt);
+		//ubx_checksum(&(ubx_cfg_prt.header), offsetof(typeof(ubx_cfg_prt), checksum) - offsetof(typeof(ubx_cfg_prt), header), &(ubx_cfg_prt.checksum));
+		
+		//ubx_checksum(ubx_cfg_prt.body, sizeof(ubx_cfg_prt.body), &(ubx_cfg_prt.checksum));
+		
+		hal_serial_flush(hal_serial1);
+		hal_serial_write(hal_serial1, (uint8_t *)&ubx_cfg_prt, sizeof(struct ubx_msg__CFG_PRT__SetPortConfigurationForUART_s));
+		hal_serial_flush(hal_serial1);
+
+		hal_timer_delay(250); //need to wait for it to finish
+		//TODO: look for correct ACK
+
 	//enable interrupts on GPS pulse GPIO pin
-	
+		hal_interrupt_attachPin(0, isr_pps, INTERRUPT_FALLING);
+	//configure GPS for timepulse
+		struct ubx_msg__CFG_TP5__SetTimePulse_s tp_ubx = ubx_msg__CFG_TP5__SetTimePulse_s_default;
+		tp_ubx.payload.freqPeriod = 1000000;
+		tp_ubx.payload.pulseLenRatio = 100000;
+		tp_ubx.payload.Active = 1;
+		tp_ubx.payload.LockGpsFreq = 1;
+		tp_ubx.payload.isLength = 1;
+		tp_ubx.payload.alignToTow = 1;
+		tp_ubx.payload.polarity = 0;
+		//ubx_checksum(tp_ubx.body, sizeof(tp_ubx.body), &(tp_ubx.checksum));
+		UBX_CHECKSUM(tp_ubx);
+
+		hal_serial_flush(hal_serial1);
+		hal_serial_write(hal_serial1, (uint8_t *)&tp_ubx, sizeof(struct ubx_msg__CFG_TP5__SetTimePulse_s));
+		hal_serial_flush(hal_serial1);
+
+		hal_timer_delay(250); //need to wait for it to finish
+		//TODO: look for correct ACK
+
+	while(true) { //check GPS reply
+		if (hal_serial_available(hal_serial1) > 0) {
+			uint8_t buf[128];
+			size_t count = hal_serial_readBytes(hal_serial1, buf, sizeof(buf));
+			hal_serial_write(hal_serial0, buf, count);
+		}
+	}
 }
 
 #endif // HW_GPS_UBLOX_NEO6_H
