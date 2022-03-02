@@ -21,6 +21,10 @@ bool hal_serial_ready(void * const handle) {
 		return (*(static_cast<Serial_*>(handle)));
 	#elif defined(HW_RAK4260_H)
 		return 0; //TODO
+	#elif defined(HW_RAK4600_H)
+		return 0; //TODO
+	#elif defined(HW_RAK11300_H)
+		return 0; //TODO
 	#else
 		#error "Hardware not yet implemented"
 	#endif
@@ -30,7 +34,11 @@ void hal_serial_begin(void * const handle, uint16_t baud) {
 	#if defined(HW_ARDUINO)
 		static_cast<HardwareSerial*>(handle)->begin(baud);
 	#elif defined(HW_RAK4260_H)
-	
+		
+	#elif defined(HW_RAK4600_H)
+			
+	#elif defined(HW_RAK11300_H)
+		
 	#else
 		#error "Hardware not yet implemented"
 	#endif
@@ -40,7 +48,11 @@ void hal_serial_end(void * const handle) {
 	#if defined(HW_ARDUINO)
 		static_cast<HardwareSerial*>(handle)->end();
 	#elif defined(HW_RAK4260_H)
-	
+		
+	#elif defined(HW_RAK4600_H)
+			
+	#elif defined(HW_RAK11300_H)
+		
 	#else
 		#error "Hardware not yet implemented"
 	#endif
@@ -50,7 +62,11 @@ void hal_serial_write(void * const handle,uint8_t *buf, uint16_t length) {
 	#if defined(HW_ARDUINO)
 		static_cast<HardwareSerial*>(handle)->write(buf, length);
 	#elif defined(HW_RAK4260_H)
-	
+		
+	#elif defined(HW_RAK4600_H)
+			
+	#elif defined(HW_RAK11300_H)
+		
 	#else
 		#error "Hardware not yet implemented"
 	#endif
@@ -61,6 +77,10 @@ size_t hal_serial_readBytes(void * const handle, uint8_t *buf, uint16_t length) 
 		return static_cast<HardwareSerial*>(handle)->readBytes((char*)buf, length);
 	#elif defined(HW_RAK4260_H)
 		return 0; //TODO
+	#elif defined(HW_RAK4600_H)
+		return 0; //TODO
+	#elif defined(HW_RAK11300_H)
+		return 0; //TODO
 	#else
 		#error "Hardware not yet implemented"
 	#endif
@@ -70,7 +90,11 @@ void hal_serial_flush(void * const handle) {
 	#if defined(HW_ARDUINO)
 		static_cast<HardwareSerial*>(handle)->flush();
 	#elif defined(HW_RAK4260_H)
-	
+		
+	#elif defined(HW_RAK4600_H)
+			
+	#elif defined(HW_RAK11300_H)
+		
 	#else
 		#error "Hardware not yet implemented"
 	#endif
@@ -80,7 +104,11 @@ void hal_serial_setTimeout(void * const handle, uint32_t mstime) {
 	#if defined(HW_ARDUINO)
 		static_cast<HardwareSerial*>(handle)->setTimeout(mstime);
 	#elif defined(HW_RAK4260_H)
-	
+		
+	#elif defined(HW_RAK4600_H)
+			
+	#elif defined(HW_RAK11300_H)
+		
 	#else
 		#error "Hardware not yet implemented"
 	#endif
@@ -90,6 +118,10 @@ uint16_t hal_serial_available(void * const handle) {
 	#if defined(HW_ARDUINO)
 		return static_cast<HardwareSerial*>(handle)->available();
 	#elif defined(HW_RAK4260_H)
+		return 0; //TODO
+	#elif defined(HW_RAK4600_H)
+		return 0; //TODO
+	#elif defined(HW_RAK11300_H)
 		return 0; //TODO
 	#else
 		#error "Hardware not yet implemented"

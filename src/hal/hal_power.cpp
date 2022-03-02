@@ -6,7 +6,9 @@
 #elif defined(HW_RAK4260_H)
 
 #elif defined(HW_RAK4600_H)
-
+			
+#elif defined(HW_RAK11300_H)
+	
 #else
 	#error "Hardware not yet implemented"
 #endif	
@@ -17,6 +19,8 @@ void hal_power_wake(void) {
 #elif defined(HW_RAK4260_H)
 	
 #elif defined(HW_RAK4600_H)
+	
+#elif defined(HW_RAK11300_H)
 	
 #else
 	#error "Hardware not yet implemented"
@@ -44,6 +48,10 @@ void hal_power_idle(uint16_t millis) {
 	HW_POWER_TASKS_LOWPWR = 0x00000000;
 	HW_POWER_TASKS_CONSTLAT = 0x00000001;
 	
+	//TODO impliment timer interrupt wake control
+	
+#elif defined(HW_RAK11300_H)
+	
 #else
 	#error "Hardware not yet implemented"
 #endif
@@ -69,6 +77,10 @@ void hal_power_sleep(uint16_t millis) {
 	
 	HW_POWER_TASKS_CONSTLAT = 0x00000000;
 	HW_POWER_TASKS_LOWPWR 	= 0x00000001;	
+	
+	//TODO impliment timer interrupt wake control
+	
+#elif defined(HW_RAK11300_H)
 	
 #else
 	#error "Hardware not yet implemented"
@@ -96,12 +108,48 @@ void hal_power_deepSleep(uint16_t millis) {
 	HW_POWER_TASKS_CONSTLAT = 0x00000000;
 	HW_POWER_TASKS_LOWPWR 	= 0x00000001;	
 	
+	//TODO impliment timer interrupt wake control
+
+#elif defined(HW_RAK11300_H)
+	
 #else
 	#error "Hardware not yet implemented"
 #endif
 }
 
 void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, uint16_t millis) {
+	
+	static uint8_t powertimersetup = 1;
+	
+	if (powertimersetup != 0) {
+		
+		#if defined(HW_MKRWAN1300_H)
+			
+		#elif defined(HW_RAK4260_H)
+			//setup milisecond timer interval on tc0 with 32 percision
+			HW_TC0_CTRLA &= HW_TCxCTRLA_DISABLE;
+				
+			HW_TC0_CTRLA |= HW_TCxCTRLA_COUNT32MODE | HW_TCxCTRLA_PRESCALER_DIV1;
+			
+			HW_TC0_CTRLBSET |= HW_TCxCTRLBSET_COUNTUP | HW_TCxCTRLBSET_STOP;
+			
+			HW_TC0_INTFLAG = 0x00;
+			
+			TW_TC0_INTSET = 0x10;
+			
+			
+			
+			HW_TC0_CTRLA |= HW_TCx_ENABLE;
+		#elif defined(HW_RAK4600_H)
+				
+		#elif defined(HW_RAK11300_H)
+			
+		#else
+			#error "Hardware not yet implemented"
+		#endif
+				
+		powertimersetup = 0;
+	}
 
 	if (pwrmode == PWR_FULL) {
 		hal_power_wake();
@@ -122,14 +170,19 @@ void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, uint16_t millis) {
 }
 
 void hal_power_softReset(void) {
-#if defined(HW_ARDUINO) && defined(HW_MKRWAN1300_H)
+#if defined(HW_MKRWAN1300_H)
 	//WDOGCONTROL  = WDOGCONTROL | 0x0x00000003;
 	//WDOGLOAD 	 = 0x0x00000001;
-	while(1) {/* wait until reset */};
+	//while(1) {/* wait until reset */};
+	HW_POWER_AIRCR = 0x05FA0006;
+	while(1) {/* wait until reset */}
 #elif defined(HW_RAK4260_H)
 	HW_POWER_AIRCR = 0x05FA0006;
 	while(1) {/* wait until reset */}
 #elif defined(HW_RAK4600_H)
+	HW_POWER_AIRCR = 0x05FA0006;
+	while(1) {/* wait until reset */}
+#elif defined(HW_RAK11300_H)
 	HW_POWER_AIRCR = 0x05FA0006;
 	while(1) {/* wait until reset */}
 #else

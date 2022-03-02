@@ -17,7 +17,11 @@ void hal_i2c_begin(void) {
 		Wire.begin();
 		hal_i2c_begun = 1;
 	#elif defined(HW_RAK4260_H)
-	
+		
+	#elif defined(HW_RAK4600_H)
+			
+	#elif defined(HW_RAK11300_H)
+		
 	#else
 		#error "Hardware not yet implemented"
 	#endif
@@ -29,6 +33,10 @@ void hal_i2c_requestFrom(uint16_t address, uint16_t quantity, bool stop) {
 		Wire.requestFrom(address, quantity, stop);
 	#elif defined(HW_RAK4260_H)
 	
+	#elif defined(HW_RAK4600_H)
+			
+	#elif defined(HW_RAK11300_H)
+		
 	#else
 		#error "Hardware not yet implemented"
 	#endif
@@ -39,6 +47,10 @@ void hal_i2c_beginTransmission(uint8_t address) {
 		Wire.beginTransmission(address);
 	#elif defined(HW_RAK4260_H)
 	
+	#elif defined(HW_RAK4600_H)
+			
+	#elif defined(HW_RAK11300_H)
+		
 	#else
 		#error "Hardware not yet implemented"
 	#endif
@@ -48,6 +60,10 @@ uint8_t hal_i2c_endTransmission(bool stop) {
 	#if defined(HW_ARDUINO)
 		return Wire.endTransmission(stop);
 	#elif defined(HW_RAK4260_H)
+		return 0; //TODO
+	#elif defined(HW_RAK4600_H)
+		return 0; //TODO
+	#elif defined(HW_RAK11300_H)
 		return 0; //TODO
 	#else
 		#error "Hardware not yet implemented"
@@ -59,6 +75,10 @@ void hal_i2c_write(uint8_t *buf, uint16_t length) {
 		Wire.write(buf, length);
 	#elif defined(HW_RAK4260_H)
 	
+	#elif defined(HW_RAK4600_H)
+			
+	#elif defined(HW_RAK11300_H)
+		
 	#else
 		#error "Hardware not yet implemented"
 	#endif
@@ -68,6 +88,10 @@ uint16_t hal_i2c_available(void) {
 	#if defined(HW_ARDUINO)
 		return Wire.available();
 	#elif defined(HW_RAK4260_H)
+		return 0; //TODO
+	#elif defined(HW_RAK4600_H)
+		return 0; //TODO
+	#elif defined(HW_RAK11300_H)
 		return 0; //TODO
 	#else
 		#error "Hardware not yet implemented"
@@ -79,6 +103,10 @@ uint8_t hal_i2c_read(void) {
 		return Wire.read();
 	#elif defined(HW_RAK4260_H)
 		return 0; //TODO
+	#elif defined(HW_RAK4600_H)
+		return 0; //TODO
+	#elif defined(HW_RAK11300_H)
+		return 0; //TODO
 	#else
 		#error "Hardware not yet implemented"
 	#endif
@@ -88,7 +116,11 @@ void hal_i2c_setClock(uint32_t freq) {
 	#if defined(HW_ARDUINO)
 		Wire.setClock(freq);
 	#elif defined(HW_RAK4260_H)
-	
+		
+	#elif defined(HW_RAK4600_H)
+			
+	#elif defined(HW_RAK11300_H)
+		
 	#else
 		#error "Hardware not yet implemented"
 	#endif
@@ -99,6 +131,10 @@ void hal_i2c_onReceive() {
 		Wire.onReceive(hal_i2c_received);
 	#elif defined(HW_RAK4260_H)
 	
+	#elif defined(HW_RAK4600_H)
+			
+	#elif defined(HW_RAK11300_H)
+		
 	#else
 		#error "Hardware not yet implemented"
 	#endif
@@ -109,6 +145,10 @@ void hal_i2c_onRequest(void (*handler)(void)) {
 		Wire.onRequest(handler);
 	#elif defined(HW_RAK4260_H)
 	
+	#elif defined(HW_RAK4600_H)
+			
+	#elif defined(HW_RAK11300_H)
+		
 	#else
 		#error "Hardware not yet implemented"
 	#endif

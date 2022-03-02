@@ -22,8 +22,6 @@
 extern "C" {
 #endif
 
-
-//void hal_timer_init(void);
 void hal_timer_init(void (*isr)(void), uint32_t interval_us);
 
 void hal_timer_delay(uint16_t msdelay);

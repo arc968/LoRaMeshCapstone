@@ -26,6 +26,11 @@
 extern "C" {
 #endif
 
+/*****Power registers**********/
+#define HW_POWER_AIRCR					(* (uint32_t *) 0xE000ED0C)
+
+
+/*****Timer registers**********/
 
  
 #ifdef __cplusplus
