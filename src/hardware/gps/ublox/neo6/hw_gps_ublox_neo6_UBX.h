@@ -14,20 +14,20 @@ extern "C" {
 
 //ACK
 #define UBX_MSG_ID__ACK_ACK {0x05, 0x01}
-	#define UBX_MSG__ACK_ACK {UBX_MSG_ID__ACK_ACK, 2}
+	#define UBX_MSG__ACK_ACK {.ID=UBX_MSG_ID__ACK_ACK, .length=2}
 #define UBX_MSG_ID__ACK_NAK {0x05, 0x00}
-	#define UBX_MSG__ACK_NAK {UBX_MSG_ID__ACK_NAK, 2}
+	#define UBX_MSG__ACK_NAK {.ID=UBX_MSG_ID__ACK_NAK, .length=2}
 //CFG
 #define UBX_MSG_ID__CFG_PRT {0x06, 0x00}
-	#define UBX_MSG__CFG_PRT__SetPortConfigurationForUART {UBX_MSG_ID__CFG_PRT, 20}
+	#define UBX_MSG__CFG_PRT__SetPortConfigurationForUART {.ID=UBX_MSG_ID__CFG_PRT, .length=20}
 #define UBX_MSG_ID__CFG_MSG {0x06, 0x01}
-	#define UBX_MSG__CFG_MSG__SetMessageRate {UBX_MSG_ID__CFG_MSG, 3}
+	#define UBX_MSG__CFG_MSG__SetMessageRate {.ID=UBX_MSG_ID__CFG_MSG, .length=3}
 #define UBX_MSG_ID__CFG_TP {0x06, 0x07}
 #define UBX_MSG_ID__CFG_TP5 {0x06, 0x31}
-	#define UBX_MSG__CFG_TP5__SetTimePulse {UBX_MSG_ID__CFG_TP5, 32}
+	#define UBX_MSG__CFG_TP5__SetTimePulse {.ID=UBX_MSG_ID__CFG_TP5, .length=32}
 //NAV
 #define UBX_MSG_ID__NAV_TIMEUTC {0x01, 0x21}
-#define UBX_MSG__NAV_TIMEUTC__TimeSolution {UBX_MSG_ID__NAV_TIMEUTC, 20}
+#define UBX_MSG__NAV_TIMEUTC__TimeSolution {.ID=UBX_MSG_ID__NAV_TIMEUTC, .length=20}
 //NMEA
 #define UBX_MSG_ID__NMEA_GPGGA {0xF0, 0x00}
 #define UBX_MSG_ID__NMEA_GPGLL {0xF0, 0x01}
@@ -48,6 +48,7 @@ typedef float R4;
 typedef double R8;
 typedef uint8_t CH;
 
+#define UBX_MSG_SYNC_SIZE 2
 struct ubx_msg_sync_s {
 	union {
 		const uint8_t syncChars[2];
@@ -63,15 +64,23 @@ struct ubx_msg_sync_s {
 #define UBX_MSG_HEADER_SIZE 4
 struct ubx_msg_header_s {
 	union {
-		const uint8_t ID[2];
 		struct {
-			const uint8_t msgClass;
-			const uint8_t msgID;
+			union {
+				const uint8_t ID[2];
+				struct {
+					const uint8_t msgClass;
+					const uint8_t msgID;
+				};
+			};
+			union {
+				struct {
+					const uint16_t length;
+				} __attribute__((scalar_storage_order("little-endian")));
+				const uint8_t lenArr[2];
+			};
 		};
+		uint8_t raw[4];
 	};
-	struct {
-		const uint16_t length;
-	} __attribute__((scalar_storage_order("little-endian")));
 } __attribute__((packed, aligned(1)));
 
 struct ubx_msg_checksum_s {
@@ -79,7 +88,7 @@ struct ubx_msg_checksum_s {
 	uint8_t ck_b;
 } __attribute__((packed, aligned(1)));
 
-static void ubx_checksum(uint8_t * raw, size_t size, struct ubx_msg_checksum_s * checksum) {
+static void ubx_msg_checksum(uint8_t * raw, size_t size, struct ubx_msg_checksum_s * checksum) {
 	checksum->ck_a = 0;
 	checksum->ck_b = 0;
 	for (size_t i=0; i<size; i++) {
@@ -88,7 +97,7 @@ static void ubx_checksum(uint8_t * raw, size_t size, struct ubx_msg_checksum_s *
 	}
 }
 
-#define UBX_CHECKSUM(ubx_msg) ubx_checksum(&((ubx_msg).header), offsetof(typeof((ubx_msg)), checksum) - offsetof(typeof((ubx_msg)), header), &((ubx_msg).checksum));
+#define UBX_MSG_CHECKSUM(ubx_msg) ubx_msg_checksum((uint8_t *)(&((ubx_msg).header)), offsetof(typeof((ubx_msg)), checksum) - offsetof(typeof((ubx_msg)), header), &((ubx_msg).checksum));
 
 // BEGIN PACKET STRUCTS
 

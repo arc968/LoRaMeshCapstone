@@ -5,6 +5,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "hw_gps_ublox_neo6_UBX.h"
 #include "hw_gps_ublox_neo6_NMEA.h"
@@ -27,10 +28,58 @@
 #endif
 */
 
+#define UBX_MSG_SERIAL_WRITE(serial_port, message) hal_serial_write(serial_port, (uint8_t *)(&(message)), sizeof(typeof(message)));
+
+#define UBX_CFG_MSG_SERIAL_WRITE(serial_port, message) ubx_cfg_write(serial_port, (uint8_t *)(&(message)), sizeof(typeof(message)));
 
 static volatile lib_datetime_interval_t timestamp = 0;
 static void isr_pps(void) {
 	timestamp = drv_timer_getMonotonicTime();
+	if (hal_gpio_digitalRead(6) == 1) {
+		hal_gpio_digitalWrite(6, LOW);
+	} else {
+		hal_gpio_digitalWrite(6, HIGH);
+	}
+}
+
+
+static uint8_t recv_buf[128];
+
+/*
+enum ubx_cfg_reply_e {
+	UBX_CFG_REPLY_ACK,
+	UBX_CFG_REPLY_NAK,
+	UBX_CFG_REPLY_TIMEOUT,
+};
+*/
+
+//TODO: look for correct ACK
+#define UBX_CFG_WRITE_TIMEOUT 200
+static void ubx_cfg_write(void * const handle, uint8_t *msg, uint16_t length) {
+	hal_serial_write(handle, msg, length);
+	hal_serial_flush(handle);
+	hal_timer_delay(250); //need to wait for it to finish
+	/*
+	lib_datetime_interval_t startTime = drv_timer_getMonotonicTime();
+	uint8_t index_sync = 0;
+	while(drv_timer_getMonotonicTime() < (startTime+UBX_CFG_WRITE_TIMEOUT)) {
+		if (hal_serial_available(handle) > 0) {
+			uint8_t buf[64];
+			uint16_t count = hal_serial_readBytes(handle, buf, sizeof(buf));
+			for (uint16_t i=0; i<count; i++) {
+				 if (index_sync == UBX_MSG_SYNC_SIZE) {
+					memmove(&(buf[0]), &(buf[i]), count-i);
+					count -= i;
+				} else if (buf[i] == ubx_msg_sync_s_default.syncChars[index_sync]) {
+					index_sync++;
+				} else {
+					index_sync = 0;
+				}
+			}
+		}
+	}
+	return UBX_CFG_REPLY_TIMEOUT;
+	*/
 }
 
 void drv_gps_init(struct drv_gps_s * handle) {
@@ -50,45 +99,31 @@ void drv_gps_init(struct drv_gps_s * handle) {
 			.inProtoMask.ubx = 1,
 			.outProtoMask.ubx = 1
 		};
-		/*ubx_cfg_prt.payload.mode.charLen = 0b11;
-		ubx_cfg_prt.payload.mode.parity = 0b100;
-		ubx_cfg_prt.payload.baudRate = 9600;
-		ubx_cfg_prt.payload.inProtoMask.ubx = 1;
-		ubx_cfg_prt.payload.outProtoMask.ubx = 1;*/
+		UBX_MSG_CHECKSUM(ubx_cfg_prt);
 		
-		//TODO: make this a macro and test it
-		UBX_CHECKSUM(ubx_cfg_prt);
-		//ubx_checksum(&(ubx_cfg_prt.header), offsetof(typeof(ubx_cfg_prt), checksum) - offsetof(typeof(ubx_cfg_prt), header), &(ubx_cfg_prt.checksum));
-		
-		//ubx_checksum(ubx_cfg_prt.body, sizeof(ubx_cfg_prt.body), &(ubx_cfg_prt.checksum));
-		
-		hal_serial_flush(hal_serial1);
-		hal_serial_write(hal_serial1, (uint8_t *)&ubx_cfg_prt, sizeof(struct ubx_msg__CFG_PRT__SetPortConfigurationForUART_s));
-		hal_serial_flush(hal_serial1);
+		//enum ubx_cfg_reply_e err = 
+		UBX_CFG_MSG_SERIAL_WRITE(hal_serial1, ubx_cfg_prt);
+		//while (err != UBX_CFG_REPLY_ACK);
 
-		hal_timer_delay(250); //need to wait for it to finish
-		//TODO: look for correct ACK
-
-	//enable interrupts on GPS pulse GPIO pin
-		hal_interrupt_attachPin(0, isr_pps, INTERRUPT_FALLING);
 	//configure GPS for timepulse
 		struct ubx_msg__CFG_TP5__SetTimePulse_s tp_ubx = ubx_msg__CFG_TP5__SetTimePulse_s_default;
-		tp_ubx.payload.freqPeriod = 1000000;
-		tp_ubx.payload.pulseLenRatio = 100000;
-		tp_ubx.payload.Active = 1;
-		tp_ubx.payload.LockGpsFreq = 1;
-		tp_ubx.payload.isLength = 1;
-		tp_ubx.payload.alignToTow = 1;
-		tp_ubx.payload.polarity = 0;
-		//ubx_checksum(tp_ubx.body, sizeof(tp_ubx.body), &(tp_ubx.checksum));
-		UBX_CHECKSUM(tp_ubx);
-
-		hal_serial_flush(hal_serial1);
-		hal_serial_write(hal_serial1, (uint8_t *)&tp_ubx, sizeof(struct ubx_msg__CFG_TP5__SetTimePulse_s));
-		hal_serial_flush(hal_serial1);
-
-		hal_timer_delay(250); //need to wait for it to finish
-		//TODO: look for correct ACK
+		tp_ubx.payload = (typeof(tp_ubx.payload)) {
+			.freqPeriod = 1000000,
+			.pulseLenRatio = 100000,
+			.Active = 1,
+			.LockGpsFreq = 1,
+			.isLength = 1,
+			.alignToTow = 1,
+			.polarity = 0,
+		};
+		UBX_MSG_CHECKSUM(tp_ubx);
+		
+		//err = 
+		UBX_CFG_MSG_SERIAL_WRITE(hal_serial1, tp_ubx);
+		//while (err != UBX_CFG_REPLY_ACK);
+		
+	//enable interrupts on GPS pulse GPIO pin
+	hal_interrupt_attachPin(0, isr_pps, INTERRUPT_FALLING);
 
 	while(true) { //check GPS reply
 		if (hal_serial_available(hal_serial1) > 0) {
