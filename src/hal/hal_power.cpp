@@ -126,10 +126,10 @@ void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, uint16_t millis) {
 		#if defined(HW_MKRWAN1300_H)
 			
 		#elif defined(HW_RAK4260_H)
-			//setup milisecond timer interval on tc0 with 32 percision
+			//setup milisecond timer interval on tc0 with 16 percision
 			HW_TC0_CTRLA &= HW_TCxCTRLA_DISABLE;
 				
-			HW_TC0_CTRLA |= HW_TCxCTRLA_COUNT32MODE | HW_TCxCTRLA_PRESCALER_DIV1;
+			HW_TC0_CTRLA |= HW_TCxCTRLA_COUNT16MODE | HW_TCxCTRLA_PRESCALER_DIV1;
 			
 			HW_TC0_CTRLBSET |= HW_TCxCTRLBSET_COUNTUP | HW_TCxCTRLBSET_STOP;
 			
@@ -174,16 +174,16 @@ void hal_power_softReset(void) {
 	//WDOGCONTROL  = WDOGCONTROL | 0x0x00000003;
 	//WDOGLOAD 	 = 0x0x00000001;
 	//while(1) {/* wait until reset */};
-	HW_POWER_AIRCR = 0x05FA0006;
+	HW_POWER_AIRCR = 0x05FA0004;
 	while(1) {/* wait until reset */}
 #elif defined(HW_RAK4260_H)
-	HW_POWER_AIRCR = 0x05FA0006;
+	HW_POWER_AIRCR = 0x05FA0004;
 	while(1) {/* wait until reset */}
 #elif defined(HW_RAK4600_H)
-	HW_POWER_AIRCR = 0x05FA0006;
+	HW_POWER_AIRCR = 0x05FA0004;
 	while(1) {/* wait until reset */}
 #elif defined(HW_RAK11300_H)
-	HW_POWER_AIRCR = 0x05FA0006;
+	HW_POWER_AIRCR = 0x05FA0004;
 	while(1) {/* wait until reset */}
 #else
 	#error "Hardware not yet implemented"

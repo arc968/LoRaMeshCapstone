@@ -15,6 +15,7 @@
 #ifndef HAL_H
 #define HAL_H
 
+#include "hal_rtc.h"
 #include "hal_gpio.h"
 #include "hal_i2c.h"
 #include "hal_interrupt.h"
