@@ -22,38 +22,31 @@
 
 static uint8_t timerIsInitialized = 0;
 
-void hal_timer_init(void (*isr)(void), uint32_t interval_us) {
+void hal_timer_init(void (*isr)(void), uint16_t interval_us) {
 	
 	if (timerIsInitialized == 0) {
 		timerIsInitialized = 1;
 		#if defined(HW_MKRWAN1300_H)
 			ITimer.attachInterruptInterval(interval_us, isr);
 		#elif defined(HW_RAK4260_H)
-			//disable TC to write to setup registers CTRLA->ENABLE bit = 0
-			
-			//enable tc bus clk
-			
-			//select tc size, desired 16 or 32 bit CTRLA -> Mode Bits default is 16 bit counter
-			
-			//set count direction to up CTRLBSET ->DIR bit 
-			
-			
-			
-			
-			//reenable TC
 			
 			HW_TC2_CTRLA &= HW_TCxCTRLA_DISABLE;
 			
-			HW_TC2_CTRLA |= HW_TCxCTRLA_COUNT32MODE | HW_TCxCTRLA_PRESCALER_DIV1;
+			//need to use the 48MHz clk set that up with GCLK
+			
+			HW_TC2_CTRLA |= HW_TCxCTRLA_COUNT16MODE | HW_TCxCTRLA_PRESCALER_DIV2;
 			
 			HW_TC2_CTRLBSET |= HW_TCxCTRLBSET_COUNTUP;
 			
 			HW_TC2_INTFLAG = 0x00;
 			
-			TW_TC2_INTSET = 0x10;
+			HW_TC2_INTSET = 0x10;
 			
 			
+			HW_TC2_CC0 = interval_us;	(48MHz / 2) / 1000 = 1msec , count = 23999
 			
+			
+			//set interrupt to the isr
 			
 			
 			HW_TC0_CTRLA |= HW_TCx_ENABLE;

@@ -23,8 +23,8 @@ enum hw_power_pwrmodes_e {
 	
 	PWR_FULL = 0,
 	PWR_IDLE = 1,
-	PWR_LOW_POWER = 2,
-	PWR_ULTRA_LOW_POWER = 3,
+	PWR_SLEEP = 2,
+	PWR_DEEP_SLEEP = 3,
 	
 };
 

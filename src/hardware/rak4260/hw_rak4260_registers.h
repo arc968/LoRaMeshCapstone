@@ -23,6 +23,10 @@
  */
  
 /*****Power registers**********/
+
+#define HW_POWER_BASEADDRESS			0x40000000
+
+
 #define HW_POWER_AIRCR					(* (uint32_t *) 0xE000ED0C)
 
 
