@@ -198,7 +198,7 @@ uint32_t hal_rtc_getCompare(void) {
 	#endif
 	
 }
-
+/*
 void hal_rtc_enableCompareInterrupt(void) {
 	
 	#if defined(HW_MKRWAN1300_H)
@@ -236,7 +236,7 @@ void hal_rtc_disableCompareInterrupt(void) {
 	#endif
 	
 }
-
+*/
 void hal_rtc_enableOverflowInterrupt(void) {
 	
 	#if defined(HW_MKRWAN1300_H)

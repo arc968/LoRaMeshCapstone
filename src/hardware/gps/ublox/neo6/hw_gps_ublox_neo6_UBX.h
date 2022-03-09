@@ -75,7 +75,7 @@ struct ubx_msg_header_s {
 			union {
 				struct {
 					const uint16_t length;
-				} __attribute__((scalar_storage_order("little-endian")));
+				} __attribute__((packed, aligned(1), scalar_storage_order("little-endian")));
 				const uint8_t lenArr[2];
 			};
 		};
@@ -83,6 +83,7 @@ struct ubx_msg_header_s {
 	};
 } __attribute__((packed, aligned(1)));
 
+#define UBX_MSG_CHECKSUM_SIZE 2
 struct ubx_msg_checksum_s {
 	uint8_t ck_a;
 	uint8_t ck_b;
@@ -153,18 +154,18 @@ struct ubx_msg__CFG_PRT__SetPortConfigurationForUART_s {
 			X1 charLen:2,:1,reserved1:1,:0;
 			X1 :2,nStopBits:2,parity:3,:0;
 			X1 :8; X1 :8; //2 byte padding
-		} __attribute__((scalar_storage_order("big-endian"))) mode;
+		} __attribute__((packed, aligned(1), scalar_storage_order("big-endian"))) mode;
 		struct {
 			U4 baudRate;
-		} __attribute__((scalar_storage_order("little-endian")));
+		} __attribute__((packed, aligned(1), scalar_storage_order("little-endian")));
 		struct {
 			X1 :6,nmea:1,ubx:1;
 			X1 :8;
-		} __attribute__((scalar_storage_order("big-endian"))) inProtoMask;
+		} __attribute__((packed, aligned(1), scalar_storage_order("big-endian"))) inProtoMask;
 		struct {
 			X1 :6,nmea:1,ubx:1;
 			X1 :8;
-		} __attribute__((scalar_storage_order("big-endian"))) outProtoMask;
+		} __attribute__((packed, aligned(1), scalar_storage_order("big-endian"))) outProtoMask;
 		U2 reserved4;
 		U2 reserved5;
 	} payload;
@@ -209,10 +210,10 @@ struct ubx_msg__NAV_TIMEUTC__TimeSolution_s {
 			U1 hour;
 			U1 min;
 			U1 sec;
-		} __attribute__((scalar_storage_order("little-endian")));
+		} __attribute__((packed, aligned(1), scalar_storage_order("little-endian")));
 		struct {
 			X1  :5,validTOW:1,validWKN:1,validUTC:1;
-		} __attribute__((scalar_storage_order("big-endian")));
+		} __attribute__((packed, aligned(1), scalar_storage_order("big-endian")));
 	} payload;
 	struct ubx_msg_checksum_s checksum;
 } __attribute__((packed, aligned(1))) const ubx_msg__NAV_TIMEUTC__TimeSolution_s_default = {
@@ -235,7 +236,7 @@ struct ubx_msg__CFG_TP5__SetTimePulse_s {
 			U4 pulseLenRatio;
 			U4 pulseLenRatioLock;
 			I4 userConfigDelay;
-		} __attribute__((scalar_storage_order("little-endian")));
+		} __attribute__((packed, aligned(1), scalar_storage_order("little-endian")));
 		struct {
 			X1  gridUtcGps:1,
 				polarity:1,
@@ -246,7 +247,7 @@ struct ubx_msg__CFG_TP5__SetTimePulse_s {
 				LockGpsFreq:1,
 				Active:1;
 			X1 :8; X1 :8; X1 :8; //3 byte padding
-		} __attribute__((scalar_storage_order("big-endian")));
+		} __attribute__((packed, aligned(1), scalar_storage_order("big-endian")));
 	} payload;
 	struct ubx_msg_checksum_s checksum;
 } __attribute__((packed, aligned(1))) const ubx_msg__CFG_TP5__SetTimePulse_s_default = {
