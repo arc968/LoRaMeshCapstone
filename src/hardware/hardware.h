@@ -44,6 +44,8 @@ extern "C" {
 
 #if defined(LORA_SEMTECH_SX1276)
 	#include "lora/semtech/sx12xx/hw_lora_semtech_sx1276.h"
+#elif defined(LORA_ARDUINO_MKRWAN1300)
+	#include "lora/arduino/mkrwan1300/hw_lora_arduino_mkrwan1300.h"
 #elif defined(LORA_NONE)
 	#include "lora/hw_lora.h"
 #else

@@ -25,7 +25,7 @@ extern "C" {
 #endif
 
 //#define MKRWAN1300
-#define RAK4260
+#define RAK4260 //iBug
 //#define RAK4600
 //#define RAK11300
 
@@ -33,6 +33,7 @@ extern "C" {
 #define GPS_UBLOX_NEO6
 
 //#define LORA_NONE
+//#define LORA_ARDUINO_MKRWAN1300
 #define LORA_SEMTECH_SX1276
 
 #ifdef __cplusplus

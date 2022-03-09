@@ -14,11 +14,13 @@ extern "C" {
 #else
 	#include "gps/drv_gps.h"
 #endif
+
 #if defined(LORA_NONE)
 	#warning "'lora/drv_lora.h' not included because LORA_NONE is defined."
 #else
 	#include "lora/drv_lora.h"
 #endif
+
 #if defined(GPS_NONE) || defined(LORA_NONE)
 	#warning "'mesh/drv_mesh.h' not included because GPS_NONE and/or LORA_NONE is defined."
 #else

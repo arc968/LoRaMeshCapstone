@@ -1,5 +1,5 @@
 #define HW_LORA_ARDUINO_MKRWAN1300_C
-#include "hw_lora_arduino_MKRWAN1300.h"
+#include "hw_lora_arduino_mkrwan1300.h"
 
 #include "../../../../drivers/lora/drv_lora.h"
 

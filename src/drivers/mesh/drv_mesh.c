@@ -4,6 +4,7 @@
 	#warning "HW_GPS and/or HW_LORA is undefined. Linking to drv_mesh.c will fail."
 #else
 
+/*
 #if defined __has_attribute
 	#if !(__has_attribute(packed))
 		#error "'__attribute__((packed))' is unavailable."
@@ -14,6 +15,7 @@
 #else
 	#error "'__has_attribute()' is unavailable."
 #endif
+*/
 
 #include "../../hal/hal.h"
 #include "../gps/drv_gps.h"
