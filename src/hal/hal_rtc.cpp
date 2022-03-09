@@ -1,12 +1,26 @@
 #define HAL_LIB
 #include "hal_rtc.h"
-#include "../lib/datetime/lib_datetime.h"
+
+#if defined(HW_MKRWAN1300_H)
+	#include <RTCZero.h>
+	
+	uint8_t y = 0, m = 0, d = 0, h = 0, min = 0, s = 0;
+	
+#elif defined(HW_RAK4260_H)
+
+#elif defined(HW_RAK4600_H)
+			
+#elif defined(HW_RAK11300_H)
+	
+#else
+	#error "Hardware not yet implemented"
+#endif	
 
 
 void hal_rtc_waitForSync(void) {
 	
 	#if defined(HW_MKRWAN1300_H)
-		
+		//none
 	#elif defined(HW_RAK4260_H)
 	
 		while (RTC->MODE2.SYNCBUSY.reg != 0);
@@ -25,13 +39,15 @@ void hal_rtc_waitForSync(void) {
 
 bool hal_rtc_init(void) {
 	
-	hal_rtc_disable();
-	
-	//sw reset and set up clk sorce and scaling
 	
 	#if defined(HW_MKRWAN1300_H)
-		
+		rtc.begin()
 	#elif defined(HW_RAK4260_H)
+	
+		//disable rtc
+		//sw reset and set up clk sorce and scaling
+	
+		hal_rtc_disable();
 		
 		MCLK->APBAMASK.reg = MCLK_APBAMASK_OSC32KCTRL | MCLK_APBAMASK_RTC;
 		
@@ -56,7 +72,7 @@ bool hal_rtc_init(void) {
 	#endif
 	
 	
-	//hal_rtc_setCount(0x00000000);
+	hal_rtc_clearClock();
 	
 	hal_rtc_waitForSync();
 	
@@ -69,7 +85,8 @@ bool hal_rtc_deinit(void) {
 	hal_rtc_disable();
 	
 	#if defined(HW_MKRWAN1300_H)
-		
+		rtc.disableAlarm();
+		rtc.detachInterrupt();
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.CTRLA.reg = RTC_MODE2_CTRLA_SWRST;
@@ -89,7 +106,7 @@ bool hal_rtc_deinit(void) {
 void hal_rtc_enable(void) {
 	
 	#if defined(HW_MKRWAN1300_H)
-		
+		rtc.enanableAlarm0();
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.CTRLA.reg |= RTC_MODE2_CTRLA_ENABLE;
@@ -109,7 +126,7 @@ void hal_rtc_enable(void) {
 void hal_rtc_disable(void) {
 	
 	#if defined(HW_MKRWAN1300_H)
-		
+		rtc.disableAlarm0();
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.CTRLA.reg &= ~RTC_MODE2_CTRLA_ENABLE;
@@ -132,6 +149,13 @@ void hal_rtc_setClock(struct lib_datetime_s dt) {
 	
 	#if defined(HW_MKRWAN1300_H)
 		
+		rtc.setYear(dt.year);
+		rtc.setMonth(dt.month);
+		rtc.setDay(dt.day);
+		rtc.setHour(dt.hour);
+		rtc.setMinutes(dt.min);
+		rtc.setSeconds(dt.sec);
+		
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.CLOCK.bit.YEAR = dt.year;
@@ -153,6 +177,36 @@ void hal_rtc_setClock(struct lib_datetime_s dt) {
 	
 }
 
+void hal_rtc_clearClock(void) {
+	
+	hal_rtc_waitForSync();
+	
+	#if defined(HW_MKRWAN1300_H)
+		
+		rtc.setDate(0x00, 0x00, 0x00);
+		rtc.setTime(0x00, 0x00, 0x00);
+		
+	#elif defined(HW_RAK4260_H)
+	
+		RTC->MODE2.CLOCK.bit.YEAR = 0x00;
+		RTC->MODE2.CLOCK.bit.MONTH = 0x00;
+		RTC->MODE2.CLOCK.bit.DAY = 0x00;
+		RTC->MODE2.CLOCK.bit.HOUR = 0x00;
+		RTC->MODE2.CLOCK.bit.MINUTE = 0x00;
+		RTC->MODE2.CLOCK.bit.SECOND = 0x00;
+		
+	#elif defined(HW_RAK4600_H)
+		
+	#elif defined(HW_RAK11300_H)
+		
+	#else
+		#error "Hardware not yet implemented"
+	#endif
+	
+	hal_rtc_waitForSync();
+	
+}
+
 struct lib_datetime_s hal_rtc_getClock(void) {
 	
 	lib_datetime_s val;
@@ -160,6 +214,13 @@ struct lib_datetime_s hal_rtc_getClock(void) {
 	hal_rtc_waitForSync();
 	
 	#if defined(HW_MKRWAN1300_H)
+		
+		val.year = rtc.getYear();
+		val.month = rtc.getMonth();
+		val.day = rtc.getDay();
+		val.hour = rtc.getHour();
+		val.min = rtc.getMinutes();
+		val.sec = rtc.getSeconds();
 		
 	#elif defined(HW_RAK4260_H)
 	
@@ -170,8 +231,6 @@ struct lib_datetime_s hal_rtc_getClock(void) {
 		val.min = RTC->MODE2.CLOCK.bit.MINUTE;
 		val.sec = RTC->MODE2.CLOCK.bit.SECOND;
 		
-		return val;
-		
 	#elif defined(HW_RAK4600_H)
 		
 	#elif defined(HW_RAK11300_H)
@@ -180,15 +239,32 @@ struct lib_datetime_s hal_rtc_getClock(void) {
 		#error "Hardware not yet implemented"
 	#endif
 	
+	return val;
+	
 }
 
-void hal_rtc_setAlarm(uint32_t val) {
+void hal_rtc_setAlarm(struct lib_datetime_s dt) {
 	
 	#if defined(HW_MKRWAN1300_H)
 		
+		rtc.setAlarmDate(dt.year, dt.month, dt.day);
+		rtc.setAlarmTime(dt.hour, dt.min, dt.sec);
+		
+		y = dt.year;
+		m = dt.month;
+		d = dt.day;
+		h = dt.hour;
+		min = dt.min;
+		s = dt.sec;
+		
 	#elif defined(HW_RAK4260_H)
 	
-		//RTC->MODE2.COMP.reg = val;
+		RTC->MODE2.Mode2Alarm[0].ALARM.bit.YEAR = dt.year;
+		RTC->MODE2.Mode2Alarm[0].ALARM.bit.MONTH = dt.month;
+		RTC->MODE2.Mode2Alarm[0].ALARM.bit.DAY = dt.day;
+		RTC->MODE2.Mode2Alarm[0].ALARM.bit.HOUR = dt.hour;
+		RTC->MODE2.Mode2Alarm[0].ALARM.bit.MINUTE = dt.min;
+		RTC->MODE2.Mode2Alarm[0].ALARM.bit.SECOND = dt.sec;
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -202,15 +278,29 @@ void hal_rtc_setAlarm(uint32_t val) {
 	
 }
 
-uint32_t hal_rtc_getAlarm(void) {
+struct lib_datetime_s hal_rtc_getAlarm(void) {
+	
+	lib_datetime_s val;
 	
 	hal_rtc_waitForSync();
 	
 	#if defined(HW_MKRWAN1300_H)
 		
-	#elif defined(HW_RAK4260_H)
+		val.year = y;
+		val.month = m;
+		val.day = d;
+		val.hour = h;
+		val.min = min;
+		val.sec = s;
 		
-		return 0;//RTC->MODE2.COMP.reg;
+	#elif defined(HW_RAK4260_H)
+	
+		val.year = RTC->MODE2.CLOCK.bit.YEAR;
+		val.month = RTC->MODE2.CLOCK.bit.MONTH;
+		val.day = RTC->MODE2.CLOCK.bit.DAY;
+		val.hour = RTC->MODE2.CLOCK.bit.HOUR;
+		val.min = RTC->MODE2.CLOCK.bit.MINUTE;
+		val.sec = RTC->MODE2.CLOCK.bit.SECOND;
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -220,12 +310,13 @@ uint32_t hal_rtc_getAlarm(void) {
 		#error "Hardware not yet implemented"
 	#endif
 	
+	return val;
 }
 
 void hal_rtc_enableAlarmInterrupt(void) {
 	
 	#if defined(HW_MKRWAN1300_H)
-		
+		rtc.enableAlarm0();
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.INTENSET.reg |= RTC_MODE2_INTENSET_ALARM0;
@@ -245,7 +336,7 @@ void hal_rtc_enableAlarmInterrupt(void) {
 void hal_rtc_disableAlarmInterrupt(void) {
 	
 	#if defined(HW_MKRWAN1300_H)
-		
+		rtc.disableAlarm0();
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.INTENCLR.reg |= RTC_MODE2_INTENCLR_ALARM0;
@@ -265,7 +356,7 @@ void hal_rtc_disableAlarmInterrupt(void) {
 void hal_rtc_enableOverflowInterrupt(void) {
 	
 	#if defined(HW_MKRWAN1300_H)
-		
+		//none
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.INTENSET.reg |= RTC_MODE2_INTENSET_OVF;
@@ -285,7 +376,7 @@ void hal_rtc_enableOverflowInterrupt(void) {
 void hal_rtc_disableOverflowInterrupt(void) {
 	
 	#if defined(HW_MKRWAN1300_H)
-		
+		//none
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.INTENCLR.reg |= RTC_MODE2_INTENCLR_OVF;
@@ -306,7 +397,7 @@ void hal_rtc_disableOverflowInterrupt(void) {
 void hal_rtc_clearAlarmInterrupt(void) {
 	
 	#if defined(HW_MKRWAN1300_H)
-		
+		//none
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.INTFLAG.reg |= RTC_MODE2_INTFLAG_ALARM0;
@@ -326,7 +417,7 @@ void hal_rtc_clearAlarmInterrupt(void) {
 void hal_rtc_clearOverflowInterrupt(void) {
 	
 	#if defined(HW_MKRWAN1300_H)
-		
+		//none
 	#elif defined(HW_RAK4260_H)
 		
 		RTC->MODE2.INTFLAG.reg |= RTC_MODE2_INTFLAG_OVF;

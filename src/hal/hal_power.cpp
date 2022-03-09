@@ -15,158 +15,170 @@
 #endif	
 
 void hal_power_wake(void) {	
-#if defined(HW_MKRWAN1300_H)
-	
-#elif defined(HW_RAK4260_H)
-	
-#elif defined(HW_RAK4600_H)
-	
-#elif defined(HW_RAK11300_H)
-	
-#else
-	#error "Hardware not yet implemented"
-#endif
+	#if defined(HW_MKRWAN1300_H)
+		
+	#elif defined(HW_RAK4260_H)
+		
+	#elif defined(HW_RAK4600_H)
+		
+	#elif defined(HW_RAK11300_H)
+		
+	#else
+		#error "Hardware not yet implemented"
+	#endif
 }
 
-void hal_power_idle(uint16_t seconds) {
-#if defined(HW_MKRWAN1300_H)
-	LowPower.idle(seconds);
-#elif defined(HW_RAK4260_H)
+void hal_power_idle() {
 	
-	//set the sleep mode power reg
-	
-	//turn on the clk for the rtc to run
-	hal_rtc_enable();
-	
-	//__wfi();
-	//WFI();
-	//__asm("WFI()");					the WFI thing is one of these 4 options whichever compiles
-	//__attribute__((naked)) WFI();
+	#if defined(HW_MKRWAN1300_H)
+		LowPower.idle();
+	#elif defined(HW_RAK4260_H)
+		
+		//set the sleep mode power reg
+		PM->SLEEPCFG.bit.SLEEPMODE = 0x2;
+		
+		//turn on the clk for the rtc to run
+		hal_rtc_enable();
+		
+		//__wfi();
+		//WFI();
+		__asm("WFI");					//the WFI thing is one of these 4 options whichever compiles
+		//__attribute__((naked)) WFI();
 
-	//clear interupt flag to use again
+		//clear interupt flag to use again
+		
+	#elif defined(HW_RAK4600_H)
+		
+		HW_POWER_SYSTEMOFF = 0x00000000;
+		
+		HW_POWER_RAM0_POWERSET = 0x0003FFFF;
+		HW_POWER_RAM1_POWERSET = 0x0003FFFF;
+		HW_POWER_RAM2_POWERSET = 0x0003FFFF;
+		HW_POWER_RAM3_POWERSET = 0x0003FFFF;
+		HW_POWER_RAM4_POWERSET = 0x0003FFFF;
+		HW_POWER_RAM5_POWERSET = 0x0003FFFF;
+		HW_POWER_RAM6_POWERSET = 0x0003FFFF;
+		HW_POWER_RAM7_POWERSET = 0x0003FFFF;
+		
+		HW_POWER_TASKS_LOWPWR = 0x00000000;
+		HW_POWER_TASKS_CONSTLAT = 0x00000001;
+		
+		//TODO impliment timer interrupt wake control
+		
+	#elif defined(HW_RAK11300_H)
+		
+		
+		//__wfi();
+		
+	#else
+		#error "Hardware not yet implemented"
+	#endif
 
-	
-#elif defined(HW_RAK4600_H)
-	
-	HW_POWER_SYSTEMOFF = 0x00000000;
-	
-	HW_POWER_RAM0_POWERSET = 0x0003FFFF;
-	HW_POWER_RAM1_POWERSET = 0x0003FFFF;
-	HW_POWER_RAM2_POWERSET = 0x0003FFFF;
-	HW_POWER_RAM3_POWERSET = 0x0003FFFF;
-	HW_POWER_RAM4_POWERSET = 0x0003FFFF;
-	HW_POWER_RAM5_POWERSET = 0x0003FFFF;
-	HW_POWER_RAM6_POWERSET = 0x0003FFFF;
-	HW_POWER_RAM7_POWERSET = 0x0003FFFF;
-	
-	HW_POWER_TASKS_LOWPWR = 0x00000000;
-	HW_POWER_TASKS_CONSTLAT = 0x00000001;
-	
-	//TODO impliment timer interrupt wake control
-	
-#elif defined(HW_RAK11300_H)
-	
-	
-	//__wfi();
-	
-#else
-	#error "Hardware not yet implemented"
-#endif
+	hal_rtc_clearAlarmInterrupt();
+
 }
 
-void hal_power_sleep(uint16_t seconds) {
-#if defined(HW_MKRWAN1300_H)
-	LowPower.sleep(seconds);
-#elif defined(HW_RAK4260_H)
+void hal_power_sleep() {
 	
-	//set the sleep mode power reg
-	//need standby mode 3
-	
-	//turn on the clk for the rtc to run
-	hal_rtc_enable();
-	
-	//__wfi();
-	//WFI();
-	//__asm("WFI()");					the WFI thing is one of these 4 options whichever compiles
-	//__attribute__((naked)) WFI();
-	
-	//clear interupt flag to use again
+	#if defined(HW_MKRWAN1300_H)
+		LowPower.sleep();
+	#elif defined(HW_RAK4260_H)
+		
+		//set the sleep mode power reg
+		PM->SLEEPCFG.bit.SLEEPMODE = 0x4;
+		
+		//turn on the clk for the rtc to run
+		hal_rtc_enable();
+		
+		//__wfi();
+		//WFI();
+		__asm("WFI");					//the WFI thing is one of these 4 options whichever compiles
+		//__attribute__((naked)) WFI();
 
+		//clear interupt flag to use again
+
+	#elif defined(HW_RAK4600_H)
+		
+		HW_POWER_SYSTEMOFF = 0x00000000;
+		
+		HW_POWER_RAM0_POWERSET = 0x0003FFFF;
+		HW_POWER_RAM1_POWERSET = 0x0003FFFF;
+		HW_POWER_RAM2_POWERSET = 0x0003FFFF;
+		HW_POWER_RAM3_POWERSET = 0x0003FFFF;
+		HW_POWER_RAM4_POWERSET = 0x0003FFFF;
+		HW_POWER_RAM5_POWERSET = 0x0003FFFF;
+		HW_POWER_RAM6_POWERSET = 0x0003FFFF;
+		HW_POWER_RAM7_POWERSET = 0x0003FFFF;
+		
+		HW_POWER_TASKS_CONSTLAT = 0x00000000;
+		HW_POWER_TASKS_LOWPWR 	= 0x00000001;	
+		
+		//TODO impliment timer interrupt wake control
+		
+	#elif defined(HW_RAK11300_H)
+		
+		
+		//__wfi();
+		
+	#else
+		#error "Hardware not yet implemented"
+	#endif
 	
-#elif defined(HW_RAK4600_H)
+	hal_rtc_clearAlarmInterrupt();
 	
-	HW_POWER_SYSTEMOFF = 0x00000000;
-	
-	HW_POWER_RAM0_POWERSET = 0x0003FFFF;
-	HW_POWER_RAM1_POWERSET = 0x0003FFFF;
-	HW_POWER_RAM2_POWERSET = 0x0003FFFF;
-	HW_POWER_RAM3_POWERSET = 0x0003FFFF;
-	HW_POWER_RAM4_POWERSET = 0x0003FFFF;
-	HW_POWER_RAM5_POWERSET = 0x0003FFFF;
-	HW_POWER_RAM6_POWERSET = 0x0003FFFF;
-	HW_POWER_RAM7_POWERSET = 0x0003FFFF;
-	
-	HW_POWER_TASKS_CONSTLAT = 0x00000000;
-	HW_POWER_TASKS_LOWPWR 	= 0x00000001;	
-	
-	//TODO impliment timer interrupt wake control
-	
-#elif defined(HW_RAK11300_H)
-	
-	
-	//__wfi();
-	
-#else
-	#error "Hardware not yet implemented"
-#endif
 }
 
-void hal_power_deepSleep(uint16_t seconds) {
-#if defined(HW_MKRWAN1300_H)
-	LowPower.deepSleep(seconds);
-#elif defined(HW_RAK4260_H)
+void hal_power_deepSleep() {
 	
-	//set the sleep mode power reg
-	
-	//turn on the clk for the rtc to run
-	hal_rtc_enable();
-	
-	//__wfi();
-	//WFI();
-	//__asm("WFI()");					the WFI thing is one of these 4 options whichever compiles
-	//__attribute__((naked)) WFI();
-	
-	//clear interupt flag to use again
-	
-#elif defined(HW_RAK4600_H)
-	
-	HW_POWER_SYSTEMOFF = 0x00000000;
-	
-	HW_POWER_RAM0_POWERSET = 0x0003FFFF;
-	HW_POWER_RAM1_POWERSET = 0x0003FFFF;
-	HW_POWER_RAM2_POWERSET = 0x0003FFFF;
-	HW_POWER_RAM3_POWERSET = 0x0003FFFF;
-	HW_POWER_RAM4_POWERSET = 0x0003FFFF;
-	HW_POWER_RAM5_POWERSET = 0x0003FFFF;
-	HW_POWER_RAM6_POWERSET = 0x0003FFFF;
-	HW_POWER_RAM7_POWERSET = 0x0003FFFF;
-	
-	HW_POWER_TASKS_CONSTLAT = 0x00000000;
-	HW_POWER_TASKS_LOWPWR 	= 0x00000001;	
-	
-	//TODO impliment timer interrupt wake control
+	#if defined(HW_MKRWAN1300_H)
+		LowPower.deepSleep();
+	#elif defined(HW_RAK4260_H)
+		
+		//set the sleep mode power reg
+		PM->SLEEPCFG.bit.SLEEPMODE = 0x5;
+		
+		//turn on the clk for the rtc to run
+		hal_rtc_enable();
+		
+		//__wfi();
+		//WFI();
+		__asm("WFI");					//the WFI thing is one of these 4 options whichever compiles
+		//__attribute__((naked)) WFI();
 
-#elif defined(HW_RAK11300_H)
+		//clear interupt flag to use again
+		
+	#elif defined(HW_RAK4600_H)
+		
+		HW_POWER_SYSTEMOFF = 0x00000000;
+		
+		HW_POWER_RAM0_POWERSET = 0x0003FFFF;
+		HW_POWER_RAM1_POWERSET = 0x0003FFFF;
+		HW_POWER_RAM2_POWERSET = 0x0003FFFF;
+		HW_POWER_RAM3_POWERSET = 0x0003FFFF;
+		HW_POWER_RAM4_POWERSET = 0x0003FFFF;
+		HW_POWER_RAM5_POWERSET = 0x0003FFFF;
+		HW_POWER_RAM6_POWERSET = 0x0003FFFF;
+		HW_POWER_RAM7_POWERSET = 0x0003FFFF;
+		
+		HW_POWER_TASKS_CONSTLAT = 0x00000000;
+		HW_POWER_TASKS_LOWPWR 	= 0x00000001;	
+		
+		//TODO impliment timer interrupt wake control
+
+	#elif defined(HW_RAK11300_H)
+		
+		
+		//__wfi();
+		
+	#else
+		#error "Hardware not yet implemented"
+	#endif
 	
-	
-	//__wfi();
-	
-#else
-	#error "Hardware not yet implemented"
-#endif
+	hal_rtc_clearAlarmInterrupt();
+
 }
 
-void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, uint16_t seconds) {
+void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s alarm) {
 	
 	static uint8_t powertimersetup = 1;
 	
@@ -182,13 +194,7 @@ void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, uint16_t seconds) {
 			
 			hal_rtc_disable();
 			
-			//hal_rtc_setCount(0x00000000);
-			
-			//hal_rtc_setCompare(/*set to 1ms * milis val*/);
-			
-			//hal_rtc_enableCompareInterrupt();
-			
-			//set gclk to run in deep sleep for the rtc
+			hal_rtc_enableAlarmInterrupt();
 			
 		#elif defined(HW_RAK4600_H)
 				
@@ -200,41 +206,45 @@ void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, uint16_t seconds) {
 				
 		powertimersetup = 0;
 	}
+	
+	
+	hal_rtc_setAlarm(alarm);
+	hal_rtc_clearClock();
 
 	if (pwrmode == PWR_FULL) {
 		hal_power_wake();
 	}
 	else if (pwrmode == PWR_IDLE) {
-		hal_power_idle(seconds);
+		hal_power_idle();
 	}
 	else if (pwrmode == PWR_SLEEP) {
-		hal_power_sleep(seconds);
+		hal_power_sleep();
 	}
 	else if (pwrmode == PWR_DEEP_SLEEP) {
-		hal_power_deepSleep(seconds);
+		hal_power_deepSleep();
 	}
 	else {
-		hal_power_deepSleep(seconds);
+		hal_power_deepSleep();
 	}
 
 }
 
 void hal_power_softReset(void) {
-#if defined(HW_MKRWAN1300_H)
-	HW_POWER_AIRCR = 0x05FA0004;
-	while(1) {/* wait until reset */}
-#elif defined(HW_RAK4260_H)
-	SYSCTRL_AIRCR->reg = 0x05FA0004;
-	while(1) {/* wait until reset */}
-#elif defined(HW_RAK4600_H)
-	HW_POWER_AIRCR = 0x05FA0004;
-	while(1) {/* wait until reset */}
-#elif defined(HW_RAK11300_H)
-	HW_POWER_AIRCR = 0x05FA0004;
-	while(1) {/* wait until reset */}
-#else
-	#error "Hardware not yet implemented"
-#endif
+	#if defined(HW_MKRWAN1300_H)
+		HW_POWER_AIRCR = 0x05FA0004;
+		while(1) {/* wait until reset */}
+	#elif defined(HW_RAK4260_H)
+		SYSCTRL_AIRCR->reg = 0x05FA0004;
+		while(1) {/* wait until reset */}
+	#elif defined(HW_RAK4600_H)
+		HW_POWER_AIRCR = 0x05FA0004;
+		while(1) {/* wait until reset */}
+	#elif defined(HW_RAK11300_H)
+		HW_POWER_AIRCR = 0x05FA0004;
+		while(1) {/* wait until reset */}
+	#else
+		#error "Hardware not yet implemented"
+	#endif
 }
 
 

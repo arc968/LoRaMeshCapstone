@@ -14,6 +14,7 @@
 #define HAL_POWER_H
 
 #include "hal_common.h"
+#include "../lib/datetime/lib_datetime.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,7 +29,7 @@ enum hw_power_pwrmodes_e {
 	
 };
 
-void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, uint16_t seconds);
+void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s alarm);
 
 void hal_power_softReset(void);
 
