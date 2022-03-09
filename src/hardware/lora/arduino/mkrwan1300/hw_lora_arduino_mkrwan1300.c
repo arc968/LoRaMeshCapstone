@@ -63,7 +63,7 @@ enum drv_lora_mode_e drv_lora_getMode(struct drv_lora_s * handle) {
 void drv_lora_setTxPower(struct drv_lora_s * handle, uint16_t dB) {
 	
 	LoRa.setTxPower(dB);
-	handle->txpower = db;
+	handle->txpower = dB;
 	
 }
 uint16_t drv_lora_getTxPower(struct drv_lora_s * handle) {
