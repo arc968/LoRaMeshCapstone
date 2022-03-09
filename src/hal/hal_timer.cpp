@@ -44,7 +44,7 @@ void hal_timer_init(void (*isr)(void), uint16_t interval_us) {
 			ITimer.attachInterruptInterval(interval_us, isr);
 		#elif defined(HW_RAK4260_H)
 			
-			TC2.COUNT16.CTRLA.ENABLE &= ~TC_CTRLA_ENABLE;
+			/*TC2.COUNT16.CTRLA.ENABLE &= ~TC_CTRLA_ENABLE;
 			
 			TC2.COUNT16.CTRLA.SWRST &= TC_CTRLA_SWRST;
 			
@@ -80,7 +80,7 @@ void hal_timer_init(void (*isr)(void), uint16_t interval_us) {
 			TC2.COUNT16.COUNT.reg = 0x0000;
 			
 			while(TC2.COUNT16.SYNCBUSY.reg != 0);
-			TC2.COUNT16.CTRLA.ENABLE &= TC_CTRLA_ENABLE;
+			TC2.COUNT16.CTRLA.ENABLE &= TC_CTRLA_ENABLE;*/
 			
 			
 		#elif defined(HW_RAK4600_H)

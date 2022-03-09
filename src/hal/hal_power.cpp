@@ -198,15 +198,15 @@ void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, uint16_t millis) {
 			
 			//have to use rtc cant use tc in deep sleep
 			
-			hal_rtc_init(RTC_32COUNT, 0x1/* fix this */);
+			//hal_rtc_init(RTC_32COUNT, 0x1/* fix this */);
 			
 			hal_rtc_disable();
 			
 			hal_rtc_setCount(0x00000000);
 			
-			hal_rtc_setCompare(/*set to 1ms * milis val*/);
+			//hal_rtc_setCompare(/*set to 1ms * milis val*/);
 			
-			hal_rtc_enableCompareInterrupt(void);
+			hal_rtc_enableCompareInterrupt();
 			
 			//set gclk to run in deep sleep for the rtc
 			
@@ -244,7 +244,7 @@ void hal_power_softReset(void) {
 	HW_POWER_AIRCR = 0x05FA0004;
 	while(1) {/* wait until reset */}
 #elif defined(HW_RAK4260_H)
-	*SCS_AIRCR.reg = 0x05FA0004;
+	//*SCS_AIRCR.reg = 0x05FA0004;
 	while(1) {/* wait until reset */}
 #elif defined(HW_RAK4600_H)
 	HW_POWER_AIRCR = 0x05FA0004;

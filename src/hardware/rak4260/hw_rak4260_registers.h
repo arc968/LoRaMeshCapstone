@@ -24,6 +24,8 @@
  
  #ifndef HW_RAK4260_REGISTERS_H
  #define HW_RAK4260_REGISTERS_H
+ 
+ #ifndef HW_ARDUINO
 
 #ifdef __cplusplus
  extern "C" {
@@ -59,7 +61,6 @@ typedef volatile       uint32_t RwReg;   /**< Read-Write 32-bit register (volati
 typedef volatile       uint16_t RwReg16; /**< Read-Write 16-bit register (volatile unsigned int) */
 typedef volatile       uint8_t  RwReg8;  /**< Read-Write  8-bit register (volatile unsigned int) */
 
-#ifndef HW_ARDUINO
 
 #if !defined(SKIP_INTEGER_LITERALS)
 #if defined(_U_) || defined(_L_) || defined(_UL_)

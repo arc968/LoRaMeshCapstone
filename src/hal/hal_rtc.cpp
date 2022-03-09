@@ -8,7 +8,7 @@ void hal_rtc_waitForSync(void) {
 		
 	#elif defined(HW_RAK4260_H)
 	
-		while (RTC->MODE1.SYNCBUSY.ENABLE != 0);
+		//while (RTC->MODE1.SYNCBUSY.ENABLE != 0);
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -109,7 +109,7 @@ void hal_rtc_disable(void) {
 		
 	#elif defined(HW_RAK4260_H)
 	
-		RTC->MODE1.CTRLA.reg &= ~RTC_MODE1_CTRLA_ENABLE;
+		//RTC->MODE1.CTRLA.reg &= ~RTC_MODE1_CTRLA_ENABLE;
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -129,7 +129,7 @@ void hal_rtc_setCount(uint32_t val) {
 		
 	#elif defined(HW_RAK4260_H)
 	
-		RTC->MODE1.COUNT.reg = val;
+		//RTC->MODE1.COUNT.reg = val;
 		hal_rtc_waitForSync();
 		
 	#elif defined(HW_RAK4600_H)
@@ -150,7 +150,7 @@ uint32_t hal_rtc_getCount(void) {
 		
 	#elif defined(HW_RAK4260_H)
 	
-		return RTC->MODE1.COUNT.reg;
+		return 0;//RTC->MODE1.COUNT.reg;
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -168,7 +168,7 @@ void hal_rtc_setCompare(uint32_t val) {
 		
 	#elif defined(HW_RAK4260_H)
 	
-		RTC->MODE1.COMP.reg = val;
+		//RTC->MODE1.COMP.reg = val;
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -190,7 +190,7 @@ uint32_t hal_rtc_getCompare(void) {
 		
 	#elif defined(HW_RAK4260_H)
 		
-		return RTC->MODE1.COMP.reg;
+		return 0;//RTC->MODE1.COMP.reg;
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -246,7 +246,7 @@ void hal_rtc_enableOverflowInterrupt(void) {
 		
 	#elif defined(HW_RAK4260_H)
 	
-		RTC->MODE1.INTENSET.reg |= RTC_MODE1_INTENSET_OVF;
+		//RTC->MODE1.INTENSET.reg |= RTC_MODE1_INTENSET_OVF;
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -266,7 +266,7 @@ void hal_rtc_disableOverflowInterrupt(void) {
 		
 	#elif defined(HW_RAK4260_H)
 	
-		RTC->MODE1.INTENCLR.reg |= RTC_MODE1_INTENSET_OVF;
+		//RTC->MODE1.INTENCLR.reg |= RTC_MODE1_INTENSET_OVF;
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -287,7 +287,7 @@ void hal_rtc_clearCompareInterrupt(void) {
 		
 	#elif defined(HW_RAK4260_H)
 	
-		RTC->MODE1.INTFLAG.reg &= ~RTC_MODE1_INTENSET_CMP0;
+		//RTC->MODE1.INTFLAG.reg &= ~RTC_MODE1_INTENSET_CMP0;
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -307,7 +307,7 @@ void hal_rtc_clearOverflowInterrupt(void) {
 		
 	#elif defined(HW_RAK4260_H)
 		
-		RTC->MODE1.INTFLAG.reg &= ~RTC_MODE1_INTENSET_OVF;
+		//RTC->MODE1.INTFLAG.reg &= ~RTC_MODE1_INTENSET_OVF;
 		
 	#elif defined(HW_RAK4600_H)
 		
