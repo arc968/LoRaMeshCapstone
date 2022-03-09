@@ -11,7 +11,7 @@
 
 void RTC_Handler(void)                                  // Event System interrupt handler
 {
-	RTC->MODE2.INTFLAG.reg = ~RTC_MODE2_INTFLAG_RESETVALUE;
+
 }
 
 #elif defined(HW_RAK4600_H)
