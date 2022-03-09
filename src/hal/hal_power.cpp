@@ -190,7 +190,7 @@ void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s alar
 			
 			//have to use rtc cant use tc in deep sleep
 			
-			while (!hal_rtc_init());
+			hal_rtc_init();
 			
 			hal_rtc_disable();
 			
