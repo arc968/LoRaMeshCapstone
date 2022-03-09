@@ -23,6 +23,15 @@
 static uint8_t timerIsInitialized = 1, gclksetup = 1, millisisinitialized = 1;
 
 static uint32_t currentMillisRunTime = 0;
+
+static void (* isrfunc)(void);
+
+void TC2_Handler(void) {
+	
+	isrfunc();
+	TC2->COUNT16.INTFLAG.reg = ~TC_INTFLAG_RESETVALUE;
+	
+}
 	
 void TC0_Handler(void) {
 	
@@ -82,6 +91,7 @@ void hal_timer_init(void (*isr)(void), uint16_t interval_us) {
 			
 			//set interrupt to the isr
 			//TC2_Handler = isr; //I think this works not sure	(void*) TC2_Handler => (void) (*isr)(void)
+			isrfunc = isr;
 			
 			TC2->COUNT16.COUNT.reg = 0x0000;
 			
