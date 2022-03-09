@@ -1,5 +1,6 @@
 #define HW_GPS_UBLOX_NEO6_C
-#include "hw_gps_ublox_neo6.h"
+//#include "hw_gps_ublox_neo6.h"
+#include "../../../hardware.h"
 
 #ifdef HW_GPS_UBLOX_NEO6_H
 
@@ -134,7 +135,7 @@ static void job_getGpsMessage(void * arg) {
 	drv_timer_setAbsoluteDateTime(&dt);
 	
 	char tbuf[256];
-	sprintf(&tbuf, "year:%u\nmonth:%u\nday:%u\nhour:%u\nmin:%u\nsec:%u\nms:%u\n",dt.year,dt.month,dt.day,dt.hour,dt.min,dt.sec,dt.ms);
+	sprintf(tbuf, "year:%u\nmonth:%u\nday:%u\nhour:%u\nmin:%u\nsec:%u\nms:%u\n",dt.year,dt.month,dt.day,dt.hour,dt.min,dt.sec,dt.ms);
 	hal_serial_write(hal_serial0, tbuf, strlen(tbuf)+1);
 	
 	// uint8_t tmp[1] = {dt.ms};

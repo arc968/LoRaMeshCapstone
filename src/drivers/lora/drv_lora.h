@@ -4,6 +4,11 @@
 extern "C" {
 #endif
 
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+
 #include "../../hal/hal_common.h"
 #include "../../hardware/hardware.h"
 

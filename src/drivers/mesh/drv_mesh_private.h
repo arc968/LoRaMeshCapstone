@@ -14,7 +14,7 @@ extern "C" {
 
 typedef uint16_t channel_t;
 
-typedef uint32_t uid_t;
+typedef uint32_t peer_uid_t;
 
 enum appointment_type_e {
 	APPT_DATA_SEND,
@@ -34,7 +34,7 @@ enum drv_mesh_bandwidth_e {
 
 struct peer_s {
 	ip_t ip;
-	uid_t uid;
+	peer_uid_t uid;
 };
 
 struct appointment_s {

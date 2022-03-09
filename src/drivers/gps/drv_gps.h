@@ -4,7 +4,10 @@
 extern "C" {
 #endif
 
+#include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
 
 #include "../../lib/datetime/lib_datetime.h"
 #include "../../hardware/hardware.h"
