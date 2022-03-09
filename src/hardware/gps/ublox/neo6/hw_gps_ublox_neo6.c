@@ -228,7 +228,7 @@ void drv_gps_init(struct drv_gps_s * handle) {
 	//configure GPS for timepulse
 		struct ubx_msg__CFG_TP5__SetTimePulse_s tp_ubx = ubx_msg__CFG_TP5__SetTimePulse_s_default;
 		tp_ubx.payload = (typeof(tp_ubx.payload)) {
-			.freqPeriod = 1000000,
+			.freqPeriod = 10000000,
 			.pulseLenRatio = 100000,
 			.Active = 1,
 			.LockGpsFreq = 1,
@@ -254,8 +254,19 @@ void drv_gps_init(struct drv_gps_s * handle) {
 		//err = 
 		UBX_CFG_MSG_SERIAL_WRITE(hal_serial1, nav_ubx);
 		//while (err != UBX_CFG_REPLY_ACK);
+		hal_timer_delay(250);
 		
-	hal_timer_delay(250);
+	//configure GPS rate
+		struct ubx_msg__CFG_RATE__NavMeasureRateSettings_s rate_ubx = ubx_msg__CFG_RATE__NavMeasureRateSettings_s_default;
+		rate_ubx.payload = (typeof(rate_ubx.payload)) {
+			.measRate = 10000,
+			.navRate = 1,
+			.timeRef = 0,
+		};
+		UBX_MSG_CHECKSUM(rate_ubx);
+		UBX_CFG_MSG_SERIAL_WRITE(hal_serial1, rate_ubx);
+		hal_timer_delay(250);
+		
 	hal_serial_flush(hal_serial1);
 		
 	//enable interrupts on GPS pulse GPIO pin

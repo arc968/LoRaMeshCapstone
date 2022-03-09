@@ -23,6 +23,8 @@ extern "C" {
 #define UBX_MSG_ID__CFG_MSG {0x06, 0x01}
 	#define UBX_MSG__CFG_MSG__SetMessageRate {.ID=UBX_MSG_ID__CFG_MSG, .length=3}
 #define UBX_MSG_ID__CFG_TP {0x06, 0x07}
+#define UBX_MSG_ID__CFG_RATE {0x06, 0x08}
+	#define UBX_MSG__CFG_RATE__NavMeasureRateSettings {.ID=UBX_MSG_ID__CFG_RATE, .length=6}
 #define UBX_MSG_ID__CFG_TP5 {0x06, 0x31}
 	#define UBX_MSG__CFG_TP5__SetTimePulse {.ID=UBX_MSG_ID__CFG_TP5, .length=32}
 //NAV
@@ -199,6 +201,25 @@ struct ubx_msg__CFG_MSG__SetMessageRate_s {
 } __attribute__((packed, aligned(1))) const ubx_msg__CFG_MSG__SetMessageRate_s_default = {
 	.sync = UBX_SYNC_CHARS,
 	.header = UBX_MSG__CFG_MSG__SetMessageRate,
+};
+
+struct ubx_msg__CFG_RATE__NavMeasureRateSettings_s {
+	struct ubx_msg_sync_s sync;
+	struct ubx_msg_header_s header;
+	#pragma scalar_storage_order little-endian
+	struct {
+		U2 measRate; //ms
+		U2 navRate; //cycles
+		U2 timeRef; // 0=UTC, 1=GPS
+	} payload;
+	#pragma scalar_storage_order default
+	struct ubx_msg_checksum_s checksum;
+} __attribute__((packed, aligned(1))) const ubx_msg__CFG_RATE__NavMeasureRateSettings_s_default = {
+	.sync = UBX_SYNC_CHARS,
+	.header = UBX_MSG__CFG_RATE__NavMeasureRateSettings,
+	.payload.measRate = 1000,
+	.payload.navRate = 1,
+	.payload.timeRef = 0,
 };
 
 struct ubx_msg__NAV_TIMEUTC__TimeSolution_s {
