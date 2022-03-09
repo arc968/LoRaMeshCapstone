@@ -58,7 +58,7 @@ struct drv_lora_s {
 	pin_t pin;
 	enum drv_lora_mode_e mode;
 	enum drv_lora_region_e region;
-	enum drv_lora_bandwidth_e bandwidth 
+	enum drv_lora_bandwidth_e bandwidth;
 	enum drv_lora_spreadingFactor_e spreadingFactor;
 	enum drv_lora_codingRate_e codingRate;
 	uint16_t txpower;

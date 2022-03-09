@@ -15,6 +15,9 @@
 #include "../../../../drivers/timer/drv_timer.h"
 #include "../../../../drivers/sched/drv_sched.h"
 
+#include <LoRa.h>
+
+
 void drv_lora_init(struct drv_lora_s * handle, enum drv_lora_region_e region, pin_t pin) {
 	
 	handle->pin = pin;
@@ -35,7 +38,7 @@ void drv_lora_setMode(struct drv_lora_s * handle, enum drv_lora_mode_e mode) {
 			LoRa.idle();
 			break;
 		case DRV_LORA_MODE__SLEEP:
-			Lora.sleep();
+			LoRa.sleep();
 			break;
 		case DRV_LORA_MODE__RECV:
 			LoRa.receive();
@@ -85,7 +88,7 @@ uint16_t drv_lora_getPreamble(struct drv_lora_s * handle) {
 
 void drv_lora_setBandwidth(struct drv_lora_s * handle, enum drv_lora_bandwidth_e bw) {
 	
-	Lora.setSignalBandwidth(bw);
+	LoRa.setSignalBandwidth(bw);
 	handle->bandwidth = bw;
 	
 }

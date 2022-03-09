@@ -18,9 +18,6 @@
 //	hal_ISR_Timer.run();
 //}
 #elif defined(HW_RAK4260_H)
-	
-	
-static uint8_t timerIsInitialized = 1, gclksetup = 1, millisisinitialized = 1;
 
 static uint32_t currentMillisRunTime = 0;
 
@@ -46,6 +43,9 @@ void TC0_Handler(void) {
 #else
 	#error "Hardware not yet implemented"
 #endif
+
+
+static uint8_t timerIsInitialized = 1, gclksetup = 1, millisisinitialized = 1;
 
 
 void hal_timer_init(void (*isr)(void), uint16_t interval_us) {
