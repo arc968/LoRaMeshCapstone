@@ -40,12 +40,8 @@ void hal_power_idle() {
 		//turn on the clk for the rtc to run
 		hal_rtc_enable();
 		
-		//__wfi();
-		//WFI();
-		__asm("WFI");					//the WFI thing is one of these 4 options whichever compiles
-		//__attribute__((naked)) WFI();
-
 		//clear interupt flag to use again
+		__asm("WFI");
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -73,7 +69,8 @@ void hal_power_idle() {
 	#else
 		#error "Hardware not yet implemented"
 	#endif
-
+	
+	//clear interupt flag to use again
 	hal_rtc_clearAlarmInterrupt();
 
 }
@@ -90,10 +87,8 @@ void hal_power_sleep() {
 		//turn on the clk for the rtc to run
 		hal_rtc_enable();
 		
-		//__wfi();
-		//WFI();
-		__asm("WFI");					//the WFI thing is one of these 4 options whichever compiles
-		//__attribute__((naked)) WFI();
+		//clear interupt flag to use again
+		__asm("WFI");
 
 		//clear interupt flag to use again
 
@@ -124,6 +119,7 @@ void hal_power_sleep() {
 		#error "Hardware not yet implemented"
 	#endif
 	
+	//clear interupt flag to use again
 	hal_rtc_clearAlarmInterrupt();
 	
 }
@@ -140,12 +136,8 @@ void hal_power_deepSleep() {
 		//turn on the clk for the rtc to run
 		hal_rtc_enable();
 		
-		//__wfi();
-		//WFI();
-		__asm("WFI");					//the WFI thing is one of these 4 options whichever compiles
-		//__attribute__((naked)) WFI();
-
-		//clear interupt flag to use again
+		//wait for interrupt compiler command
+		__asm("WFI");
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -174,6 +166,7 @@ void hal_power_deepSleep() {
 		#error "Hardware not yet implemented"
 	#endif
 	
+	//clear interupt flag to use again
 	hal_rtc_clearAlarmInterrupt();
 
 }
