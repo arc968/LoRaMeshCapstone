@@ -24,10 +24,10 @@ extern "C" {
 	#error "Do not directly include this header file, include hardware.h instead."
 #endif
 
-//#define MKRWAN1300
+#define MKRWAN1300
 //#define RAK4260 //iBug
 //#define RAK4600
-#define RAK11300
+//#define RAK11300
 
 //#define GPS_NONE
 #define GPS_UBLOX_NEO6
