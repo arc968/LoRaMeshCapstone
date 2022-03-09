@@ -22,6 +22,10 @@
  * The RAK4600 hardware uses the <a href="https://dl-docs.rakwireless.com/api/render/?emulateScreenMedia=false&pdf.format=legal&url=https%3A%2F%2Fdocs.rakwireless.com%2FProduct-Categories%2FWisDuo%2FRAK4600-Module%2FDatasheet%2F">RAK4600</a> processor. This processor is composed of two other processors, the <a href="https://www.mouser.com/datasheet/2/761/sx1276-1278113.pdf">SX1276-7-8</a>  and <a href="https://infocenter.nordicsemi.com/pdf/nRF52832_PS_v1.0.pdf">nRF52832</a> .
  */
  
+#ifndef HW_RAK4600_REGISTERS_H
+#define HW_RAK4600_REGISTERS_H
+
+ 
 /*****Power registers**********/
 #define HW_POWER 						(* (uint32_t *) 0x40000000)
 
@@ -60,6 +64,6 @@
 #define HW_POWER_AIRCR					(* (uint32_t *) 0xE000ED0C)
 
 
-
+#endif //HW_RAK4600_REGISTERS_H
 
 /** @} */ // end of IBUGReggroup

@@ -22,7 +22,15 @@
 extern "C" {
 #endif
 
-bool hal_rtc_init(uint8_t mode, uint8_t clkdiv);
+enum hw_rtc_modes_e {
+	
+	RTC_32COUNT = 0,
+	RTC_16COUNT = 1,
+	RTC_CLOCK = 2,
+		
+};
+
+bool hal_rtc_init(enum hw_rtc_modes_e mode, uint8_t clkdiv);
 
 bool hal_rtc_deinit(void);
 
@@ -30,7 +38,7 @@ void hal_rtc_enable(void);
 
 void hal_rtc_disable(void);
 
-void hal_rtc_setCount(void);
+void hal_rtc_setCount(uint32_t val);
 
 uint32_t hal_rtc_getCount(void);
 

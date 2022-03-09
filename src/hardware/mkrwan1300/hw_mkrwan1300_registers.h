@@ -21,7 +21,11 @@
  *
  * The mkrwan1300 hardware uses the <a href="http://ww1.microchip.com/downloads/en/DeviceDoc/40001884A.pdf">SAMD21 Cortex-M0+ 32bit low power ARM MCU</a> processor.
  */
- 
+
+#ifndef HW_MKRWAN1300_REGISTRS_H
+#define HW_MKRWAN1300_REGISTRS_H
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -36,5 +40,7 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
+#endif //HW_MKRWAN1300_REGISTRS_H
 
  /** @} */ // end of MKRWAN1300Reggroup

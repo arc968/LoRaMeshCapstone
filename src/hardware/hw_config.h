@@ -24,8 +24,8 @@ extern "C" {
 	#error "Do not directly include this header file, include hardware.h instead."
 #endif
 
-#define MKRWAN1300
-//#define RAK4260
+//#define MKRWAN1300
+#define RAK4260
 //#define RAK4600
 //#define RAK11300
 

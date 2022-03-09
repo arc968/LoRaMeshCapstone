@@ -22,6 +22,10 @@
  * The RAK11300 hardware uses the <a href="https://dl-docs.rakwireless.com/api/render/?emulateScreenMedia=false&pdf.format=legal&url=https%3A%2F%2Fdocs.rakwireless.com%2FProduct-Categories%2FWisDuo%2FRAK11300-Module%2FDatasheet%2F">RAK11300</a> processor. This processor is composed of two other processors, the <a href="https://semtech.my.salesforce.com/sfc/p/#E0000000JelG/a/2R000000Un7F/yT.fKdAr9ZAo3cJLc4F2cBdUsMftpT2vsOICP7NmvMo">SX1262</a>  and <a href="https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf">RP2040</a> .
  */
  
+ #ifndef HW_RAK11300_REGISTERS_H
+#define HW_RAK11300_REGISTERS_H
+
+ 
 /*****Power registers**********/
 #define HW_POWER_AIRCR					(* (uint32_t *) 0xE000ED0C)
 
@@ -29,6 +33,6 @@
 /*****Timer registers**********/
 
 
-
+#endif HW_RAK11300_REGISTERS_H
 
 /** @} */ // end of RAK11300Reggroup

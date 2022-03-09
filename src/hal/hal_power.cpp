@@ -1,5 +1,6 @@
 #define HAL_LIB
 #include "hal_power.h"
+#include "hal_rtc.h"
 
 #if defined(HW_MKRWAN1300_H)
 	#include "ArduinoLowPower.h"
@@ -35,11 +36,16 @@ void hal_power_idle(uint16_t millis) {
 	//set the sleep mode power reg
 	
 	//turn on the clk for the rtc to run
+	hal_rtc_enable();
 	
+	//__wfi();
 	//WFI();
-	//__asm("WFI()");					the WFI thing is one of these 3 options whichever compiles
+	//__asm("WFI()");					the WFI thing is one of these 4 options whichever compiles
 	//__attribute__((naked)) WFI();
 
+	//clear interupt flag to use again
+
+	
 #elif defined(HW_RAK4600_H)
 	
 	HW_POWER_SYSTEMOFF = 0x00000000;
@@ -77,10 +83,15 @@ void hal_power_sleep(uint16_t millis) {
 	//need standby mode 3
 	
 	//turn on the clk for the rtc to run
+	hal_rtc_enable();
 	
+	//__wfi();
 	//WFI();
-	//__asm("WFI()");					the WFI thing is one of these 3 options whichever compiles
+	//__asm("WFI()");					the WFI thing is one of these 4 options whichever compiles
 	//__attribute__((naked)) WFI();
+	
+	//clear interupt flag to use again
+
 	
 #elif defined(HW_RAK4600_H)
 	
@@ -118,10 +129,14 @@ void hal_power_deepSleep(uint16_t millis) {
 	//set the sleep mode power reg
 	
 	//turn on the clk for the rtc to run
+	hal_rtc_enable();
 	
+	//__wfi();
 	//WFI();
-	//__asm("WFI()");					the WFI thing is one of these 3 options whichever compiles
+	//__asm("WFI()");					the WFI thing is one of these 4 options whichever compiles
 	//__attribute__((naked)) WFI();
+	
+	//clear interupt flag to use again
 	
 #elif defined(HW_RAK4600_H)
 	
@@ -183,6 +198,18 @@ void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, uint16_t millis) {
 			
 			//have to use rtc cant use tc in deep sleep
 			
+			hal_rtc_init(RTC_32COUNT, 0x1/* fix this */);
+			
+			hal_rtc_disable();
+			
+			hal_rtc_setCount(0x00000000);
+			
+			hal_rtc_setCompare(/*set to 1ms * milis val*/);
+			
+			hal_rtc_enableCompareInterrupt(void);
+			
+			//set gclk to run in deep sleep for the rtc
+			
 		#elif defined(HW_RAK4600_H)
 				
 		#elif defined(HW_RAK11300_H)
@@ -214,13 +241,10 @@ void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, uint16_t millis) {
 
 void hal_power_softReset(void) {
 #if defined(HW_MKRWAN1300_H)
-	//WDOGCONTROL  = WDOGCONTROL | 0x0x00000003;
-	//WDOGLOAD 	 = 0x0x00000001;
-	//while(1) {/* wait until reset */};
 	HW_POWER_AIRCR = 0x05FA0004;
 	while(1) {/* wait until reset */}
 #elif defined(HW_RAK4260_H)
-	HW_POWER_AIRCR = 0x05FA0004;
+	HW_SCS_AIRCR.reg = 0x05FA0004;
 	while(1) {/* wait until reset */}
 #elif defined(HW_RAK4600_H)
 	HW_POWER_AIRCR = 0x05FA0004;
