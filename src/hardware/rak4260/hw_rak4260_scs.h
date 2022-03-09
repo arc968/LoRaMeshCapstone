@@ -2,7 +2,7 @@
 #define HW_RAK4260_SCS_H
 
 
-/* -------- HW_SCS_AIRCR : (HW_SCS Offset: 0x0C) (R/W  32) Application Interrupt and Reset Control Register -------- */
+/* -------- SCS_AIRCR : (SCS Offset: 0x0C) (R/W  32) Application Interrupt and Reset Control Register -------- */
 typedef union {
   struct {
     uint8_t  VECTRESET:1;              /*!< bit:      0   Writing 1 to this bit causes a local system reset */
@@ -15,6 +15,6 @@ typedef union {
     uint16_t  VECTKEY:16;              /*!< bit: 16..31   Reserved */
   } bit;                       /*!< Structure used for bit  access */
   uint32_t reg;                 /*!< Type      used for register access   */
-} HW_SCS_AIRCR_Type;
+} SCS_AIRCR_Type;
 
 #endif //HW_RAK4260_SCS_H

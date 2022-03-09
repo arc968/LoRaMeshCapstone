@@ -244,7 +244,7 @@ void hal_power_softReset(void) {
 	HW_POWER_AIRCR = 0x05FA0004;
 	while(1) {/* wait until reset */}
 #elif defined(HW_RAK4260_H)
-	HW_SCS_AIRCR.reg = 0x05FA0004;
+	*SCS_AIRCR.reg = 0x05FA0004;
 	while(1) {/* wait until reset */}
 #elif defined(HW_RAK4600_H)
 	HW_POWER_AIRCR = 0x05FA0004;

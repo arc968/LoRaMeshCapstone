@@ -340,147 +340,145 @@ __attribute__ ((section(".isr_vector"))) const DeviceVectors exception_table =
 #include "hw_rak4260_scs.h"
 
 
-//#define HW_AC                (* (Ac       *)0x43001000UL) /**< \brief (AC) APB Base Address */
-//#define HW_AC_INST_NUM       1                          /**< \brief (AC) Number of instances */
-//#define HW_AC_INSTS          { AC }                     /**< \brief (AC) Instances List */
+//#define AC                ((Ac       *)0x43001000UL) /**< \brief (AC) APB Base Address */
+//#define AC_INST_NUM       1                          /**< \brief (AC) Number of instances */
+//#define AC_INSTS          { AC }                     /**< \brief (AC) Instances List */
 
-//#define HW_ADC               (* (Adc      *)0x43000C00UL) /**< \brief (ADC) APB Base Address */
-//#define HW_ADC_INST_NUM      1                          /**< \brief (ADC) Number of instances */
-//#define HW_ADC_INSTS         { ADC }                    /**< \brief (ADC) Instances List */
+//#define ADC               ((Adc      *)0x43000C00UL) /**< \brief (ADC) APB Base Address */
+//#define ADC_INST_NUM      1                          /**< \brief (ADC) Number of instances */
+//#define ADC_INSTS         { ADC }                    /**< \brief (ADC) Instances List */
 
-//#define HW_AES               (* (Aes      *)0x42003400UL) /**< \brief (AES) APB Base Address */
-//#define HW_AES_INST_NUM      1                          /**< \brief (AES) Number of instances */
-//#define HW_AES_INSTS         { AES }                    /**< \brief (AES) Instances List */
+//#define AES               ((Aes      *)0x42003400UL) /**< \brief (AES) APB Base Address */
+//#define AES_INST_NUM      1                          /**< \brief (AES) Number of instances */
+//#define AES_INSTS         { AES }                    /**< \brief (AES) Instances List */
 
-//#define HW_CCL               (* (Ccl      *)0x43001C00UL) /**< \brief (CCL) APB Base Address */
-//#define HW_CCL_INST_NUM      1                          /**< \brief (CCL) Number of instances */
-//#define HW_CCL_INSTS         { CCL }                    /**< \brief (CCL) Instances List */
+//#define CCL               ((Ccl      *)0x43001C00UL) /**< \brief (CCL) APB Base Address */
+//#define CCL_INST_NUM      1                          /**< \brief (CCL) Number of instances */
+//#define CCL_INSTS         { CCL }                    /**< \brief (CCL) Instances List */
 
-//#define HW_DAC               (* (Dac      *)0x42003000UL) /**< \brief (DAC) APB Base Address */
-//#define HW_DAC_INST_NUM      1                          /**< \brief (DAC) Number of instances */
-//#define HW_DAC_INSTS         { DAC }                    /**< \brief (DAC) Instances List */
+//#define DAC               ((Dac      *)0x42003000UL) /**< \brief (DAC) APB Base Address */
+//#define DAC_INST_NUM      1                          /**< \brief (DAC) Number of instances */
+//#define DAC_INSTS         { DAC }                    /**< \brief (DAC) Instances List */
 
-//#define HW_DMAC              (* (Dmac     *)0x44000400UL) /**< \brief (DMAC) APB Base Address */
-//#define HW_DMAC_INST_NUM     1                          /**< \brief (DMAC) Number of instances */
-//#define HW_DMAC_INSTS        { DMAC }                   /**< \brief (DMAC) Instances List */
+//#define DMAC              ((Dmac     *)0x44000400UL) /**< \brief (DMAC) APB Base Address */
+//#define DMAC_INST_NUM     1                          /**< \brief (DMAC) Number of instances */
+//#define DMAC_INSTS        { DMAC }                   /**< \brief (DMAC) Instances List */
 
-//#define HW_DSU               (* (Dsu      *)0x41002000UL) /**< \brief (DSU) APB Base Address */
-//#define HW_DSU_INST_NUM      1                          /**< \brief (DSU) Number of instances */
-//#define HW_DSU_INSTS         { DSU }                    /**< \brief (DSU) Instances List */
+//#define DSU               ((Dsu      *)0x41002000UL) /**< \brief (DSU) APB Base Address */
+//#define DSU_INST_NUM      1                          /**< \brief (DSU) Number of instances */
+//#define DSU_INSTS         { DSU }                    /**< \brief (DSU) Instances List */
 
-//#define HW_EIC               (* (Eic      *)0x40002400UL) /**< \brief (EIC) APB Base Address */
-//#define HW_EIC_INST_NUM      1                          /**< \brief (EIC) Number of instances */
-//#define HW_EIC_INSTS         { EIC }                    /**< \brief (EIC) Instances List */
+//#define EIC               ((Eic      *)0x40002400UL) /**< \brief (EIC) APB Base Address */
+//#define EIC_INST_NUM      1                          /**< \brief (EIC) Number of instances */
+//#define EIC_INSTS         { EIC }                    /**< \brief (EIC) Instances List */
 
-//#define HW_EVSYS             (* (Evsys    *)0x43000000UL) /**< \brief (EVSYS) APB Base Address */
-//#define HW_EVSYS_INST_NUM    1                          /**< \brief (EVSYS) Number of instances */
-//#define HW_EVSYS_INSTS       { EVSYS }                  /**< \brief (EVSYS) Instances List */
+//#define EVSYS             ((Evsys    *)0x43000000UL) /**< \brief (EVSYS) APB Base Address */
+//#define EVSYS_INST_NUM    1                          /**< \brief (EVSYS) Number of instances */
+//#define EVSYS_INSTS       { EVSYS }                  /**< \brief (EVSYS) Instances List */
 
-#define HW_GCLK              (* (Gclk     *)0x40001800UL) /**< \brief (GCLK) APB Base Address */
-#define HW_GCLK_INST_NUM     1                          /**< \brief (GCLK) Number of instances */
-#define HW_GCLK_INSTS        { GCLK }                   /**< \brief (GCLK) Instances List */
+#define GCLK              ((Gclk     *)0x40001800UL) /**< \brief (GCLK) APB Base Address */
+#define GCLK_INST_NUM     1                          /**< \brief (GCLK) Number of instances */
+#define GCLK_INSTS        { GCLK }                   /**< \brief (GCLK) Instances List */
 
-#define HW_MCLK              (* (Mclk     *)0x40000400UL) /**< \brief (MCLK) APB Base Address */
-#define HW_MCLK_INST_NUM     1                          /**< \brief (MCLK) Number of instances */
-#define HW_MCLK_INSTS        { MCLK }                   /**< \brief (MCLK) Instances List */
+#define MCLK              ((Mclk     *)0x40000400UL) /**< \brief (MCLK) APB Base Address */
+#define MCLK_INST_NUM     1                          /**< \brief (MCLK) Number of instances */
+#define MCLK_INSTS        { MCLK }                   /**< \brief (MCLK) Instances List */
 
-//#define HW_MTB               (* (Mtb      *)0x41006000UL) /**< \brief (MTB) APB Base Address */
-//#define HW_MTB_INST_NUM      1                          /**< \brief (MTB) Number of instances */
-//#define HW_MTB_INSTS         { MTB }                    /**< \brief (MTB) Instances List */
+//#define MTB               ((Mtb      *)0x41006000UL) /**< \brief (MTB) APB Base Address */
+//#define MTB_INST_NUM      1                          /**< \brief (MTB) Number of instances */
+//#define MTB_INSTS         { MTB }                    /**< \brief (MTB) Instances List */
 
-//#define HW_NVMCTRL           (* (Nvmctrl  *)0x41004000UL) /**< \brief (NVMCTRL) APB Base Address */
-//#define HW_NVMCTRL_CAL                   (0x00800000UL) /**< \brief (NVMCTRL) CAL Base Address */
-//#define HW_NVMCTRL_LOCKBIT               (0x00802000UL) /**< \brief (NVMCTRL) LOCKBIT Base Address */
-//#define HW_NVMCTRL_OTP1                  (0x00806000UL) /**< \brief (NVMCTRL) OTP1 Base Address */
-//#define HW_NVMCTRL_OTP2                  (0x00806008UL) /**< \brief (NVMCTRL) OTP2 Base Address */
-//#define HW_NVMCTRL_OTP3                  (0x00806010UL) /**< \brief (NVMCTRL) OTP3 Base Address */
-//#define HW_NVMCTRL_OTP4                  (0x00806018UL) /**< \brief (NVMCTRL) OTP4 Base Address */
-//#define HW_NVMCTRL_OTP5                  (0x00806020UL) /**< \brief (NVMCTRL) OTP5 Base Address */
-//#define HW_NVMCTRL_TEMP_LOG              (0x00806030UL) /**< \brief (NVMCTRL) TEMP_LOG Base Address */
-//#define HW_NVMCTRL_USER                  (0x00804000UL) /**< \brief (NVMCTRL) USER Base Address */
-//#define HW_NVMCTRL_INST_NUM  1                          /**< \brief (NVMCTRL) Number of instances */
-//#define HW_NVMCTRL_INSTS     { NVMCTRL }                /**< \brief (NVMCTRL) Instances List */
+//#define NVMCTRL           ((Nvmctrl  *)0x41004000UL) /**< \brief (NVMCTRL) APB Base Address */
+//#define NVMCTRL_CAL                   (0x00800000UL) /**< \brief (NVMCTRL) CAL Base Address */
+//#define NVMCTRL_LOCKBIT               (0x00802000UL) /**< \brief (NVMCTRL) LOCKBIT Base Address */
+//#define NVMCTRL_OTP1                  (0x00806000UL) /**< \brief (NVMCTRL) OTP1 Base Address */
+//#define NVMCTRL_OTP2                  (0x00806008UL) /**< \brief (NVMCTRL) OTP2 Base Address */
+//#define NVMCTRL_OTP3                  (0x00806010UL) /**< \brief (NVMCTRL) OTP3 Base Address */
+//#define NVMCTRL_OTP4                  (0x00806018UL) /**< \brief (NVMCTRL) OTP4 Base Address */
+//#define NVMCTRL_OTP5                  (0x00806020UL) /**< \brief (NVMCTRL) OTP5 Base Address */
+//#define NVMCTRL_TEMP_LOG              (0x00806030UL) /**< \brief (NVMCTRL) TEMP_LOG Base Address */
+//#define NVMCTRL_USER                  (0x00804000UL) /**< \brief (NVMCTRL) USER Base Address */
+//#define NVMCTRL_INST_NUM  1                          /**< \brief (NVMCTRL) Number of instances */
+//#define NVMCTRL_INSTS     { NVMCTRL }                /**< \brief (NVMCTRL) Instances List */
 
-//#define HW_OPAMP             (* (Opamp    *)0x43001800UL) /**< \brief (OPAMP) APB Base Address */
-//#define HW_OPAMP_INST_NUM    1                          /**< \brief (OPAMP) Number of instances */
-//#define HW_OPAMP_INSTS       { OPAMP }                  /**< \brief (OPAMP) Instances List */
+//#define OPAMP             ((Opamp    *)0x43001800UL) /**< \brief (OPAMP) APB Base Address */
+//#define OPAMP_INST_NUM    1                          /**< \brief (OPAMP) Number of instances */
+//#define OPAMP_INSTS       { OPAMP }                  /**< \brief (OPAMP) Instances List */
 
-#define HW_OSCCTRL           (* (Oscctrl  *)0x40000C00UL) /**< \brief (OSCCTRL) APB Base Address */
-#define HW_OSCCTRL_INST_NUM  1                          /**< \brief (OSCCTRL) Number of instances */
-#define HW_OSCCTRL_INSTS     { OSCCTRL }                /**< \brief (OSCCTRL) Instances List */
+#define OSCCTRL           ((Oscctrl  *)0x40000C00UL) /**< \brief (OSCCTRL) APB Base Address */
+#define OSCCTRL_INST_NUM  1                          /**< \brief (OSCCTRL) Number of instances */
+#define OSCCTRL_INSTS     { OSCCTRL }                /**< \brief (OSCCTRL) Instances List */
 
-#define HW_OSC32KCTRL        (* (Osc32kctrl *)0x40001000UL) /**< \brief (OSC32KCTRL) APB Base Address */
-#define HW_OSC32KCTRL_INST_NUM 1                          /**< \brief (OSC32KCTRL) Number of instances */
-#define HW_OSC32KCTRL_INSTS  { OSC32KCTRL }             /**< \brief (OSC32KCTRL) Instances List */
+#define OSC32KCTRL        ((Osc32kctrl *)0x40001000UL) /**< \brief (OSC32KCTRL) APB Base Address */
+#define OSC32KCTRL_INST_NUM 1                          /**< \brief (OSC32KCTRL) Number of instances */
+#define OSC32KCTRL_INSTS  { OSC32KCTRL }             /**< \brief (OSC32KCTRL) Instances List */
 
-//#define HW_PAC               (* (Pac      *)0x44000000UL) /**< \brief (PAC) APB Base Address */
-//#define HW_PAC_INST_NUM      1                          /**< \brief (PAC) Number of instances */
-//#define HW_PAC_INSTS         { PAC }                    /**< \brief (PAC) Instances List */
+//#define PAC               ((Pac      *)0x44000000UL) /**< \brief (PAC) APB Base Address */
+//#define PAC_INST_NUM      1                          /**< \brief (PAC) Number of instances */
+//#define PAC_INSTS         { PAC }                    /**< \brief (PAC) Instances List */
 
-#define HW_POWER                (* (Pm       *)0x40000000UL) /**< \brief (PM) APB Base Address */
-#define HW_POWER_INST_NUM       1                          /**< \brief (PM) Number of instances */
-#define HW_POWER_INSTS          { HW_POWER }                     /**< \brief (PM) Instances List */
+#define PM                ((Pm       *)0x40000000UL) /**< \brief (PM) APB Base Address */
+#define PM_INST_NUM       1                          /**< \brief (PM) Number of instances */
+#define PM_INSTS          { PM }                     /**< \brief (PM) Instances List */
 
-//#define HW_PORT              (* (Port     *)0x40002800UL) /**< \brief (PORT) APB Base Address */
-//#define HW_PORT_IOBUS        (* (Port     *)0x60000000UL) /**< \brief (PORT) IOBUS Base Address */
-//#define HW_PORT_INST_NUM     1                          /**< \brief (PORT) Number of instances */
-//#define HW_PORT_INSTS        { PORT }                   /**< \brief (PORT) Instances List */
-//#define HW_PORT_IOBUS_INST_NUM 1                          /**< \brief (PORT) Number of instances */
-//#define HW_PORT_IOBUS_INSTS  { PORT_IOBUS }             /**< \brief (PORT) Instances List */
+//#define PORT              ((Port     *)0x40002800UL) /**< \brief (PORT) APB Base Address */
+//#define PORT_IOBUS        ((Port     *)0x60000000UL) /**< \brief (PORT) IOBUS Base Address */
+//#define PORT_INST_NUM     1                          /**< \brief (PORT) Number of instances */
+//#define PORT_INSTS        { PORT }                   /**< \brief (PORT) Instances List */
+//#define PORT_IOBUS_INST_NUM 1                          /**< \brief (PORT) Number of instances */
+//#define PORT_IOBUS_INSTS  { PORT_IOBUS }             /**< \brief (PORT) Instances List */
 
-//#define HW_PTC               (* (void     *)0x43001400UL) /**< \brief (PTC) APB Base Address */
-//#define HW_PTC_GCLK_ID       33
-//#define HW_PTC_INST_NUM      1                          /**< \brief (PTC) Number of instances */
-//#define HW_PTC_INSTS         { PTC }                    /**< \brief (PTC) Instances List */
+//#define PTC               ((void     *)0x43001400UL) /**< \brief (PTC) APB Base Address */
+//#define PTC_GCLK_ID       33
+//#define PTC_INST_NUM      1                          /**< \brief (PTC) Number of instances */
+//#define PTC_INSTS         { PTC }                    /**< \brief (PTC) Instances List */
 
-//#define HW_RSTC              (* (Rstc     *)0x40000800UL) /**< \brief (RSTC) APB Base Address */
-//#define HW_RSTC_INST_NUM     1                          /**< \brief (RSTC) Number of instances */
-//#define HW_RSTC_INSTS        { RSTC }                   /**< \brief (RSTC) Instances List */
+//#define RSTC              ((Rstc     *)0x40000800UL) /**< \brief (RSTC) APB Base Address */
+//#define RSTC_INST_NUM     1                          /**< \brief (RSTC) Number of instances */
+//#define RSTC_INSTS        { RSTC }                   /**< \brief (RSTC) Instances List */
 
-#define HW_RTC               (* (Rtc      *)0x40002000UL) /**< \brief (RTC) APB Base Address */
-#define HW_RTC_INST_NUM      1                          /**< \brief (RTC) Number of instances */
-#define HW_RTC_INSTS         { RTC }                    /**< \brief (RTC) Instances List */
+#define RTC               ((Rtc      *)0x40002000UL) /**< \brief (RTC) APB Base Address */
+#define RTC_INST_NUM      1                          /**< \brief (RTC) Number of instances */
+#define RTC_INSTS         { RTC }                    /**< \brief (RTC) Instances List */
 
-//#define HW_SERCOM0           (* (Sercom   *)0x42000000UL) /**< \brief (SERCOM0) APB Base Address */
-//#define HW_SERCOM1           (* (Sercom   *)0x42000400UL) /**< \brief (SERCOM1) APB Base Address */
-//#define HW_SERCOM2           (* (Sercom   *)0x42000800UL) /**< \brief (SERCOM2) APB Base Address */
-//#define HW_SERCOM3           (* (Sercom   *)0x42000C00UL) /**< \brief (SERCOM3) APB Base Address */
-//#define HW_SERCOM4           (* (Sercom   *)0x42001000UL) /**< \brief (SERCOM4) APB Base Address */
-//#define HW_SERCOM5           (* (Sercom   *)0x43000400UL) /**< \brief (SERCOM5) APB Base Address */
-//#define HW_SERCOM_INST_NUM   6                          /**< \brief (SERCOM) Number of instances */
-//#define HW_SERCOM_INSTS      { SERCOM0, SERCOM1, SERCOM2, SERCOM3, SERCOM4, SERCOM5 } /**< \brief (SERCOM) Instances List */
+//#define SERCOM0           ((Sercom   *)0x42000000UL) /**< \brief (SERCOM0) APB Base Address */
+//#define SERCOM1           ((Sercom   *)0x42000400UL) /**< \brief (SERCOM1) APB Base Address */
+//#define SERCOM2           ((Sercom   *)0x42000800UL) /**< \brief (SERCOM2) APB Base Address */
+//#define SERCOM3           ((Sercom   *)0x42000C00UL) /**< \brief (SERCOM3) APB Base Address */
+//#define SERCOM4           ((Sercom   *)0x42001000UL) /**< \brief (SERCOM4) APB Base Address */
+//#define SERCOM5           ((Sercom   *)0x43000400UL) /**< \brief (SERCOM5) APB Base Address */
+//#define SERCOM_INST_NUM   6                          /**< \brief (SERCOM) Number of instances */
+//#define SERCOM_INSTS      { SERCOM0, SERCOM1, SERCOM2, SERCOM3, SERCOM4, SERCOM5 } /**< \brief (SERCOM) Instances List */
 
-//#define HW_SUPC              (* (Supc     *)0x40001400UL) /**< \brief (SUPC) APB Base Address */
-//#define HW_SUPC_INST_NUM     1                          /**< \brief (SUPC) Number of instances */
-//#define HW_SUPC_INSTS        { SUPC }                   /**< \brief (SUPC) Instances List */
+//#define SUPC              ((Supc     *)0x40001400UL) /**< \brief (SUPC) APB Base Address */
+//#define SUPC_INST_NUM     1                          /**< \brief (SUPC) Number of instances */
+//#define SUPC_INSTS        { SUPC }                   /**< \brief (SUPC) Instances List */
 
-#define HW_TC0               (* (Tc       *)0x42002000UL) /**< \brief (TC0) APB Base Address */
-#define HW_TC1               (* (Tc       *)0x42002400UL) /**< \brief (TC1) APB Base Address */
-#define HW_TC2               (* (Tc       *)0x42002800UL) /**< \brief (TC2) APB Base Address */
-#define HW_TC3               (* (Tc       *)0x42002C00UL) /**< \brief (TC3) APB Base Address */
-#define HW_TC4               (* (Tc       *)0x43000800UL) /**< \brief (TC4) APB Base Address */
-#define HW_TC_INST_NUM       5                          /**< \brief (TC) Number of instances */
-#define HW_TC_INSTS          { TC0, TC1, TC2, TC3, TC4 } /**< \brief (TC) Instances List */
+#define TC0               ((Tc       *)0x42002000UL) /**< \brief (TC0) APB Base Address */
+#define TC1               ((Tc       *)0x42002400UL) /**< \brief (TC1) APB Base Address */
+#define TC2               ((Tc       *)0x42002800UL) /**< \brief (TC2) APB Base Address */
+#define TC3               ((Tc       *)0x42002C00UL) /**< \brief (TC3) APB Base Address */
+#define TC4               ((Tc       *)0x43000800UL) /**< \brief (TC4) APB Base Address */
+#define TC_INST_NUM       5                          /**< \brief (TC) Number of instances */
+#define TC_INSTS          { TC0, TC1, TC2, TC3, TC4 } /**< \brief (TC) Instances List */
 
-//#define HW_TCC0              (* (Tcc      *)0x42001400UL) /**< \brief (TCC0) APB Base Address */
-//#define HW_TCC1              (* (Tcc      *)0x42001800UL) /**< \brief (TCC1) APB Base Address */
-//#define HW_TCC2              (* (Tcc      *)0x42001C00UL) /**< \brief (TCC2) APB Base Address */
-//#define HW_TCC_INST_NUM      3                          /**< \brief (TCC) Number of instances */
-//#define HW_TCC_INSTS         { TCC0, TCC1, TCC2 }       /**< \brief (TCC) Instances List */
+//#define TCC0              ((Tcc      *)0x42001400UL) /**< \brief (TCC0) APB Base Address */
+//#define TCC1              ((Tcc      *)0x42001800UL) /**< \brief (TCC1) APB Base Address */
+//#define TCC2              ((Tcc      *)0x42001C00UL) /**< \brief (TCC2) APB Base Address */
+//#define TCC_INST_NUM      3                          /**< \brief (TCC) Number of instances */
+//#define TCC_INSTS         { TCC0, TCC1, TCC2 }       /**< \brief (TCC) Instances List */
 
-//#define HW_TRNG              (* (Trng     *)0x42003800UL) /**< \brief (TRNG) APB Base Address */
-//#define HW_TRNG_INST_NUM     1                          /**< \brief (TRNG) Number of instances */
-//#define HW_TRNG_INSTS        { TRNG }                   /**< \brief (TRNG) Instances List */
+//#define TRNG              ((Trng     *)0x42003800UL) /**< \brief (TRNG) APB Base Address */
+//#define TRNG_INST_NUM     1                          /**< \brief (TRNG) Number of instances */
+//#define TRNG_INSTS        { TRNG }                   /**< \brief (TRNG) Instances List */
 
-//#define HW_USB               (* (Usb      *)0x41000000UL) /**< \brief (USB) APB Base Address */
-//#define HW_USB_INST_NUM      1                          /**< \brief (USB) Number of instances */
-//#define HW_USB_INSTS         { USB }                    /**< \brief (USB) Instances List */
+//#define USB               ((Usb      *)0x41000000UL) /**< \brief (USB) APB Base Address */
+//#define USB_INST_NUM      1                          /**< \brief (USB) Number of instances */
+//#define USB_INSTS         { USB }                    /**< \brief (USB) Instances List */
 
-//define HW_WDT               (* (Wdt      *)0x40001C00UL) /**< \brief (WDT) APB Base Address */
-//#define HW_WDT_INST_NUM      1                          /**< \brief (WDT) Number of instances */
-//#define HW_WDT_INSTS         { WDT }                    /**< \brief (WDT) Instances List */
-
-#define HW_SYSCTRL_AIRCR	  (* (HW_SCS_AIRCR_Type *) 0xE000ED0C)
+//define WDT               ((Wdt      *)0x40001C00UL) /**< \brief (WDT) APB Base Address */
+//#define WDT_INST_NUM      1                          /**< \brief (WDT) Number of instances */
+//#define WDT_INSTS         { WDT }                    /**< \brief (WDT) Instances List */
 
 
 #ifdef __cplusplus
@@ -489,6 +487,24 @@ __attribute__ ((section(".isr_vector"))) const DeviceVectors exception_table =
 
 
  
+
+#endif //HW_ARDUINO
+
+#ifdef __cplusplus
+ extern "C" {
+#endif
+#define SYSCTRL_AIRCR	  ((SCS_AIRCR_Type *) 0xE000ED0C)
+#ifdef __cplusplus
+}
+#endif
+
+#endif //HW_RAK4260_REGISTERS_H
+
+/** @} */ // end of RAK4260Reggroup
+
+
+
+
 /*
 #define HW_POWER_BASEADDRESS			0x40000000
 
@@ -611,11 +627,4 @@ __attribute__ ((section(".isr_vector"))) const DeviceVectors exception_table =
 #define HW_TCxCTRLBSET_READSYNC			0x80
 
 */
-
-
-#endif //HW_ARDUINO
-
-#endif //HW_RAK4260_REGISTERS_H
-
-/** @} */ // end of RAK4260Reggroup
 
