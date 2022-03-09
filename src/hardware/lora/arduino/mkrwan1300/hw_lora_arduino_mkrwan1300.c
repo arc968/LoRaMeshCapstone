@@ -15,7 +15,9 @@
 #include "../../../../drivers/timer/drv_timer.h"
 #include "../../../../drivers/sched/drv_sched.h"
 
-void drv_lora_init(struct drv_lora_s * handle, pin_t pin) {
+void drv_lora_init(struct drv_lora_s * handle, enum drv_lora_region_e region, pin_t pin) {
+	
+	
 	
 }
 

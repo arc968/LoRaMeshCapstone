@@ -17,20 +17,13 @@
 #define HAL_RTC_H
 
 #include "hal_common.h"
+#include "../lib/datetime/lib_datetime.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-enum hw_rtc_modes_e {
-	
-	RTC_32COUNT = 0,
-	RTC_16COUNT = 1,
-	RTC_CLOCK = 2,
-		
-};
-
-bool hal_rtc_init(enum hw_rtc_modes_e mode, uint8_t clkdiv);
+bool hal_rtc_init(void);
 
 bool hal_rtc_deinit(void);
 
@@ -38,27 +31,23 @@ void hal_rtc_enable(void);
 
 void hal_rtc_disable(void);
 
-void hal_rtc_setCount(uint32_t val);
+void hal_rtc_setClock(uint32_t val);
 
-uint32_t hal_rtc_getCount(void);
+struct lib_datetime_s hal_rtc_getClock(void);
 
-void hal_rtc_setCompare(uint32_t val);
+void hal_rtc_setAlarm(uint32_t val);
 
-uint32_t hal_rtc_getCompare(void);
+uint32_t hal_rtc_getAlarm(void);
 
-void hal_rtc_enableCompareInterrupt(void);
+void hal_rtc_enableAlarmInterrupt(void);
 
-void hal_rtc_disableCompareInterrupt(void);
+void hal_rtc_disableAlarmInterrupt(void);
 
 void hal_rtc_enableOverflowInterrupt(void);
 
 void hal_rtc_disableOverflowInterrupt(void);
 
-void hal_rtc_enableCompareInterrupt(void);
-
-void hal_rtc_disableCompareInterrupt(void);
-
-void hal_rtc_clearCompareInterrupt(void);
+void hal_rtc_clearAlarmInterrupt(void);
 
 void hal_rtc_clearOverflowInterrupt(void);
 

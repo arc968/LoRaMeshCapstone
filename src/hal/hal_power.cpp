@@ -28,9 +28,9 @@ void hal_power_wake(void) {
 #endif
 }
 
-void hal_power_idle(uint16_t millis) {
+void hal_power_idle(uint16_t seconds) {
 #if defined(HW_MKRWAN1300_H)
-	LowPower.idle(millis);
+	LowPower.idle(seconds);
 #elif defined(HW_RAK4260_H)
 	
 	//set the sleep mode power reg
@@ -74,9 +74,9 @@ void hal_power_idle(uint16_t millis) {
 #endif
 }
 
-void hal_power_sleep(uint16_t millis) {
+void hal_power_sleep(uint16_t seconds) {
 #if defined(HW_MKRWAN1300_H)
-	LowPower.sleep(millis);
+	LowPower.sleep(seconds);
 #elif defined(HW_RAK4260_H)
 	
 	//set the sleep mode power reg
@@ -121,9 +121,9 @@ void hal_power_sleep(uint16_t millis) {
 #endif
 }
 
-void hal_power_deepSleep(uint16_t millis) {
+void hal_power_deepSleep(uint16_t seconds) {
 #if defined(HW_MKRWAN1300_H)
-	LowPower.deepSleep(millis);
+	LowPower.deepSleep(seconds);
 #elif defined(HW_RAK4260_H)
 	
 	//set the sleep mode power reg
@@ -166,7 +166,7 @@ void hal_power_deepSleep(uint16_t millis) {
 #endif
 }
 
-void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, uint16_t millis) {
+void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, uint16_t seconds) {
 	
 	static uint8_t powertimersetup = 1;
 	
@@ -175,38 +175,18 @@ void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, uint16_t millis) {
 		#if defined(HW_MKRWAN1300_H)
 			
 		#elif defined(HW_RAK4260_H)
-			/*//setup milisecond timer interval on tc0 with 16 percision
-			HW_TC0_CTRLA &= HW_TCxCTRLA_DISABLE;
-			
-			//setup milisecond timer interval on tc0 with 16 percision
-			//GCLK has to use the 48MHz clk then we divide by 2
-				
-			HW_TC0_CTRLA |= HW_TCxCTRLA_COUNT16MODE | HW_TCxCTRLA_PRESCALER_DIV2;
-			
-			HW_TC0_CTRLBSET |= HW_TCxCTRLBSET_COUNTUP | HW_TCxCTRLBSET_STOP;
-			
-			HW_TC0_INTFLAG = 0x00;
-			HW_TC0_INTSET = 0x10;
-			
-			HW_TC0_CC0 = 0x5DBF; 	// (48MHz/2) / 1000 = 1ms = 23999 = 0x5DBF
-			
-			//connect TC_CC0 interrupt on compare equal to the wake event
-			
-			//sleep functions MUST request that GCLK keeps the 48MHz clk on durring low power modes
-			
-			HW_TC0_CTRLA |= HW_TCx_ENABLE;*/
 			
 			//have to use rtc cant use tc in deep sleep
 			
-			//hal_rtc_init(RTC_32COUNT, 0x1/* fix this */);
+			hal_rtc_init();
 			
 			hal_rtc_disable();
 			
-			hal_rtc_setCount(0x00000000);
+			//hal_rtc_setCount(0x00000000);
 			
 			//hal_rtc_setCompare(/*set to 1ms * milis val*/);
 			
-			hal_rtc_enableCompareInterrupt();
+			//hal_rtc_enableCompareInterrupt();
 			
 			//set gclk to run in deep sleep for the rtc
 			
@@ -225,16 +205,16 @@ void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, uint16_t millis) {
 		hal_power_wake();
 	}
 	else if (pwrmode == PWR_IDLE) {
-		hal_power_idle(millis);
+		hal_power_idle(seconds);
 	}
 	else if (pwrmode == PWR_SLEEP) {
-		hal_power_sleep(millis);
+		hal_power_sleep(seconds);
 	}
 	else if (pwrmode == PWR_DEEP_SLEEP) {
-		hal_power_deepSleep(millis);
+		hal_power_deepSleep(seconds);
 	}
 	else {
-		hal_power_deepSleep(millis);
+		hal_power_deepSleep(seconds);
 	}
 
 }
@@ -244,7 +224,7 @@ void hal_power_softReset(void) {
 	HW_POWER_AIRCR = 0x05FA0004;
 	while(1) {/* wait until reset */}
 #elif defined(HW_RAK4260_H)
-	//*SCS_AIRCR.reg = 0x05FA0004;
+	SYSCTRL_AIRCR->reg = 0x05FA0004;
 	while(1) {/* wait until reset */}
 #elif defined(HW_RAK4600_H)
 	HW_POWER_AIRCR = 0x05FA0004;

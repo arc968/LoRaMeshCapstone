@@ -28,7 +28,7 @@ enum hw_power_pwrmodes_e {
 	
 };
 
-void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, uint16_t millis);
+void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, uint16_t seconds);
 
 void hal_power_softReset(void);
 

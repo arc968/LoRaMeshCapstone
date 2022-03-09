@@ -25,6 +25,8 @@
  #ifndef HW_RAK4260_REGISTERS_H
  #define HW_RAK4260_REGISTERS_H
  
+ #include <stdint.h>
+ 
  #ifndef HW_ARDUINO
 
 #ifdef __cplusplus
@@ -44,7 +46,6 @@
 #define     __OM     volatile            /*! Defines 'write only' structure member permissions */
 #define     __IOM    volatile            /*! Defines 'read / write' structure member permissions */
 
-#include <stdint.h>
 #ifndef __cplusplus
 typedef volatile const uint32_t RoReg;   /**< Read only 32-bit register (volatile const unsigned int) */
 typedef volatile const uint16_t RoReg16; /**< Read only 16-bit register (volatile const unsigned int) */
@@ -338,7 +339,6 @@ __attribute__ ((section(".isr_vector"))) const DeviceVectors exception_table =
 #include "hw_rak4260_tc.h"
 #include "hw_rak4260_rtc.h"
 #include "hw_rak4260_gclk.h"
-#include "hw_rak4260_scs.h"
 
 
 //#define AC                ((Ac       *)0x43001000UL) /**< \brief (AC) APB Base Address */
@@ -486,15 +486,15 @@ __attribute__ ((section(".isr_vector"))) const DeviceVectors exception_table =
 }
 #endif
 
-
- 
-
 #endif //HW_ARDUINO
 
 #ifdef __cplusplus
  extern "C" {
 #endif
+
+#include "hw_rak4260_scs.h"
 #define SYSCTRL_AIRCR	  ((SCS_AIRCR_Type *) 0xE000ED0C)
+
 #ifdef __cplusplus
 }
 #endif
