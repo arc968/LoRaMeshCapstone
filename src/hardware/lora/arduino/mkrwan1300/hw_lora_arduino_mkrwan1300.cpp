@@ -24,9 +24,9 @@ extern "C" {
 
 void drv_lora_init(struct drv_lora_s * handle, enum drv_lora_region_e region, pin_t pin) {
 	
+	while (!LoRa.begin(region));
 	handle->pin = pin;
 	handle->region = region;
-	LoRa.begin(region);
 	handle->bandwidth = DRV_LORA_BW__125kHz;
 	handle->spreadingFactor = DRV_LORA_SF__7;
 	handle->codingRate = DRV_LORA_CR__4_5;
@@ -126,20 +126,41 @@ enum drv_lora_codingRate_e drv_lora_getCodingRate(struct drv_lora_s * handle) {
 	
 }
 
-uint16_t drv_lora_recvPacketCount(struct drv_lora_s * handle) {
+void drv_lora_recvPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet) {
 	
-	return 0; //TODO
+	uint8_t indx = 0;
 	
-}
-void drv_lora_getRecvPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet) {
+	if (LoRa.parsePacket(packet->size)) {
+		while (LoRa.available() && indx < packet->size) {
+			
+			packet->buf[indx] = LoRa.read();
+			
+		}
+		
+		packet->rssi = LoRa.packetRssi();
+		packet->snr = LoRa.packetSnr();
+		packet->freqerr = LoRa.packetFrequencyError();
+		
+		indx++;
+		
+	}
 	
-	
+	if (indx == 0) {
+		packet->size = 0;
+	}
+	else if (indx < packet->size-1) {
+		packet->size = indx + 1;
+	}
 	
 }
 
-void drv_lora_queuePacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet) {
+void drv_lora_sendPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet) {
 	
+	while (LoRa.beginPacket());
 	
+	LoRa.write(packet->buf, packet->size);
+	
+	LoRa.endPacket();
 	
 }
 

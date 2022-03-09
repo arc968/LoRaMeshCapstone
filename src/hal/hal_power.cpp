@@ -72,6 +72,7 @@ void hal_power_idle() {
 	
 	//clear interupt flag to use again
 	hal_rtc_clearAlarmInterrupt();
+	hal_rtc_disable();
 
 }
 
@@ -121,6 +122,7 @@ void hal_power_sleep() {
 	
 	//clear interupt flag to use again
 	hal_rtc_clearAlarmInterrupt();
+	hal_rtc_disable();
 	
 }
 
@@ -168,6 +170,7 @@ void hal_power_deepSleep() {
 	
 	//clear interupt flag to use again
 	hal_rtc_clearAlarmInterrupt();
+	hal_rtc_disable();
 
 }
 
@@ -182,6 +185,7 @@ void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s alar
 		#elif defined(HW_RAK4260_H)
 			
 			//have to use rtc cant use tc in deep sleep
+			//warning any running peripheral in sleep mode that triggers an interrupt triggers a wake event
 			
 			hal_rtc_init();
 			

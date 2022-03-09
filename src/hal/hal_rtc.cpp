@@ -35,7 +35,7 @@ void hal_rtc_waitForSync(void) {
 	#elif defined(HW_RAK4600_H)
 		
 	#elif defined(HW_RAK11300_H)
-		while (rtc_running());
+		//while (rtc_running());
 	#else
 		#error "Hardware not yet implemented"
 	#endif
@@ -73,9 +73,6 @@ void hal_rtc_init(void) {
 	#elif defined(HW_RAK4600_H)
 		
 	#elif defined(HW_RAK11300_H)
-		
-		hal_rtc_disable();
-		
 		
 	#else
 		#error "Hardware not yet implemented"
@@ -340,6 +337,7 @@ void hal_rtc_enableAlarmInterrupt(void) {
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.INTENSET.reg |= RTC_MODE2_INTENSET_ALARM0;
+		RTC->MODE2.EVCTRL.reg |= RTC_MODE2_EVCTRL_ALARMEO0;
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -360,6 +358,7 @@ void hal_rtc_disableAlarmInterrupt(void) {
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.INTENCLR.reg |= RTC_MODE2_INTENCLR_ALARM0;
+		RTC->MODE2.EVCTRL.reg &= ~RTC_MODE2_EVCTRL_ALARMEO0;
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -380,6 +379,7 @@ void hal_rtc_enableOverflowInterrupt(void) {
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.INTENSET.reg |= RTC_MODE2_INTENSET_OVF;
+		RTC->MODE2.EVCTRL.reg |= RTC_MODE2_EVCTRL_OVFEO;
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -400,6 +400,7 @@ void hal_rtc_disableOverflowInterrupt(void) {
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.INTENCLR.reg |= RTC_MODE2_INTENCLR_OVF;
+		RTC->MODE2.EVCTRL.reg &= ~RTC_MODE2_EVCTRL_OVFEO;
 		
 	#elif defined(HW_RAK4600_H)
 		

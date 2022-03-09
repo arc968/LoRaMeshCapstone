@@ -6,36 +6,30 @@
 	#include "ISR_Timer_Generic.h"
 	SAMDTimer ITimer(TIMER_TC3);
 	//ISR_Timer hal_ISR_Timer;
-#elif defined(HW_RAK4260_H)
-	
-#else
-	#error "Hardware not yet implemented"
-#endif	
 
-
-#if defined(HW_MKRWAN1300_H)
-//void hal_timer_handler(void) {
-//	hal_ISR_Timer.run();
-//}
+	//void hal_timer_handler(void) {
+	//	hal_ISR_Timer.run();
+	//}
 #elif defined(HW_RAK4260_H)
 
-static uint32_t currentMillisRunTime = 0;
+	static uint32_t currentMillisRunTime = 0;
 
-static void (* isrfunc)(void);
+	static void (* isrfunc)(void);
 
-void TC2_Handler(void) {
+	void TC2_Handler(void) {
+		
+		isrfunc();
+		TC2->COUNT16.INTFLAG.reg = ~TC_INTFLAG_RESETVALUE;
+		
+	}
+		
+	void TC0_Handler(void) {
+		
+		RTC->MODE2.GP[0].reg++;
+		TC0->COUNT32.INTFLAG.reg = ~TC_INTFLAG_RESETVALUE;
+		
+	}
 	
-	isrfunc();
-	TC2->COUNT16.INTFLAG.reg = ~TC_INTFLAG_RESETVALUE;
-	
-}
-	
-void TC0_Handler(void) {
-	
-	currentMillisRunTime++;
-	TC0->COUNT32.INTFLAG.reg = ~TC_INTFLAG_RESETVALUE;
-	
-}
 #elif defined(HW_RAK4600_H)
 	
 #elif defined(HW_RAK11300_H)
@@ -85,6 +79,7 @@ void hal_timer_init(void (*isr)(void), uint16_t interval_us) {
 			TC2->COUNT16.INTFLAG.reg = ~TC_INTFLAG_RESETVALUE;
 			
 			TC2->COUNT16.INTENSET.reg = TC_INTENSET_MC0;
+			TC2->COUNT16.EVCTRL.reg = TC_EVCTRL_MCEO0;
 			
 			TC2->COUNT16.CC[0].reg = interval_us;	//(48MHz / 2) / 1000 = 1msec , count = 23999
 			
@@ -164,10 +159,13 @@ uint32_t hal_timer_millis(void) {
 			TC0->COUNT32.INTFLAG.reg = TC_INTFLAG_RESETVALUE;
 			
 			TC0->COUNT32.INTENSET.reg = TC_INTENSET_MC0;
+			TC0->COUNT32.EVCTRL.reg = TC_EVCTRL_MCEO0;
 			
 			TC0->COUNT32.CC[0].reg = 23999;	//(48MHz / 2) / 1000 = 1msec , count = 23999
 			
 			TC0->COUNT32.COUNT.reg = 0x00000000;
+			
+			RTC->MODE2.GP[0].reg = 0x00000000;
 			
 			while(TC0->COUNT32.SYNCBUSY.reg != 0);
 			TC0->COUNT32.CTRLA.reg |= TC_CTRLA_ENABLE;

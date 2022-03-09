@@ -51,6 +51,9 @@ enum drv_lora_mode_e {
 
 struct drv_lora_packet_s {
 	uint8_t size;
+	int rssi;
+	float snr;
+	long freqerr;
 	uint8_t buf[255];
 };
 
@@ -85,10 +88,9 @@ enum drv_lora_spreadingFactor_e drv_lora_getSpreadingFactor(struct drv_lora_s * 
 void drv_lora_setCodingRate(struct drv_lora_s * handle, enum drv_lora_codingRate_e);
 enum drv_lora_codingRate_e drv_lora_getCodingRate(struct drv_lora_s * handle);
 
-uint16_t drv_lora_recvPacketCount(struct drv_lora_s * handle);
-void drv_lora_getRecvPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet);
+void drv_lora_recvPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet);
 
-void drv_lora_queuePacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet);
+void drv_lora_sendPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet);
 
 #if defined (__cplusplus)
 }
