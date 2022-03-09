@@ -12,6 +12,12 @@ extern "C" {
 #include "../../hal/hal_common.h"
 #include "../../hardware/hardware.h"
 
+enum drv_lora_region_e {
+	DRV_LORA_REGION_US915,
+	DRV_LORA_REGION_EU868,
+	DRV_LORA_REGION_433,
+};
+
 enum drv_lora_bandwidth_e {
 	DRV_LORA_BW__62_5kHz,
 	DRV_LORA_BW__125kHz,
@@ -52,14 +58,14 @@ struct drv_lora_s {
 	
 };
 
-void drv_lora_init(struct drv_lora_s * handle, pin_t pin);
+void drv_lora_init(struct drv_lora_s * handle, enum drv_lora_region_e region, pin_t pin);
 
-void drv_lora_setMode(enum drv_lora_mode_e mode);
+void drv_lora_setMode(struct drv_lora_s * handle, enum drv_lora_mode_e mode);
 //enum drv_lora_mode_e drv_lora_getMode(void);
 
-void drv_lora_setTxPower(uint16_t dB);
+void drv_lora_setTxPower(struct drv_lora_s * handle, uint16_t dB);
 
-void drv_lora_setPreamble(uint16_t ms);
+void drv_lora_setPreamble(struct drv_lora_s * handle, uint16_t ms);
 
 void drv_lora_setBandwidth(struct drv_lora_s * handle, enum drv_lora_bandwidth_e);
 //enum drv_lora_bandwidth_e drv_lora_getBandwidth(struct drv_lora_s * handle);
@@ -70,10 +76,10 @@ void drv_lora_setSpreadingFactor(struct drv_lora_s * handle, enum drv_lora_sprea
 void drv_lora_setCodingRate(struct drv_lora_s * handle, enum drv_lora_codingRate_e);
 //enum drv_lora_codingRate_e drv_lora_getCodingRate(struct drv_lora_s * handle);
 
-uint16_t drv_lora_recvPacketCount(void);
-void drv_lora_getRecvPacket(struct drv_lora_packet_s * packet);
+uint16_t drv_lora_recvPacketCount(struct drv_lora_s * handle);
+void drv_lora_getRecvPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet);
 
-void drv_lora_queuePacket(struct drv_lora_packet_s * packet);
+void drv_lora_queuePacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet);
 
 #if defined (__cplusplus)
 }
