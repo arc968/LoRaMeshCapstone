@@ -72,9 +72,27 @@ void hal_serial_write(void * const handle,uint8_t *buf, uint16_t length) {
 	#endif
 }
 
+int hal_serial_read(void * const handle) {
+	#if defined(HW_ARDUINO)
+		return static_cast<HardwareSerial*>(handle)->read();
+	#elif defined(HW_RAK4260_H)
+		return 0; //TODO
+	#elif defined(HW_RAK4600_H)
+		return 0; //TODO
+	#elif defined(HW_RAK11300_H)
+		return 0; //TODO
+	#else
+		#error "Hardware not yet implemented"
+	#endif
+}
+
 size_t hal_serial_readBytes(void * const handle, uint8_t *buf, uint16_t length) {
 	#if defined(HW_ARDUINO)
-		return static_cast<HardwareSerial*>(handle)->readBytes((char*)buf, length);
+		uint16_t count = 0;
+		while(static_cast<HardwareSerial*>(handle)->available() > 0 && count < length) {
+			buf[count++] = static_cast<HardwareSerial*>(handle)->read();
+		}
+		return count;
 	#elif defined(HW_RAK4260_H)
 		return 0; //TODO
 	#elif defined(HW_RAK4600_H)
