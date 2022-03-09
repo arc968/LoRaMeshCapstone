@@ -68,7 +68,7 @@ struct drv_lora_s {
 void drv_lora_init(struct drv_lora_s * handle, enum drv_lora_region_e region, pin_t pin);
 
 void drv_lora_setMode(struct drv_lora_s * handle, enum drv_lora_mode_e mode);
-enum drv_lora_mode_e drv_lora_getMode(void);
+enum drv_lora_mode_e drv_lora_getMode(struct drv_lora_s * handle);
 
 void drv_lora_setTxPower(struct drv_lora_s * handle, uint16_t dB);
 uint16_t drv_lora_getTxPower(struct drv_lora_s * handle);

@@ -54,7 +54,7 @@ void drv_lora_setMode(struct drv_lora_s * handle, enum drv_lora_mode_e mode) {
 	handle->mode = mode;
 	
 }
-enum drv_lora_mode_e drv_lora_getMode(void) {
+enum drv_lora_mode_e drv_lora_getMode(struct drv_lora_s * handle) {
 	
 	return handle->mode;
 	
