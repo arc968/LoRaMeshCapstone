@@ -1,4 +1,4 @@
-#if !defined(HARDWARE_H_SCOPE) && !defined(HW_LORA_ARDUINO_MKRWAN1300_C)
+#if !defined(HARDWARE_H_SCOPE) && !defined(HW_LORA_ARDUINO_MKRWAN1300_CPP)
 	#error "Do not directly include this header file, include hardware.h instead."
 #elif defined(HW_LORA_H) && !defined(HW_LORA_ARDUINO_MKRWAN1300_H)
 	#error "Multiple LoRa hardware definitions."

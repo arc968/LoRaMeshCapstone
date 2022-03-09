@@ -1,4 +1,4 @@
-#define HW_LORA_ARDUINO_MKRWAN1300_C
+#define HW_LORA_ARDUINO_MKRWAN1300_CPP
 //#include "hw_lora_arduino_mkrwan1300.h"
 #include "../../../hardware.h"
 
@@ -14,6 +14,10 @@
 #include "../../../../drivers/lora/drv_lora.h"
 #include "../../../../drivers/timer/drv_timer.h"
 #include "../../../../drivers/sched/drv_sched.h"
+
+#if defined (__cplusplus)
+extern "C" {
+#endif
 
 #include <LoRa.h>
 
@@ -112,7 +116,7 @@ enum drv_lora_spreadingFactor_e drv_lora_getSpreadingFactor(struct drv_lora_s * 
 
 void drv_lora_setCodingRate(struct drv_lora_s * handle, enum drv_lora_codingRate_e cr) {
 	
-	LoRa.setCodingRate(cr);
+	LoRa.setCodingRate4(cr);
 	handle->codingRate = cr;
 	
 }
@@ -139,6 +143,10 @@ void drv_lora_queuePacket(struct drv_lora_s * handle, struct drv_lora_packet_s *
 	
 }
 
+#if defined (__cplusplus)
+}
+#endif
+
 #endif // HW_LORA_ARDUINO_MKRWAN1300_H
 
-#undef HW_LORA_ARDUINO_MKRWAN1300_C
+#undef HW_LORA_ARDUINO_MKRWAN1300_CPP
