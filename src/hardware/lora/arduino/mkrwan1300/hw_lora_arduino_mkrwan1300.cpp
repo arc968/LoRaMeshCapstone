@@ -45,7 +45,7 @@ void drv_lora_setMode(struct drv_lora_s * handle, enum drv_lora_mode_e mode) {
 			LoRa.sleep();
 			break;
 		case DRV_LORA_MODE__RECV:
-			LoRa.receive();
+			
 			break;
 		case DRV_LORA_MODE__SEND:
 			
