@@ -2,9 +2,10 @@
 #include "hal_rtc.h"
 
 #if defined(HW_MKRWAN1300_H)
+
 	#include <RTCZero.h>
-	
-	uint8_t y = 0, m = 0, d = 0, h = 0, min = 0, s = 0;
+	RTCZero rtc;
+	uint8_t y = 0, m = 0, d = 0, h = 0, mi = 0, s = 0;
 	
 #elif defined(HW_RAK4260_H)
 
@@ -37,11 +38,11 @@ void hal_rtc_waitForSync(void) {
 
 
 
-bool hal_rtc_init(void) {
+void hal_rtc_init(void) {
 	
 	
 	#if defined(HW_MKRWAN1300_H)
-		rtc.begin()
+		rtc.begin();
 	#elif defined(HW_RAK4260_H)
 	
 		//disable rtc
@@ -80,7 +81,7 @@ bool hal_rtc_init(void) {
 	
 }
 
-bool hal_rtc_deinit(void) {
+void hal_rtc_deinit(void) {
 	
 	hal_rtc_disable();
 	
@@ -106,7 +107,7 @@ bool hal_rtc_deinit(void) {
 void hal_rtc_enable(void) {
 	
 	#if defined(HW_MKRWAN1300_H)
-		rtc.enanableAlarm0();
+		rtc.enableAlarm(rtc.MATCH_YYMMDDHHMMSS);
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.CTRLA.reg |= RTC_MODE2_CTRLA_ENABLE;
@@ -126,7 +127,7 @@ void hal_rtc_enable(void) {
 void hal_rtc_disable(void) {
 	
 	#if defined(HW_MKRWAN1300_H)
-		rtc.disableAlarm0();
+		rtc.disableAlarm();
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.CTRLA.reg &= ~RTC_MODE2_CTRLA_ENABLE;
@@ -152,7 +153,7 @@ void hal_rtc_setClock(struct lib_datetime_s dt) {
 		rtc.setYear(dt.year);
 		rtc.setMonth(dt.month);
 		rtc.setDay(dt.day);
-		rtc.setHour(dt.hour);
+		rtc.setHours(dt.hour);
 		rtc.setMinutes(dt.min);
 		rtc.setSeconds(dt.sec);
 		
@@ -218,7 +219,7 @@ struct lib_datetime_s hal_rtc_getClock(void) {
 		val.year = rtc.getYear();
 		val.month = rtc.getMonth();
 		val.day = rtc.getDay();
-		val.hour = rtc.getHour();
+		val.hour = rtc.getHours();
 		val.min = rtc.getMinutes();
 		val.sec = rtc.getSeconds();
 		
@@ -254,7 +255,7 @@ void hal_rtc_setAlarm(struct lib_datetime_s dt) {
 		m = dt.month;
 		d = dt.day;
 		h = dt.hour;
-		min = dt.min;
+		mi = dt.min;
 		s = dt.sec;
 		
 	#elif defined(HW_RAK4260_H)
@@ -290,7 +291,7 @@ struct lib_datetime_s hal_rtc_getAlarm(void) {
 		val.month = m;
 		val.day = d;
 		val.hour = h;
-		val.min = min;
+		val.min = mi;
 		val.sec = s;
 		
 	#elif defined(HW_RAK4260_H)
@@ -316,7 +317,7 @@ struct lib_datetime_s hal_rtc_getAlarm(void) {
 void hal_rtc_enableAlarmInterrupt(void) {
 	
 	#if defined(HW_MKRWAN1300_H)
-		rtc.enableAlarm0();
+		rtc.enableAlarm(rtc.MATCH_YYMMDDHHMMSS);
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.INTENSET.reg |= RTC_MODE2_INTENSET_ALARM0;
@@ -336,7 +337,7 @@ void hal_rtc_enableAlarmInterrupt(void) {
 void hal_rtc_disableAlarmInterrupt(void) {
 	
 	#if defined(HW_MKRWAN1300_H)
-		rtc.disableAlarm0();
+		rtc.disableAlarm();
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.INTENCLR.reg |= RTC_MODE2_INTENCLR_ALARM0;

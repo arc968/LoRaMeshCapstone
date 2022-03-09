@@ -23,9 +23,9 @@
 extern "C" {
 #endif
 
-bool hal_rtc_init(void);
+void hal_rtc_init(void);
 
-bool hal_rtc_deinit(void);
+void hal_rtc_deinit(void);
 
 void hal_rtc_enable(void);
 
