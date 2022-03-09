@@ -135,12 +135,13 @@ uint32_t hal_timer_millis(void) {
 				
 				GCLK->GENCTRL[1].reg |= GCLK_GENCTRL_GENEN;
 				
-				GCLK->PCHCTRL[28].reg = GCLK_PCHCTRL_GEN_GCLK1_Val;
-				
-				while(GCLK->SYNCBUSY.reg != 0x0);
-				
 				gclksetup = 0;
 			}
+			
+			
+			GCLK->PCHCTRL[27].reg = GCLK_PCHCTRL_GEN_GCLK1_Val;
+				
+			while(GCLK->SYNCBUSY.reg != 0x0);
 			
 			GCLK->PCHCTRL[27].reg |= GCLK_PCHCTRL_CHEN;
 			
@@ -160,7 +161,8 @@ uint32_t hal_timer_millis(void) {
 			
 			while(TC0->COUNT32.SYNCBUSY.reg != 0);
 			TC0->COUNT32.CTRLA.reg |= TC_CTRLA_ENABLE;
-		
+			
+			millisisinitialized = 0;
 		}
 		
 		return currentMillisRunTime;
