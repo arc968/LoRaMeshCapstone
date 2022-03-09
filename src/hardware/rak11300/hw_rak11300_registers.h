@@ -33,6 +33,6 @@
 /*****Timer registers**********/
 
 
-#endif HW_RAK11300_REGISTERS_H
+#endif //HW_RAK11300_REGISTERS_H
 
 /** @} */ // end of RAK11300Reggroup

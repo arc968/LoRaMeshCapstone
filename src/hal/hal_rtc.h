@@ -27,6 +27,8 @@ void hal_rtc_init(void);
 
 void hal_rtc_deinit(void);
 
+bool hal_rtc_isInitialized(void);
+
 void hal_rtc_enable(void);
 
 void hal_rtc_disable(void);

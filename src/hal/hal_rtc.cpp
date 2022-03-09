@@ -22,6 +22,7 @@ void RTC_Handler(void)                                  // Event System interrup
 	#error "Hardware not yet implemented"
 #endif	
 
+static uint8_t rtcIsInit = 0;
 
 void hal_rtc_waitForSync(void) {
 	
@@ -34,7 +35,7 @@ void hal_rtc_waitForSync(void) {
 	#elif defined(HW_RAK4600_H)
 		
 	#elif defined(HW_RAK11300_H)
-		
+		while (rtc_running());
 	#else
 		#error "Hardware not yet implemented"
 	#endif
@@ -73,12 +74,17 @@ void hal_rtc_init(void) {
 		
 	#elif defined(HW_RAK11300_H)
 		
+		hal_rtc_disable();
+		
+		
 	#else
 		#error "Hardware not yet implemented"
 	#endif
 	
 	
 	hal_rtc_clearClock();
+	
+	rtcIsInit = 1;
 	
 	hal_rtc_waitForSync();
 	
@@ -106,6 +112,14 @@ void hal_rtc_deinit(void) {
 	#endif
 	
 	hal_rtc_waitForSync();
+	
+	rtcIsInit = 0;
+	
+}
+
+bool hal_rtc_isInitialized(void) {
+	
+	return rtcIsInit;
 	
 }
 

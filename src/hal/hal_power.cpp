@@ -175,7 +175,7 @@ void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s alar
 	
 	static uint8_t powertimersetup = 1;
 	
-	if (powertimersetup != 0) {
+	if (powertimersetup != 0 || !hal_rtc_isInitialized()) {
 		
 		#if defined(HW_MKRWAN1300_H)
 			
