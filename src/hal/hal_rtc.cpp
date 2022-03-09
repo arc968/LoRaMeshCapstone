@@ -8,7 +8,7 @@ void hal_rtc_waitForSync(void) {
 		
 	#elif defined(HW_RAK4260_H)
 	
-	while (RTC->MODE1.SYNCBUSY.ENABLE != 0);
+		while (RTC->MODE1.SYNCBUSY.ENABLE != 0);
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -65,14 +65,11 @@ bool hal_rtc_deinit(void) {
 	
 	hal_rtc_disable();
 	
-	//RTC->MODE1.CTRLA.reg = RTC_MODE1_CTRLA_SWRST;
-	
-	hal_rtc_waitForSync();
-
-	
 	#if defined(HW_MKRWAN1300_H)
 		
 	#elif defined(HW_RAK4260_H)
+	
+		//RTC->MODE1.CTRLA.reg = RTC_MODE1_CTRLA_SWRST;
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -81,6 +78,8 @@ bool hal_rtc_deinit(void) {
 	#else
 		#error "Hardware not yet implemented"
 	#endif
+	
+	hal_rtc_waitForSync();
 	
 }
 
@@ -90,8 +89,7 @@ void hal_rtc_enable(void) {
 		
 	#elif defined(HW_RAK4260_H)
 	
-	RTC->MODE1.CTRLA.reg |= RTC_MODE1_CTRLA_ENABLE;
-	hal_rtc_waitForSync();
+		RTC->MODE1.CTRLA.reg |= RTC_MODE1_CTRLA_ENABLE;
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -100,6 +98,8 @@ void hal_rtc_enable(void) {
 	#else
 		#error "Hardware not yet implemented"
 	#endif
+	
+	hal_rtc_waitForSync();
 	
 }
 
@@ -109,8 +109,7 @@ void hal_rtc_disable(void) {
 		
 	#elif defined(HW_RAK4260_H)
 	
-	RTC->MODE1.CTRLA.reg &= ~RTC_MODE1_CTRLA_ENABLE;
-	hal_rtc_waitForSync();
+		RTC->MODE1.CTRLA.reg &= ~RTC_MODE1_CTRLA_ENABLE;
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -119,6 +118,8 @@ void hal_rtc_disable(void) {
 	#else
 		#error "Hardware not yet implemented"
 	#endif
+	
+	hal_rtc_waitForSync();
 	
 }
 
@@ -129,7 +130,6 @@ void hal_rtc_setCount(uint32_t val) {
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE1.COUNT.reg = val;
-		
 		hal_rtc_waitForSync();
 		
 	#elif defined(HW_RAK4600_H)
@@ -144,13 +144,13 @@ void hal_rtc_setCount(uint32_t val) {
 
 uint32_t hal_rtc_getCount(void) {
 	
+	hal_rtc_waitForSync();
+	
 	#if defined(HW_MKRWAN1300_H)
 		
 	#elif defined(HW_RAK4260_H)
 	
-	hal_rtc_waitForSync();
-	
-	return RTC->MODE1.COUNT.reg;
+		return RTC->MODE1.COUNT.reg;
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -169,7 +169,6 @@ void hal_rtc_setCompare(uint32_t val) {
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE1.COMP.reg = val;
-		hal_rtc_waitForSync();
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -179,15 +178,17 @@ void hal_rtc_setCompare(uint32_t val) {
 		#error "Hardware not yet implemented"
 	#endif
 	
+	hal_rtc_waitForSync();
+	
 }
 
 uint32_t hal_rtc_getCompare(void) {
 	
+	hal_rtc_waitForSync();
+	
 	#if defined(HW_MKRWAN1300_H)
 		
 	#elif defined(HW_RAK4260_H)
-		
-		hal_rtc_waitForSync();
 		
 		return RTC->MODE1.COMP.reg;
 		
@@ -246,7 +247,6 @@ void hal_rtc_enableOverflowInterrupt(void) {
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE1.INTENSET.reg |= RTC_MODE1_INTENSET_OVF;
-		hal_rtc_waitForSync();
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -255,6 +255,8 @@ void hal_rtc_enableOverflowInterrupt(void) {
 	#else
 		#error "Hardware not yet implemented"
 	#endif
+	
+	hal_rtc_waitForSync();
 	
 }
 
@@ -265,7 +267,6 @@ void hal_rtc_disableOverflowInterrupt(void) {
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE1.INTENCLR.reg |= RTC_MODE1_INTENSET_OVF;
-		hal_rtc_waitForSync();
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -274,6 +275,8 @@ void hal_rtc_disableOverflowInterrupt(void) {
 	#else
 		#error "Hardware not yet implemented"
 	#endif
+	
+	hal_rtc_waitForSync();
 	
 }
 
@@ -285,7 +288,6 @@ void hal_rtc_clearCompareInterrupt(void) {
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE1.INTFLAG.reg &= ~RTC_MODE1_INTENSET_CMP0;
-		hal_rtc_waitForSync();
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -294,6 +296,8 @@ void hal_rtc_clearCompareInterrupt(void) {
 	#else
 		#error "Hardware not yet implemented"
 	#endif
+	
+	hal_rtc_waitForSync();
 	
 }
 
@@ -304,7 +308,6 @@ void hal_rtc_clearOverflowInterrupt(void) {
 	#elif defined(HW_RAK4260_H)
 		
 		RTC->MODE1.INTFLAG.reg &= ~RTC_MODE1_INTENSET_OVF;
-		hal_rtc_waitForSync();
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -313,5 +316,7 @@ void hal_rtc_clearOverflowInterrupt(void) {
 	#else
 		#error "Hardware not yet implemented"
 	#endif
+	
+	hal_rtc_waitForSync();
 	
 }
