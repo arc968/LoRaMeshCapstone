@@ -330,9 +330,6 @@ __attribute__ ((section(".isr_vector"))) const DeviceVectors exception_table =
 #define __Vendor_SysTickConfig 0         /*!< Set to 1 if different SysTick Config is used */
 
 
-#endif //HW_ARDUINO
-
-
 
 //struct peripheral includes
 #include "hw_rak4260_power.h"
@@ -615,6 +612,8 @@ __attribute__ ((section(".isr_vector"))) const DeviceVectors exception_table =
 
 */
 
+
+#endif //HW_ARDUINO
 
 #endif //HW_RAK4260_REGISTERS_H
 
