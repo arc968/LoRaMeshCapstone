@@ -12,7 +12,7 @@
 	//}
 #elif defined(HW_RAK4260_H)
 
-	static volatile uint32_t currentMillisRunTime = 0;
+	static volatile uint64_t currentMillisRunTime = 0;
 
 	static void (* isrfunc)(void);
 
@@ -121,7 +121,7 @@ void hal_timer_delay(uint16_t msdelay) {
 	
 }
 
-uint32_t hal_timer_millis(void) {
+uint64_t hal_timer_millis(void) {
 	
 	#if defined(HW_ARDUINO)
 		return millis();	

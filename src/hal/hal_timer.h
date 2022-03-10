@@ -26,7 +26,7 @@ void hal_timer_init(void (*isr)(void), uint16_t interval_us);
 
 void hal_timer_delay(uint16_t msdelay);
 
-uint32_t hal_timer_millis(void);
+uint64_t hal_timer_millis(void);
 
 //void hal_timer_setInterruptInterval(void (*isr)(void), uint32_t interval);
 
