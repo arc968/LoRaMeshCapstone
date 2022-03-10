@@ -18,8 +18,8 @@
 
 	void TC2_Handler(void) {
 		
-		isrfunc();
 		TC2->COUNT16.INTFLAG.reg = ~TC_INTFLAG_RESETVALUE;
+		isrfunc();
 		
 	}
 		
