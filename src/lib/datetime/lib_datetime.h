@@ -35,7 +35,7 @@ struct lib_datetime_s {
 			 ms:10;   //sss 00..999
 }
 //packed attribute is used to remove 2 byte padding (6->8 bytes)
-#if defined(__GNUC__) && defined(PACK_STRUCTS)
+#if defined(PACK_STRUCTS)
 	__attribute__((packed, aligned(1))) //__attribute__((scalar_storage_order("big-endian"))) ????????
 #endif
 ;
@@ -48,7 +48,11 @@ struct lib_datetime_s {
 	uint8_t min;   //mm  00..59
 	uint8_t sec;   //ss  00..59
 	uint16_t ms;   //sss 00..999
-};
+}
+#if defined(PACK_STRUCTS)
+	__attribute__((packed))
+#endif
+;
 #endif
 
 void lib_datetime_copy(struct lib_datetime_s * src, struct lib_datetime_s * dst);
