@@ -19,12 +19,20 @@
 extern "C" {
 #endif
 
-#include <LoRa.h>
+#ifdef HW_ARDUINO
+	#include <LoRa.h>
+#else
+	
+#endif //HW_ARDUINO
 
 
 void drv_lora_init(struct drv_lora_s * handle, enum drv_lora_region_e region, pin_t pin) {
 	
-	while (!LoRa.begin(region));
+	#ifdef HW_ARDUINO
+		while (!LoRa.begin(region));
+	#else
+		
+	#endif //HW_ARDUINO
 	handle->pin = pin;
 	/*handle->region = region;
 	handle->bandwidth = DRV_LORA_BW__125kHz;
@@ -39,19 +47,39 @@ void drv_lora_setMode(struct drv_lora_s * handle, enum drv_lora_mode_e mode) {
 	
 	switch (mode) {
 		case DRV_LORA_MODE__IDLE:
-			LoRa.idle();
+			#ifdef HW_ARDUINO
+				LoRa.idle();
+			#else
+				
+			#endif //HW_ARDUINO
 			break;
 		case DRV_LORA_MODE__SLEEP:
-			LoRa.sleep();
+			#ifdef HW_ARDUINO
+				LoRa.sleep();
+			#else
+				
+			#endif //HW_ARDUINO
 			break;
 		case DRV_LORA_MODE__RECV:
-			
+			#ifdef HW_ARDUINO
+				
+			#else
+				
+			#endif //HW_ARDUINO
 			break;
 		case DRV_LORA_MODE__SEND:
-			
+			#ifdef HW_ARDUINO
+				
+			#else
+				
+			#endif //HW_ARDUINO
 			break;
 		default:
-			LoRa.idle();
+			#ifdef HW_ARDUINO
+				LoRa.idle();
+			#else
+				
+			#endif //HW_ARDUINO
 			//mode = DRV_LORA_MODE__IDLE;
 	}
 	
@@ -66,7 +94,12 @@ void drv_lora_setMode(struct drv_lora_s * handle, enum drv_lora_mode_e mode) {
 
 void drv_lora_setTxPower(struct drv_lora_s * handle, uint16_t dB) {
 	
-	LoRa.setTxPower(dB);
+	#ifdef HW_ARDUINO
+		LoRa.setTxPower(dB);
+	#else
+		
+	#endif //HW_ARDUINO
+	
 	//handle->txpower = dB;
 	
 }
@@ -79,7 +112,12 @@ void drv_lora_setTxPower(struct drv_lora_s * handle, uint16_t dB) {
 void drv_lora_setPreamble(struct drv_lora_s * handle, uint16_t ms) {
 	
 	if (ms > 6 && ms < 65535) {
-		LoRa.setPreambleLength(ms);
+		#ifdef HW_ARDUINO
+			LoRa.setPreambleLength(ms);
+		#else
+			
+		#endif //HW_ARDUINO
+		
 		//handle->preamblelen = ms;
 	}
 	
@@ -92,7 +130,12 @@ void drv_lora_setPreamble(struct drv_lora_s * handle, uint16_t ms) {
 
 void drv_lora_setBandwidth(struct drv_lora_s * handle, enum drv_lora_bandwidth_e bw) {
 	
-	LoRa.setSignalBandwidth(bw);
+	#ifdef HW_ARDUINO
+		LoRa.setSignalBandwidth(bw);
+	#else
+		
+	#endif //HW_ARDUINO
+	
 	//handle->bandwidth = bw;
 	
 }
@@ -104,7 +147,12 @@ void drv_lora_setBandwidth(struct drv_lora_s * handle, enum drv_lora_bandwidth_e
 
 void drv_lora_setSpreadingFactor(struct drv_lora_s * handle, enum drv_lora_spreadingFactor_e sf) {
 	
-	LoRa.setSpreadingFactor(sf);
+	#ifdef HW_ARDUINO
+		LoRa.setSpreadingFactor(sf);
+	#else
+		
+	#endif //HW_ARDUINO
+	
 	//handle->spreadingFactor = sf;
 	
 }
@@ -116,7 +164,12 @@ void drv_lora_setSpreadingFactor(struct drv_lora_s * handle, enum drv_lora_sprea
 
 void drv_lora_setCodingRate(struct drv_lora_s * handle, enum drv_lora_codingRate_e cr) {
 	
-	LoRa.setCodingRate4(cr);
+	#ifdef HW_ARDUINO
+		LoRa.setCodingRate4(cr);
+	#else
+		
+	#endif //HW_ARDUINO
+	
 	//handle->codingRate = cr;
 	
 }
@@ -128,39 +181,48 @@ void drv_lora_setCodingRate(struct drv_lora_s * handle, enum drv_lora_codingRate
 
 void drv_lora_recvPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet) {
 	
-	uint8_t indx = 0;
-	
-	if (LoRa.parsePacket(packet->size)) {
-		while (LoRa.available() && indx < packet->size) {
+	#ifdef HW_ARDUINO
+		uint8_t indx = 0;
+		
+		if (LoRa.parsePacket(packet->size)) {
+			while (LoRa.available() && indx < packet->size) {
+				
+				packet->buf[indx] = LoRa.read();
+				
+			}
 			
-			packet->buf[indx] = LoRa.read();
+			packet->rssi = LoRa.packetRssi();
+			packet->snr = LoRa.packetSnr();
+			packet->freqerr = LoRa.packetFrequencyError();
+			
+			indx++;
 			
 		}
 		
-		packet->rssi = LoRa.packetRssi();
-		packet->snr = LoRa.packetSnr();
-		packet->freqerr = LoRa.packetFrequencyError();
+		if (indx == 0) {
+			packet->size = 0;
+		}
+		else if (indx < packet->size-1) {
+			packet->size = indx + 1;
+		}
+	#else
 		
-		indx++;
-		
-	}
+	#endif //HW_ARDUINO
 	
-	if (indx == 0) {
-		packet->size = 0;
-	}
-	else if (indx < packet->size-1) {
-		packet->size = indx + 1;
-	}
 	
 }
 
 void drv_lora_sendPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet) {
 	
-	while (LoRa.beginPacket());
+	#ifdef HW_ARDUINO
+		while (LoRa.beginPacket());
 	
 	LoRa.write(packet->buf, packet->size);
 	
 	LoRa.endPacket();
+	#else
+		
+	#endif //HW_ARDUINO
 	
 }
 
