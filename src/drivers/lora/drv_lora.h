@@ -71,22 +71,22 @@ struct drv_lora_s {
 void drv_lora_init(struct drv_lora_s * handle, enum drv_lora_region_e region, pin_t pin);
 
 void drv_lora_setMode(struct drv_lora_s * handle, enum drv_lora_mode_e mode);
-enum drv_lora_mode_e drv_lora_getMode(struct drv_lora_s * handle);
+//enum drv_lora_mode_e drv_lora_getMode(struct drv_lora_s * handle);
 
 void drv_lora_setTxPower(struct drv_lora_s * handle, uint16_t dB);
-uint16_t drv_lora_getTxPower(struct drv_lora_s * handle);
+//uint16_t drv_lora_getTxPower(struct drv_lora_s * handle);
 
 void drv_lora_setPreamble(struct drv_lora_s * handle, uint16_t ms);
-uint16_t drv_lora_getPreamble(struct drv_lora_s * handle);
+//uint16_t drv_lora_getPreamble(struct drv_lora_s * handle);
 
 void drv_lora_setBandwidth(struct drv_lora_s * handle, enum drv_lora_bandwidth_e);
-enum drv_lora_bandwidth_e drv_lora_getBandwidth(struct drv_lora_s * handle);
+//enum drv_lora_bandwidth_e drv_lora_getBandwidth(struct drv_lora_s * handle);
 
 void drv_lora_setSpreadingFactor(struct drv_lora_s * handle, enum drv_lora_spreadingFactor_e);
-enum drv_lora_spreadingFactor_e drv_lora_getSpreadingFactor(struct drv_lora_s * handle);
+//enum drv_lora_spreadingFactor_e drv_lora_getSpreadingFactor(struct drv_lora_s * handle);
 
 void drv_lora_setCodingRate(struct drv_lora_s * handle, enum drv_lora_codingRate_e);
-enum drv_lora_codingRate_e drv_lora_getCodingRate(struct drv_lora_s * handle);
+//enum drv_lora_codingRate_e drv_lora_getCodingRate(struct drv_lora_s * handle);
 
 void drv_lora_recvPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet);
 
