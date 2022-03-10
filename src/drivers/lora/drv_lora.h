@@ -51,9 +51,9 @@ enum drv_lora_mode_e {
 
 struct drv_lora_packet_s {
 	uint8_t size;
-	int rssi;
+	int32_t rssi;
 	float snr;
-	long freqerr;
+	int32_t freqerr;
 	uint8_t buf[255];
 };
 
