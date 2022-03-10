@@ -291,6 +291,48 @@ void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle e
 				}
 			}
 		}
+		
+		#define TIME_SLEEP 1000
+		#define TIME_IDLE 10
+		{ //power //TODO manage powerState
+			lib_datetime_interval_t curMonoTime = drv_timer_getMonotonicTime();
+			lib_datetime_interval_t timeUntilMono = state.head_ready->time - curMonoTime;
+			if (timeUntilMono > TIME_SLEEP) {
+				lib_datetime_time_t curAbsoluteTime;
+				if (drv_timer_getAbsoluteTime(&curAbsoluteTime) == DRV_TIMER_ERR__NONE) {
+					lib_datetime_interval_t timeUntilAbsolute = state.head_timed->time - curAbsoluteTime;
+					if (timeUntilAbsolute > TIME_SLEEP) {
+						//SLEEP
+						struct lib_datetime_s dt = (struct lib_datetime_s) {
+							.sec = (timeUntilAbsolute < timeUntilMono) ? timeUntilAbsolute/1000 : timeUntilMono/1000,
+						};
+						(*(state.func_onSleep_ptr))();
+						hal_power_mode(PWR_SLEEP, &dt);
+						(*(state.func_onWake_ptr))();
+					}
+				} else {
+					//SLEEP
+					struct lib_datetime_s dt = (struct lib_datetime_s) {
+						.sec = timeUntilMono/1000,
+					};
+					(*(state.func_onSleep_ptr))();
+					hal_power_mode(PWR_SLEEP, &dt);
+					(*(state.func_onWake_ptr))();
+				}
+			} else if (timeUntilMono > TIME_IDLE) {
+				lib_datetime_time_t curAbsoluteTime;
+				if (drv_timer_getAbsoluteTime(&curAbsoluteTime) == DRV_TIMER_ERR__NONE) {
+					lib_datetime_interval_t timeUntilAbsolute = state.head_timed->time - curAbsoluteTime;
+					if (timeUntilAbsolute > TIME_IDLE) {
+						//IDLE
+						hal_power_mode(PWR_IDLE, NULL);
+					}
+				} else {
+					//IDLE
+					hal_power_mode(PWR_IDLE, NULL);
+				}
+			}
+		}
 		/*
 		//if (powerState == STATE_SLEEP) (*(state.func_onWake_ptr))(), powerState = STATE_AWAKE;
 		 else if (powerState == STATE_AWAKE) { //TODO: add logic for sleeping if nothing scheduled in certain amount of time
