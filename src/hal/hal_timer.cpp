@@ -12,7 +12,7 @@
 	//}
 #elif defined(HW_RAK4260_H)
 
-	static uint32_t currentMillisRunTime = 0;
+	static volatile uint32_t currentMillisRunTime = 0;
 
 	static void (* isrfunc)(void);
 
@@ -25,7 +25,8 @@
 		
 	void TC0_Handler(void) {
 		
-		RTC->MODE2.GP[0].reg++;
+		currentMillisRunTime++;
+		//RTC->MODE2.GP[0].reg++;
 		TC0->COUNT32.INTFLAG.reg = ~TC_INTFLAG_RESETVALUE;
 		
 	}
@@ -85,7 +86,6 @@ void hal_timer_init(void (*isr)(void), uint16_t interval_us) {
 			
 			
 			//set interrupt to the isr
-			//TC2_Handler = isr; //I think this works not sure	(void*) TC2_Handler => (void) (*isr)(void)
 			isrfunc = isr;
 			
 			TC2->COUNT16.COUNT.reg = 0x0000;
@@ -165,7 +165,7 @@ uint32_t hal_timer_millis(void) {
 			
 			TC0->COUNT32.COUNT.reg = 0x00000000;
 			
-			RTC->MODE2.GP[0].reg = 0x00000000;
+			//RTC->MODE2.GP[0].reg = 0x00000000;
 			
 			while(TC0->COUNT32.SYNCBUSY.reg != 0);
 			TC0->COUNT32.CTRLA.reg |= TC_CTRLA_ENABLE;
