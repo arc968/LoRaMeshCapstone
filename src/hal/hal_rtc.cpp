@@ -56,9 +56,14 @@ void hal_rtc_init(void) {
 	
 		hal_rtc_disable();
 		
-		MCLK->APBAMASK.reg = MCLK_APBAMASK_OSC32KCTRL | MCLK_APBAMASK_RTC;
+		//MCLK->APBAMASK.reg = MCLK_APBAMASK_OSC32KCTRL | MCLK_APBAMASK_RTC;
 		
-		MCLK->BUPDIV.reg = MCLK_BUPDIV_BUPDIV_DIV32;
+		//MCLK->BUPDIV.reg = MCLK_BUPDIV_BUPDIV_DIV32;
+		
+		
+		//uses the internal ultra low power always on 32k occilator auto divided down to 1024Hz
+		OSC32KCTRL->RTCCTRL.bit.RTCSEL = OSC32KCTRL_RTCCTRL_RTCSEL_ULP1K_Val;
+		OSC32KCTRL->OSCULP32K.bit.WRTLOCK = 0x1;
 		
 		RTC->MODE2.CTRLA.reg = RTC_MODE2_CTRLA_SWRST;
 
@@ -68,7 +73,7 @@ void hal_rtc_init(void) {
 		RTC->MODE2.INTFLAG.reg = ~RTC_MODE2_INTFLAG_RESETVALUE;
 		RTC->MODE2.EVCTRL.reg = RTC_MODE2_EVCTRL_RESETVALUE;
 		RTC->MODE2.FREQCORR.reg &= ~RTC_FREQCORR_SIGN;
-		//RTC->MODE2.FREQCORR.bit.VALUE = 
+		RTC->MODE2.FREQCORR.bit.VALUE = 0x00;
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -160,27 +165,27 @@ void hal_rtc_disable(void) {
 	
 }
 
-void hal_rtc_setClock(struct lib_datetime_s dt) {
+void hal_rtc_setClock(struct lib_datetime_s * dt) {
 	
 	hal_rtc_waitForSync();
 	
 	#if defined(HW_MKRWAN1300_H)
 		
-		rtc.setYear(dt.year);
-		rtc.setMonth(dt.month);
-		rtc.setDay(dt.day);
-		rtc.setHours(dt.hour);
-		rtc.setMinutes(dt.min);
-		rtc.setSeconds(dt.sec);
+		rtc.setYear(dt->year);
+		rtc.setMonth(dt->month);
+		rtc.setDay(dt->day);
+		rtc.setHours(dt->hour);
+		rtc.setMinutes(dt->min);
+		rtc.setSeconds(dt->sec);
 		
 	#elif defined(HW_RAK4260_H)
 	
-		RTC->MODE2.CLOCK.bit.YEAR = dt.year;
-		RTC->MODE2.CLOCK.bit.MONTH = dt.month;
-		RTC->MODE2.CLOCK.bit.DAY = dt.day;
-		RTC->MODE2.CLOCK.bit.HOUR = dt.hour;
-		RTC->MODE2.CLOCK.bit.MINUTE = dt.min;
-		RTC->MODE2.CLOCK.bit.SECOND = dt.sec;
+		RTC->MODE2.CLOCK.bit.YEAR = dt->year;
+		RTC->MODE2.CLOCK.bit.MONTH = dt->month;
+		RTC->MODE2.CLOCK.bit.DAY = dt->day;
+		RTC->MODE2.CLOCK.bit.HOUR = dt->hour;
+		RTC->MODE2.CLOCK.bit.MINUTE = dt->min;
+		RTC->MODE2.CLOCK.bit.SECOND = dt->sec;
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -224,29 +229,27 @@ void hal_rtc_clearClock(void) {
 	
 }
 
-struct lib_datetime_s hal_rtc_getClock(void) {
-	
-	lib_datetime_s val;
+void hal_rtc_getClock(struct lib_datetime_s * val) {
 	
 	hal_rtc_waitForSync();
 	
 	#if defined(HW_MKRWAN1300_H)
 		
-		val.year = rtc.getYear();
-		val.month = rtc.getMonth();
-		val.day = rtc.getDay();
-		val.hour = rtc.getHours();
-		val.min = rtc.getMinutes();
-		val.sec = rtc.getSeconds();
+		val->year = rtc.getYear();
+		val->month = rtc.getMonth();
+		val->day = rtc.getDay();
+		val->hour = rtc.getHours();
+		val->min = rtc.getMinutes();
+		val->sec = rtc.getSeconds();
 		
 	#elif defined(HW_RAK4260_H)
 	
-		val.year = RTC->MODE2.CLOCK.bit.YEAR;
-		val.month = RTC->MODE2.CLOCK.bit.MONTH;
-		val.day = RTC->MODE2.CLOCK.bit.DAY;
-		val.hour = RTC->MODE2.CLOCK.bit.HOUR;
-		val.min = RTC->MODE2.CLOCK.bit.MINUTE;
-		val.sec = RTC->MODE2.CLOCK.bit.SECOND;
+		val->year = RTC->MODE2.CLOCK.bit.YEAR;
+		val->month = RTC->MODE2.CLOCK.bit.MONTH;
+		val->day = RTC->MODE2.CLOCK.bit.DAY;
+		val->hour = RTC->MODE2.CLOCK.bit.HOUR;
+		val->min = RTC->MODE2.CLOCK.bit.MINUTE;
+		val->sec = RTC->MODE2.CLOCK.bit.SECOND;
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -256,32 +259,30 @@ struct lib_datetime_s hal_rtc_getClock(void) {
 		#error "Hardware not yet implemented"
 	#endif
 	
-	return val;
-	
 }
 
-void hal_rtc_setAlarm(struct lib_datetime_s dt) {
+void hal_rtc_setAlarm(struct lib_datetime_s * dt) {
 	
 	#if defined(HW_MKRWAN1300_H)
 		
-		rtc.setAlarmDate(dt.year, dt.month, dt.day);
-		rtc.setAlarmTime(dt.hour, dt.min, dt.sec);
+		rtc.setAlarmDate(dt->year, dt->month, dt->day);
+		rtc.setAlarmTime(dt->hour, dt->min, dt->sec);
 		
-		y = dt.year;
-		m = dt.month;
-		d = dt.day;
-		h = dt.hour;
-		mi = dt.min;
-		s = dt.sec;
+		y = dt->year;
+		m = dt->month;
+		d = dt->day;
+		h = dt->hour;
+		mi = dt->min;
+		s = dt->sec;
 		
 	#elif defined(HW_RAK4260_H)
 	
-		RTC->MODE2.Mode2Alarm[0].ALARM.bit.YEAR = dt.year;
-		RTC->MODE2.Mode2Alarm[0].ALARM.bit.MONTH = dt.month;
-		RTC->MODE2.Mode2Alarm[0].ALARM.bit.DAY = dt.day;
-		RTC->MODE2.Mode2Alarm[0].ALARM.bit.HOUR = dt.hour;
-		RTC->MODE2.Mode2Alarm[0].ALARM.bit.MINUTE = dt.min;
-		RTC->MODE2.Mode2Alarm[0].ALARM.bit.SECOND = dt.sec;
+		RTC->MODE2.Mode2Alarm[0].ALARM.bit.YEAR = dt->year;
+		RTC->MODE2.Mode2Alarm[0].ALARM.bit.MONTH = dt->month;
+		RTC->MODE2.Mode2Alarm[0].ALARM.bit.DAY = dt->day;
+		RTC->MODE2.Mode2Alarm[0].ALARM.bit.HOUR = dt->hour;
+		RTC->MODE2.Mode2Alarm[0].ALARM.bit.MINUTE = dt->min;
+		RTC->MODE2.Mode2Alarm[0].ALARM.bit.SECOND = dt->sec;
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -295,29 +296,27 @@ void hal_rtc_setAlarm(struct lib_datetime_s dt) {
 	
 }
 
-struct lib_datetime_s hal_rtc_getAlarm(void) {
-	
-	lib_datetime_s val;
+void hal_rtc_getAlarm(struct lib_datetime_s * val) {
 	
 	hal_rtc_waitForSync();
 	
 	#if defined(HW_MKRWAN1300_H)
 		
-		val.year = y;
-		val.month = m;
-		val.day = d;
-		val.hour = h;
-		val.min = mi;
-		val.sec = s;
+		val->year = y;
+		val->month = m;
+		val->day = d;
+		val->hour = h;
+		val->min = mi;
+		val->sec = s;
 		
 	#elif defined(HW_RAK4260_H)
 	
-		val.year = RTC->MODE2.CLOCK.bit.YEAR;
-		val.month = RTC->MODE2.CLOCK.bit.MONTH;
-		val.day = RTC->MODE2.CLOCK.bit.DAY;
-		val.hour = RTC->MODE2.CLOCK.bit.HOUR;
-		val.min = RTC->MODE2.CLOCK.bit.MINUTE;
-		val.sec = RTC->MODE2.CLOCK.bit.SECOND;
+		val->year = RTC->MODE2.CLOCK.bit.YEAR;
+		val->month = RTC->MODE2.CLOCK.bit.MONTH;
+		val->day = RTC->MODE2.CLOCK.bit.DAY;
+		val->hour = RTC->MODE2.CLOCK.bit.HOUR;
+		val->min = RTC->MODE2.CLOCK.bit.MINUTE;
+		val->sec = RTC->MODE2.CLOCK.bit.SECOND;
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -327,7 +326,6 @@ struct lib_datetime_s hal_rtc_getAlarm(void) {
 		#error "Hardware not yet implemented"
 	#endif
 	
-	return val;
 }
 
 void hal_rtc_enableAlarmInterrupt(void) {

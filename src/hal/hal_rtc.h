@@ -37,11 +37,11 @@ void hal_rtc_setClock(uint32_t val);
 
 void hal_rtc_clearClock(void);
 
-struct lib_datetime_s hal_rtc_getClock(void);
+void hal_rtc_getClock(struct lib_datetime_s * val);
 
-void hal_rtc_setAlarm(struct lib_datetime_s dt);
+void hal_rtc_setAlarm(struct lib_datetime_s * dt);
 
-struct lib_datetime_s hal_rtc_getAlarm(void);
+void hal_rtc_getAlarm(struct lib_datetime_s * val);
 
 void hal_rtc_enableAlarmInterrupt(void);
 

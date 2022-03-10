@@ -14,6 +14,8 @@
 	#error "Hardware not yet implemented"
 #endif	
 
+uint8_t rtcenable = 1;
+
 void hal_power_wake(void) {	
 	#if defined(HW_MKRWAN1300_H)
 		
@@ -37,8 +39,10 @@ void hal_power_idle() {
 		//set the sleep mode power reg
 		PM->SLEEPCFG.bit.SLEEPMODE = 0x2;
 		
-		//turn on the clk for the rtc to run
-		hal_rtc_enable();
+		if (rtcenable) {
+			//turn on the clk for the rtc to run
+			hal_rtc_enable();
+		}
 		
 		//clear interupt flag to use again
 		__asm("WFI");
@@ -85,8 +89,10 @@ void hal_power_sleep() {
 		//set the sleep mode power reg
 		PM->SLEEPCFG.bit.SLEEPMODE = 0x4;
 		
-		//turn on the clk for the rtc to run
-		hal_rtc_enable();
+		if (rtcenable) {
+			//turn on the clk for the rtc to run
+			hal_rtc_enable();
+		}
 		
 		//clear interupt flag to use again
 		__asm("WFI");
@@ -135,8 +141,10 @@ void hal_power_deepSleep() {
 		//set the sleep mode power reg
 		PM->SLEEPCFG.bit.SLEEPMODE = 0x5;
 		
-		//turn on the clk for the rtc to run
-		hal_rtc_enable();
+		if (rtcenable) {
+			//turn on the clk for the rtc to run
+			hal_rtc_enable();
+		}
 		
 		//wait for interrupt compiler command
 		__asm("WFI");
@@ -174,7 +182,7 @@ void hal_power_deepSleep() {
 
 }
 
-void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s alarm) {
+void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s * alarm) {
 	
 	static uint8_t powertimersetup = 1;
 	
@@ -208,8 +216,14 @@ void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s alar
 		powertimersetup = 0;
 	}
 	
+	rtcenable = 1;
 	hal_rtc_clearAlarmInterrupt();
-	hal_rtc_setAlarm(alarm);
+	if (alarm != NULL) {
+		hal_rtc_setAlarm(alarm);
+	}
+	else {
+		rtcenable = 0;
+	}
 	hal_rtc_clearClock();
 
 	if (pwrmode == PWR_FULL) {

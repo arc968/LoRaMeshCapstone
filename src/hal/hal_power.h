@@ -29,7 +29,7 @@ enum hw_power_pwrmodes_e {
 	
 };
 
-void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s alarm);
+void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s * alarm);
 
 void hal_power_softReset(void);
 
