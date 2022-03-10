@@ -339,6 +339,7 @@ __attribute__ ((section(".isr_vector"))) const DeviceVectors exception_table =
 #include "hw_rak4260_tc.h"
 #include "hw_rak4260_rtc.h"
 #include "hw_rak4260_gclk.h"
+#include "hw_rak4260_wdt.h"
 
 
 //#define AC                ((Ac       *)0x43001000UL) /**< \brief (AC) APB Base Address */
@@ -477,9 +478,9 @@ __attribute__ ((section(".isr_vector"))) const DeviceVectors exception_table =
 //#define USB_INST_NUM      1                          /**< \brief (USB) Number of instances */
 //#define USB_INSTS         { USB }                    /**< \brief (USB) Instances List */
 
-//define WDT               ((Wdt      *)0x40001C00UL) /**< \brief (WDT) APB Base Address */
-//#define WDT_INST_NUM      1                          /**< \brief (WDT) Number of instances */
-//#define WDT_INSTS         { WDT }                    /**< \brief (WDT) Instances List */
+#define WDT               ((Wdt      *)0x40001C00UL) /**< \brief (WDT) APB Base Address */
+#define WDT_INST_NUM      1                          /**< \brief (WDT) Number of instances */
+#define WDT_INSTS         { WDT }                    /**< \brief (WDT) Instances List */
 
 
 #ifdef __cplusplus

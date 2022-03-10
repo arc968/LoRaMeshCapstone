@@ -195,6 +195,8 @@ void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s alar
 			
 			PM->STDBYCFG.reg = PM_STDBYCFG_RESETVALUE;
 			
+			WDT->CTRLA.reg = WDT_CTRLA_RESETVALUE;
+			
 		#elif defined(HW_RAK4600_H)
 				
 		#elif defined(HW_RAK11300_H)
@@ -206,7 +208,7 @@ void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s alar
 		powertimersetup = 0;
 	}
 	
-	
+	hal_rtc_clearAlarmInterrupt();
 	hal_rtc_setAlarm(alarm);
 	hal_rtc_clearClock();
 
