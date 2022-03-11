@@ -60,7 +60,6 @@ void hal_rtc_init(void) {
 		
 		//MCLK->BUPDIV.reg = MCLK_BUPDIV_BUPDIV_DIV32;
 		
-		
 		//uses the internal ultra low power always on 32k occilator auto divided down to 1024Hz
 		OSC32KCTRL->RTCCTRL.bit.RTCSEL = OSC32KCTRL_RTCCTRL_RTCSEL_ULP1K_Val;
 		OSC32KCTRL->OSCULP32K.bit.WRTLOCK = 0x1;

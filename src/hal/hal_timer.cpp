@@ -73,7 +73,7 @@ void hal_timer_init(void (*isr)(void), uint16_t interval_us) {
 			
 			while(TC2->COUNT16.SYNCBUSY.reg != 0x0);
 			
-			TC2->COUNT16.CTRLA.reg |= TC_CTRLA_MODE_COUNT16 | TC_CTRLA_PRESCALER_DIV2_Val;
+			TC2->COUNT16.CTRLA.reg |= TC_CTRLA_MODE_COUNT16 | TC_CTRLA_PRESCALER_DIV64;
 			
 			TC2->COUNT16.CTRLBSET.reg |= TC_CTRLBSET_DIR;
 			
@@ -82,7 +82,7 @@ void hal_timer_init(void (*isr)(void), uint16_t interval_us) {
 			TC2->COUNT16.INTENSET.reg = TC_INTENSET_MC0;
 			TC2->COUNT16.EVCTRL.reg = TC_EVCTRL_MCEO0;
 			
-			TC2->COUNT16.CC[0].reg = interval_us;	//(48MHz / 2) / 1000 = 1msec , count = 23999
+			TC2->COUNT16.CC[0].reg = interval_us;	//0.001sec = (max-count + 1) * (1/(48 * 10^6)Hz/64) , count = 749 -> 1ms interval
 			
 			
 			//set interrupt to the isr
