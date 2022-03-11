@@ -15,6 +15,8 @@
 #endif	
 
 uint8_t rtcenable = 1;
+uint64_t currentmillis;
+lib_datetime_s * wakeAlarm;
 
 void hal_power_wake(void) {	
 	#if defined(HW_MKRWAN1300_H)
@@ -33,7 +35,15 @@ void hal_power_wake(void) {
 void hal_power_idle() {
 	
 	#if defined(HW_MKRWAN1300_H)
-		LowPower.idle();
+		while ((wakeAlarm != NULL ? (RTC->MODE2.CLOCK.reg < RTC->MODE2.Mode2Alarm[0].ALARM.reg) : 0) && rtcenable) {
+			LowPower.idle();
+		}
+		
+		currentmillis = millis();
+		
+		while (wakeAlarm->ms < millis() - currentmillis) {
+			LowPower.idle(wakeAlarm->ms);
+		}
 	#elif defined(HW_RAK4260_H)
 		
 		//set the sleep mode power reg
@@ -44,8 +54,17 @@ void hal_power_idle() {
 			hal_rtc_enable();
 		}
 		
-		//clear interupt flag to use again
-		__asm("WFI");
+		while ((wakeAlarm != NULL ? (RTC->MODE2.CLOCK.reg < RTC->MODE2.Mode2Alarm[0].ALARM.reg) : 0) && rtcenable) {
+			//wait for interrupt compiler command
+			__asm("WFI");
+		}
+		
+		currentmillis = millis();
+		
+		while (wakeAlarm->ms < millis() - currentmillis) {
+			//wait for interrupt compiler command
+			__asm("WFI");
+		}
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -83,7 +102,15 @@ void hal_power_idle() {
 void hal_power_sleep() {
 	
 	#if defined(HW_MKRWAN1300_H)
-		LowPower.sleep();
+		while ((wakeAlarm != NULL ? (RTC->MODE2.CLOCK.reg < RTC->MODE2.Mode2Alarm[0].ALARM.reg) : 0) && rtcenable) {
+			LowPower.sleep();
+		}
+		
+		currentmillis = millis();
+		
+		while (wakeAlarm->ms < millis() - currentmillis) {
+			LowPower.sleep(wakeAlarm->ms);
+		}
 	#elif defined(HW_RAK4260_H)
 		
 		//set the sleep mode power reg
@@ -94,8 +121,12 @@ void hal_power_sleep() {
 			hal_rtc_enable();
 		}
 		
-		//clear interupt flag to use again
-		__asm("WFI");
+		
+		//deep sleep resets millis() count so deep sleep cannot support millisecond preceicion
+		while ((wakeAlarm != NULL ? (RTC->MODE2.CLOCK.reg < RTC->MODE2.Mode2Alarm[0].ALARM.reg) : 0) && rtcenable) {
+			//wait for interrupt compiler command
+			__asm("WFI");
+		}
 
 		//clear interupt flag to use again
 
@@ -146,8 +177,17 @@ void hal_power_deepSleep() {
 			hal_rtc_enable();
 		}
 		
-		//wait for interrupt compiler command
-		__asm("WFI");
+		while ((wakeAlarm != NULL ? (RTC->MODE2.CLOCK.reg < RTC->MODE2.Mode2Alarm[0].ALARM.reg) : 0) && rtcenable) {
+			//wait for interrupt compiler command
+			__asm("WFI");
+		}
+		
+		currentmillis = millis();
+		
+		while (wakeAlarm->ms < millis() - currentmillis) {
+			//wait for interrupt compiler command
+			__asm("WFI");
+		}
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -184,9 +224,11 @@ void hal_power_deepSleep() {
 
 void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s * alarm) {
 	
-	static uint8_t powertimersetup = 1;
+	static uint8_t powertimersetup = 0;
 	
-	if (powertimersetup != 0 || !hal_rtc_isInitialized()) {
+	wakeAlarm = alarm;
+	
+	if (!powertimersetup || !hal_rtc_isInitialized()) {
 		
 		#if defined(HW_MKRWAN1300_H)
 			
@@ -213,17 +255,19 @@ void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s * al
 			#error "Hardware not yet implemented"
 		#endif
 				
-		powertimersetup = 0;
+		powertimersetup = 1;
 	}
 	
 	rtcenable = 1;
 	hal_rtc_clearAlarmInterrupt();
-	if (alarm != NULL) {
-		hal_rtc_setAlarm(alarm);
+	
+	if (wakeAlarm != NULL) {
+		hal_rtc_setAlarm(wakeAlarm);
 	}
 	else {
 		rtcenable = 0;
 	}
+	
 	hal_rtc_clearClock();
 
 	if (pwrmode == PWR_FULL) {
