@@ -285,7 +285,7 @@ void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s * al
 		hal_power_deepSleep();
 	}
 	else {
-		hal_power_deepSleep();
+		//hal_power_idle();
 	}
 
 }
