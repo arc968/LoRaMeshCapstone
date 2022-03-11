@@ -74,9 +74,19 @@ enum ciphermask_e {
 	CIPHER__PSK_XCHACHA20 = (0x1 << 3),
 };
 
+#pragma scalar_storage_order big-endian
 struct ciphermask_s {
-	uint8_t mask;
-};
+	union {
+		uint8_t none:1,
+				AES:1,
+				PSK_AES:1,
+				XCHACHA20:1,
+				PSK_XCHACHA20:1,
+				:0;
+		uint8_t mask;
+	};
+} __attribute__((packed, aligned(1)));
+#pragma scalar_storage_order default
 
 struct packet_header_s {
 	enum packet_type_e type;

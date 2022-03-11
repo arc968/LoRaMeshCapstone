@@ -334,20 +334,12 @@ bool hal_rtc_compareClockToAlarm(void) {
 	hal_rtc_waitForSync();
 	
 	#if defined(HW_MKRWAN1300_H)	
-		if (rtc.getYear() >= rtc.getAlarmYear()) {
-			if (rtc.getMonth() >= rtc.getAlarmMonth()) {
-				if (rtc.getDay() >= rtc.getAlarmDay()) {
-					if (rtc.getHours() >= rtc.getAlarmHours()) {
-						if (rtc.getMinutes() >= rtc.getAlarmMinutes()) {
-							if(rtc.getSeconds() >= rtc.getAlarmSeconds()) {
-								return true;
-							}
-						}
-					}
-				}
-			}
-		}
-		return false;
+		return (rtc.getYear() >= rtc.getAlarmYear() &&
+				rtc.getMonth() >= rtc.getAlarmMonth() &&
+				rtc.getDay() >= rtc.getAlarmDay() &&
+				rtc.getHours() >= rtc.getAlarmHours() &&
+				rtc.getMinutes() >= rtc.getAlarmMinutes() &&
+				rtc.getSeconds() >= rtc.getAlarmSeconds());
 	#elif defined(HW_RAK4260_H)
 	
 		return RTC->MODE2.CLOCK.reg >= RTC->MODE2.Mode2Alarm[0].ALARM.reg;

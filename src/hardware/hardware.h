@@ -16,6 +16,7 @@
 #ifndef HARDWARE_H
 #define HARDWARE_H
 #define HARDWARE_H_SCOPE
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -57,7 +58,7 @@ extern "C" {
 #endif
 
 #ifdef HW_ARDUINO
-	#include "Arduino.h"
+	#include <Arduino.h>
 #endif
 
 #undef HARDWARE_H_SCOPE

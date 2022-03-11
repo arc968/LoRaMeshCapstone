@@ -20,15 +20,27 @@ enum drv_mesh_error_e {
 };
 
 struct drv_mesh_packet_s {
-	uint16_t len;
+	ip_t ip;
+	uint8_t len;
 	uint8_t buf[DRV_MESH__PAYLOAD_SIZE_MAX];
+};
+
+struct drv_mesh_stats_s {
+	uint32_t packets_dropped;
+	uint32_t packets_forwarded;
+	uint32_t checksum_failures;
+	uint32_t broadcasts_sent;
+	uint32_t broadcasts_recv;
+	uint32_t peer_count;
 };
 
 void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *));
 
-enum drv_mesh_error_e drv_mesh_send(ip_t ip, uint16_t len, uint8_t * buf);
+enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s *);
 
-uint16_t drv_mesh_getMaxMessageSize(void);
+void drv_mesh_getStats(struct drv_mesh_stats_s *);
+
+//uint8_t drv_mesh_getMaxMessageSize(void);
 
 #if defined (__cplusplus)
 }
