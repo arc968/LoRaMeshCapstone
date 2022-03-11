@@ -78,10 +78,10 @@ enum ciphermask_e {
 struct ciphermask_s {
 	union {
 		uint8_t none:1,
-				AES:1,
-				PSK_AES:1,
-				XCHACHA20:1,
-				PSK_XCHACHA20:1,
+				aes:1,
+				psk_aes:1,
+				xchacha20:1,
+				psk_xchacha20:1,
 				:0;
 		uint8_t mask;
 	};
