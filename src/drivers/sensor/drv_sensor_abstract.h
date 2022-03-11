@@ -25,8 +25,8 @@ class drv_sensor_abstract {
 		virtual bool isInitialized(void) {return drv_initalized;}
 		bool isEnabled(void);
 		
-		virtual bool read() = 0;
-		virtual void write() = 0;
+		virtual bool read(uint8_t* buf, uint16_t byteLength) = 0;
+		virtual void write(uint8_t* buf, uint16_t byteLength) = 0;
 	
 };
 

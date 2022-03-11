@@ -20,7 +20,7 @@ class drv_co2_CCS811 : protected drv_i2c_abstract {
 		
 		void reset(void);
 		
-		bool read(uint8_t* buf, uint16_t buflength);
+		bool read(uint8_t* buf, uint16_t byteLength);
 		void write(uint8_t * buf, uint16_t byteLength);
 		
 };
