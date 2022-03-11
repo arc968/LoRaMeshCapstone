@@ -16,4 +16,4 @@ this will open the document as a website to navigate in your web browser of choi
 1. Arduino Low Power - by Arduino LLC
 2. TimmerInterrupt_Generic - by Khoi Hoang
 3. RTCZero - by Arduino LLC
-4. Lora.h
+4. Lora.h - by Sandeep Mistry
