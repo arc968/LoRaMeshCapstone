@@ -307,7 +307,7 @@ void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle e
 							.sec = (timeUntilAbsolute < timeUntilMono) ? timeUntilAbsolute/1000 : timeUntilMono/1000,
 						};
 						(*(state.func_onSleep_ptr))();
-						hal_power_mode(PWR_SLEEP, &dt);
+						hal_power_setMode(PWR_SLEEP, &dt);
 						(*(state.func_onWake_ptr))();
 					}
 				} else {
@@ -316,7 +316,7 @@ void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle e
 						.sec = timeUntilMono/1000,
 					};
 					(*(state.func_onSleep_ptr))();
-					hal_power_mode(PWR_SLEEP, &dt);
+					hal_power_setMode(PWR_SLEEP, &dt);
 					(*(state.func_onWake_ptr))();
 				}
 			} else if (timeUntilMono > TIME_IDLE) {
@@ -325,11 +325,11 @@ void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle e
 					lib_datetime_interval_t timeUntilAbsolute = state.head_timed->time - curAbsoluteTime;
 					if (timeUntilAbsolute > TIME_IDLE) {
 						//IDLE
-						hal_power_mode(PWR_IDLE, NULL);
+						hal_power_setMode(PWR_IDLE, NULL);
 					}
 				} else {
 					//IDLE
-					hal_power_mode(PWR_IDLE, NULL);
+					hal_power_setMode(PWR_IDLE, NULL);
 				}
 			}
 		}

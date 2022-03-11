@@ -224,7 +224,7 @@ void hal_power_deepSleep() {
 
 }
 
-void hal_power_mode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s * alarm) {
+void hal_power_setMode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s * alarm) {
 	
 	static uint8_t powertimersetup = 0;
 	
