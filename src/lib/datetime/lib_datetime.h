@@ -29,6 +29,7 @@ typedef uint64_t lib_datetime_interval_t; //time interval in ms
 struct lib_datetime_s {
 	union {
 		struct {
+			uint8_t :8;
 			uint16_t year:12, //yyyy 00..4095
 					 month:4; //mm 01..12
 			uint32_t day:5,   //dd  01..31
