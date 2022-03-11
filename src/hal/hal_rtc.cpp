@@ -327,7 +327,21 @@ bool hal_rtc_compareClockToAlarm(void) {
 	
 	hal_rtc_waitForSync();
 	
-	#if defined(HW_MKRWAN1300_H)	
+	#if defined(HW_MKRWAN1300_H)
+		
+		/*lib_datetime_s * clk, alarm;
+		
+		hal_rtc_getClock(clk);
+		hals_rtc_getAlarm(alarm);
+		
+		if (lib_datetime_cmp(clk, alarm) >= 0) {
+			return true;
+		}
+		else {
+			return false;
+		}*/
+		
+		
 		return (rtc.getYear() >= rtc.getAlarmYear() &&
 				rtc.getMonth() >= rtc.getAlarmMonth() &&
 				rtc.getDay() >= rtc.getAlarmDay() &&
