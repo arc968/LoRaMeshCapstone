@@ -49,7 +49,7 @@ bool drv_co2_CCS811 :: read(uint8_t* buf, uint16_t buflength) {
 	
 	if (drv_enabled && drv_initalized) {
 		
-		hal_gpio_digitalWrite(drv_nreset, GPIO_LOW);
+		hal_gpio_digitalWrite(drv_nwake, GPIO_LOW);
 
 	
 		hal_i2c_requestFrom(drv_address, buflength, true);
@@ -63,14 +63,14 @@ bool drv_co2_CCS811 :: read(uint8_t* buf, uint16_t buflength) {
 		
 		if (readlength == buflength - 1) {
 			
-			hal_gpio_digitalWrite(drv_nreset, GPIO_HIGH);
+			hal_gpio_digitalWrite(drv_nwake, GPIO_HIGH);
 			return true;
 			
 		}
 		
 	}
 	
-	hal_gpio_digitalWrite(drv_nreset, GPIO_HIGH);
+	hal_gpio_digitalWrite(drv_nwake, GPIO_HIGH);
 	return false;
 	
 }
@@ -79,11 +79,11 @@ void drv_co2_CCS811 :: write(uint8_t * buf, uint16_t byteLength) {
 	
 	if (drv_enabled && drv_initalized) {
 		
-		hal_gpio_digitalWrite(drv_nreset, GPIO_LOW);
+		hal_gpio_digitalWrite(drv_nwake, GPIO_LOW);
 		hal_i2c_beginTransmission(drv_address);
 		hal_i2c_write(buf, byteLength);
 		hal_i2c_endTransmission(true);
-		hal_gpio_digitalWrite(drv_nreset, GPIO_HIGH);
+		hal_gpio_digitalWrite(drv_nwake, GPIO_HIGH);
 		
 	}
 	
