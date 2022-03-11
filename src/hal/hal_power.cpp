@@ -39,9 +39,9 @@ void hal_power_idle() {
 			LowPower.idle();
 		}
 		
-		currentmillis = millis();
+		currentmillis = hal_timer_millis();
 		
-		while (wakeAlarm->ms < millis() - currentmillis) {
+		while (wakeAlarm->ms < hal_timer_millis() - currentmillis) {
 			LowPower.idle(wakeAlarm->ms);
 		}
 	#elif defined(HW_RAK4260_H)
@@ -59,9 +59,9 @@ void hal_power_idle() {
 			__asm("WFI");
 		}
 		
-		currentmillis = millis();
+		currentmillis = hal_timer_millis();
 		
-		while (wakeAlarm->ms < millis() - currentmillis) {
+		while (wakeAlarm->ms < hal_timer_millis() - currentmillis) {
 			//wait for interrupt compiler command
 			__asm("WFI");
 		}
@@ -106,9 +106,9 @@ void hal_power_sleep() {
 			LowPower.sleep();
 		}
 		
-		currentmillis = millis();
+		currentmillis = hal_timer_millis();
 		
-		while (wakeAlarm->ms < millis() - currentmillis) {
+		while (wakeAlarm->ms < hal_timer_millis() - currentmillis) {
 			LowPower.sleep(wakeAlarm->ms);
 		}
 	#elif defined(HW_RAK4260_H)
@@ -126,9 +126,9 @@ void hal_power_sleep() {
 			__asm("WFI");
 		}
 		
-		currentmillis = millis();
+		currentmillis = hal_timer_millis();
 		
-		while (wakeAlarm->ms < millis() - currentmillis) {
+		while (wakeAlarm->ms < hal_timer_millis() - currentmillis) {
 			//wait for interrupt compiler command
 			__asm("WFI");
 		}
