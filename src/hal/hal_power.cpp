@@ -2,6 +2,7 @@
 #include "hal_power.h"
 #include "hal_rtc.h"
 #include "hal_timer.h"
+#include "hal_interrupt.h"
 
 #if defined(HW_MKRWAN1300_H)
 	#include "ArduinoLowPower.h"
@@ -15,7 +16,7 @@
 	#error "Hardware not yet implemented"
 #endif	
 
-uint8_t rtcenable = 1;
+uint8_t rtcenable = 1, interruptwasdisabled = 0;;
 uint64_t currentmillis;
 lib_datetime_s * wakeAlarm;
 
@@ -271,6 +272,13 @@ void hal_power_setMode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s *
 	}
 	
 	hal_rtc_clearClock();
+	
+	//must ensure that global interrups are enabled to be able to trigger a wake event interrupt
+	interruptwasdisabled = 0;
+	if (!hal_interrupt_isEnabled()) {
+		hal_interrupt_enable();
+		interruptwasdisabled = 1;
+	}
 
 	if (pwrmode == PWR_FULL) {
 		hal_power_wake();
@@ -286,6 +294,10 @@ void hal_power_setMode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s *
 	}
 	else {
 		//hal_power_idle();
+	}
+	
+	if (interruptwasdisabled) {
+		hal_interrupt_disable();
 	}
 
 }

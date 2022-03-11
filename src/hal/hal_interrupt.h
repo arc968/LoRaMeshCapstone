@@ -50,6 +50,8 @@ void hal_interrupt_enable(void);
 
 void hal_interrupt_disable(void);
 
+bool hal_interrupt_isEnabled(void);
+
 void hal_interrupt_attachPin(pin_t pin, void (*isr)(void), enum hal_interrupt_mode_e mode);
 
 void hal_interrupt_detachPin(pin_t pin);

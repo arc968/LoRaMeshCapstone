@@ -1,6 +1,8 @@
 #define HAL_LIB
 #include "hal_interrupt.h"
 
+uint8_t globalinterruptsenabled = 1;
+
 void hal_interrupt_enable(void) {
 	#if defined(HW_ARDUINO)
 		interrupts();
@@ -15,6 +17,9 @@ void hal_interrupt_enable(void) {
 	#else
 		#error "Hardware not yet implemented"
 	#endif
+	
+	globalinterruptsenabled = 1;
+	
 }
 
 void hal_interrupt_disable(void) {
@@ -31,6 +36,15 @@ void hal_interrupt_disable(void) {
 	#else
 		#error "Hardware not yet implemented"
 	#endif
+	
+	globalinterruptsenabled = 0;
+	
+}
+
+bool hal_interrupt_isEnabled(void) {
+	
+	return globalinterruptsenabled;
+	
 }
 
 void hal_interrupt_attachPin(pin_t pin, void (*isr)(void), enum hal_interrupt_mode_e mode) {
