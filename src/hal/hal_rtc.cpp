@@ -211,12 +211,7 @@ void hal_rtc_clearClock(void) {
 		
 	#elif defined(HW_RAK4260_H)
 	
-		RTC->MODE2.CLOCK.bit.YEAR = 0x00;
-		RTC->MODE2.CLOCK.bit.MONTH = 0x00;
-		RTC->MODE2.CLOCK.bit.DAY = 0x00;
-		RTC->MODE2.CLOCK.bit.HOUR = 0x00;
-		RTC->MODE2.CLOCK.bit.MINUTE = 0x00;
-		RTC->MODE2.CLOCK.bit.SECOND = 0x00;
+		RTC->MODE2.CLOCK.reg = RTC_MODE2_CLOCK_RESETVALUE;
 		
 	#elif defined(HW_RAK4600_H)
 		
