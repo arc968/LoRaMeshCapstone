@@ -329,6 +329,39 @@ void hal_rtc_getAlarm(struct lib_datetime_s * val) {
 	
 }
 
+bool hal_rtc_compareClockToAlarm(void) {
+	
+	hal_rtc_waitForSync();
+	
+	#if defined(HW_MKRWAN1300_H)	
+		if (rtc.getYear() >= rtc.getAlarmYear()) {
+			if (rtc.getMonth() >= rtc.getAlarmMonth()) {
+				if (rtc.getDay() >= rtc.getAlarmDay()) {
+					if (rtc.getHour() >= rtc.getAlarmHour()) {
+						if (rtc.getMinutes() >= rtc.getAlarmMinutes()) {
+							if(rtc.getSeconds() >= rtc.getAlarmSeconds()) {
+								return true;
+							}
+						}
+					}
+				}
+			}
+		}
+		return false;
+	#elif defined(HW_RAK4260_H)
+	
+		return RTC->MODE2.CLOCK.reg >= RTC->MODE2.Mode2Alarm[0].ALARM.reg;
+				
+	#elif defined(HW_RAK4600_H)
+		
+	#elif defined(HW_RAK11300_H)
+		
+	#else
+		#error "Hardware not yet implemented"
+	#endif
+	
+}
+
 void hal_rtc_enableAlarmInterrupt(void) {
 	
 	#if defined(HW_MKRWAN1300_H)

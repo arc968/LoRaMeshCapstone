@@ -1,6 +1,7 @@
 #define HAL_LIB
 #include "hal_power.h"
 #include "hal_rtc.h"
+#include "hal_timer.h"
 
 #if defined(HW_MKRWAN1300_H)
 	#include "ArduinoLowPower.h"
@@ -35,7 +36,7 @@ void hal_power_wake(void) {
 void hal_power_idle() {
 	
 	#if defined(HW_MKRWAN1300_H)
-		while (rtcenable ? (RTC->MODE2.CLOCK.reg < RTC->MODE2.Mode2Alarm[0].ALARM.reg) : 0) {
+		while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0) {
 			LowPower.idle();
 		}
 		
@@ -54,7 +55,7 @@ void hal_power_idle() {
 			hal_rtc_enable();
 		}
 		
-		while (rtcenable ? (RTC->MODE2.CLOCK.reg < RTC->MODE2.Mode2Alarm[0].ALARM.reg) : 0) {
+		while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0) {
 			//wait for interrupt compiler command
 			__asm("WFI");
 		}
@@ -102,7 +103,7 @@ void hal_power_idle() {
 void hal_power_sleep() {
 	
 	#if defined(HW_MKRWAN1300_H)
-		while ((rtcenable ? (RTC->MODE2.CLOCK.reg < RTC->MODE2.Mode2Alarm[0].ALARM.reg) : 0)) {
+		while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0) {
 			LowPower.sleep();
 		}
 		
@@ -121,7 +122,7 @@ void hal_power_sleep() {
 			hal_rtc_enable();
 		}
 		
-		while (rtcenable ? (RTC->MODE2.CLOCK.reg < RTC->MODE2.Mode2Alarm[0].ALARM.reg) : 0) {
+		while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0) {
 			//wait for interrupt compiler command
 			__asm("WFI");
 		}
@@ -171,7 +172,9 @@ void hal_power_sleep() {
 void hal_power_deepSleep() {
 	
 	#if defined(HW_MKRWAN1300_H)
-		LowPower.deepSleep();
+		while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0) {
+			LowPower.deepSleep();
+		}
 	#elif defined(HW_RAK4260_H)
 		
 		//set the sleep mode power reg
@@ -183,7 +186,7 @@ void hal_power_deepSleep() {
 		}
 		
 		//deep sleep resets millis() count so deep sleep cannot support millisecond preceicion
-		while (rtcenable ? (RTC->MODE2.CLOCK.reg < RTC->MODE2.Mode2Alarm[0].ALARM.reg) : 0) {
+		while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0) {
 			//wait for interrupt compiler command
 			__asm("WFI");
 		}

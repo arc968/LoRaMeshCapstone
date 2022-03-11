@@ -43,6 +43,8 @@ void hal_rtc_setAlarm(struct lib_datetime_s * dt);
 
 void hal_rtc_getAlarm(struct lib_datetime_s * val);
 
+bool hal_rtc_compareClockToAlarm(void);
+
 void hal_rtc_enableAlarmInterrupt(void);
 
 void hal_rtc_disableAlarmInterrupt(void);
