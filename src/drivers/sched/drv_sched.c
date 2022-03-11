@@ -333,12 +333,5 @@ void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle e
 				}
 			}
 		}
-		/*
-		//if (powerState == STATE_SLEEP) (*(state.func_onWake_ptr))(), powerState = STATE_AWAKE;
-		 else if (powerState == STATE_AWAKE) { //TODO: add logic for sleeping if nothing scheduled in certain amount of time
-			(*(state.func_onSleep_ptr))();
-			powerState = STATE_SLEEP;
-		}
-		*/
 	}
 }
