@@ -48,6 +48,11 @@ enum lib_datetime_err_e lib_datetime_validateDatetime(struct lib_datetime_s * dt
 }
 
 int lib_datetime_cmp(struct lib_datetime_s * a, struct lib_datetime_s * b) {
+	#if defined(USE_BITFIELDS)
+	if (a->raw > b->raw) return 1;
+	if (a->raw < b->raw) return -1;
+	return 0;
+	#else
 	if (a->year > b->year) return 1;
 	if (a->year < b->year) return -1;
 	if (a->month > b->month) return 1;
@@ -63,6 +68,7 @@ int lib_datetime_cmp(struct lib_datetime_s * a, struct lib_datetime_s * b) {
 	if (a->ms > b->ms) return 1;
 	if (a->ms < b->ms) return -1;
 	return 0;
+	#endif
 }
 
 void lib_datetime_convertTimeToDatetime(lib_datetime_time_t time, struct lib_datetime_s * dt) {

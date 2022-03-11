@@ -26,13 +26,18 @@ typedef uint64_t lib_datetime_interval_t; //time interval in ms
 //bitfields are used to reduce the struct down to 6 bytes
 //this will increase binary size by quite a bit, but saves a lot of memory
 struct lib_datetime_s {
-	uint16_t year:12, //yyyy 00..4095
-			 month:4; //mm 01..12
-	uint32_t day:5,   //dd  01..31
-			 hour:5,  //hh  00..23
-			 min:6,   //mm  00..59
-			 sec:6,   //ss  00..59
-			 ms:10;   //sss 00..999
+	union {
+		struct {
+			uint16_t year:12, //yyyy 00..4095
+					 month:4; //mm 01..12
+			uint32_t day:5,   //dd  01..31
+					 hour:5,  //hh  00..23
+					 min:6,   //mm  00..59
+					 sec:6,   //ss  00..59
+					 ms:10;   //sss 00..999
+		};
+		uint64_t raw;
+	};
 }
 //packed attribute is used to remove 2 byte padding (6->8 bytes)
 #if defined(PACK_STRUCTS)

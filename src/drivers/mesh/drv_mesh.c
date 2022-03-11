@@ -150,7 +150,7 @@ void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *)) {
 	drv_sched_onAbsoluteAvailable(drv_mesh_start, NULL);
 }
 
-enum drv_mesh_error_e drv_mesh_send(ip_t ip, uint16_t len, uint8_t * buf) {
+enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * packet) {
 	return 0;
 }
 
