@@ -337,7 +337,7 @@ bool hal_rtc_compareClockToAlarm(void) {
 		if (rtc.getYear() >= rtc.getAlarmYear()) {
 			if (rtc.getMonth() >= rtc.getAlarmMonth()) {
 				if (rtc.getDay() >= rtc.getAlarmDay()) {
-					if (rtc.getHour() >= rtc.getAlarmHour()) {
+					if (rtc.getHours() >= rtc.getAlarmHours()) {
 						if (rtc.getMinutes() >= rtc.getAlarmMinutes()) {
 							if(rtc.getSeconds() >= rtc.getAlarmSeconds()) {
 								return true;
