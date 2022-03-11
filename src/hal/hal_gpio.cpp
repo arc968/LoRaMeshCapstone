@@ -4,6 +4,8 @@
 void hal_gpio_pinMode(pin_t pin, uint8_t mode) {
 	#if defined(HW_ARDUINO)
 		pinMode(pin, mode);	
+	#elif defined(HW_MKRWAN1300_H)
+		
 	#elif defined(HW_RAK4260_H)
 	
 	#elif defined(HW_RAK4600_H)
@@ -18,6 +20,8 @@ void hal_gpio_pinMode(pin_t pin, uint8_t mode) {
 void hal_gpio_digitalWrite(pin_t pin, uint8_t val) {
 	#if defined(HW_ARDUINO)
 		digitalWrite(pin, val);
+	#elif defined(HW_MKRWAN1300_H)
+		
 	#elif defined(HW_RAK4260_H)
 	
 	#elif defined(HW_RAK4600_H)
@@ -32,6 +36,8 @@ void hal_gpio_digitalWrite(pin_t pin, uint8_t val) {
 uint8_t hal_gpio_digitalRead(pin_t pin) {
 	#if defined(HW_ARDUINO)
 		return digitalRead(pin);
+	#elif defined(HW_MKRWAN1300_H)
+		
 	#elif defined(HW_RAK4260_H)
 		return 0; //TODO
 	#elif defined(HW_RAK4600_H)
@@ -46,6 +52,8 @@ uint8_t hal_gpio_digitalRead(pin_t pin) {
 uint16_t hal_gpio_analogRead(pin_t pin) {
 	#if defined(HW_ARDUINO)
 		return analogRead(pin);
+	#elif defined(HW_MKRWAN1300_H)
+		
 	#elif defined(HW_RAK4260_H)
 		return 0; //TODO
 	#elif defined(HW_RAK4600_H)
