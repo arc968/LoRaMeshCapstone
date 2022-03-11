@@ -5,7 +5,6 @@
 
 	#include <RTCZero.h>
 	RTCZero rtc;
-	uint8_t y = 0, m = 0, d = 0, h = 0, mi = 0, s = 0;
 	
 #elif defined(HW_RAK4260_H)
 
@@ -263,13 +262,6 @@ void hal_rtc_setAlarm(struct lib_datetime_s * dt) {
 		rtc.setAlarmDate(dt->year, dt->month, dt->day);
 		rtc.setAlarmTime(dt->hour, dt->min, dt->sec);
 		
-		y = dt->year;
-		m = dt->month;
-		d = dt->day;
-		h = dt->hour;
-		mi = dt->min;
-		s = dt->sec;
-		
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.Mode2Alarm[0].ALARM.bit.YEAR = dt->year;
@@ -297,12 +289,12 @@ void hal_rtc_getAlarm(struct lib_datetime_s * val) {
 	
 	#if defined(HW_MKRWAN1300_H)
 		
-		val->year = y;
-		val->month = m;
-		val->day = d;
-		val->hour = h;
-		val->min = mi;
-		val->sec = s;
+		val->year = rtc.getAlarmYear();
+		val->month = rtc.getAlarmMonth();
+		val->day = rtc.getAlarmDay();
+		val->hour = rtc.getAlarmHours();
+		val->min = rtc.getAlarmMinutes();
+		val->sec = rtc.getAlarmSeconds();
 		
 	#elif defined(HW_RAK4260_H)
 	
@@ -348,6 +340,7 @@ bool hal_rtc_compareClockToAlarm(void) {
 				rtc.getHours() >= rtc.getAlarmHours() &&
 				rtc.getMinutes() >= rtc.getAlarmMinutes() &&
 				rtc.getSeconds() >= rtc.getAlarmSeconds());
+				
 	#elif defined(HW_RAK4260_H)
 	
 		return RTC->MODE2.CLOCK.reg >= RTC->MODE2.Mode2Alarm[0].ALARM.reg;
