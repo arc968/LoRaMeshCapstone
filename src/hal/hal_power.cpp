@@ -35,7 +35,7 @@ void hal_power_wake(void) {
 void hal_power_idle() {
 	
 	#if defined(HW_MKRWAN1300_H)
-		while ((wakeAlarm != NULL ? (RTC->MODE2.CLOCK.reg < RTC->MODE2.Mode2Alarm[0].ALARM.reg) : 0) && rtcenable) {
+		while (rtcenable ? (RTC->MODE2.CLOCK.reg < RTC->MODE2.Mode2Alarm[0].ALARM.reg) : 0) {
 			LowPower.idle();
 		}
 		
@@ -54,7 +54,7 @@ void hal_power_idle() {
 			hal_rtc_enable();
 		}
 		
-		while ((wakeAlarm != NULL ? (RTC->MODE2.CLOCK.reg < RTC->MODE2.Mode2Alarm[0].ALARM.reg) : 0) && rtcenable) {
+		while (rtcenable ? (RTC->MODE2.CLOCK.reg < RTC->MODE2.Mode2Alarm[0].ALARM.reg) : 0) {
 			//wait for interrupt compiler command
 			__asm("WFI");
 		}
@@ -102,7 +102,7 @@ void hal_power_idle() {
 void hal_power_sleep() {
 	
 	#if defined(HW_MKRWAN1300_H)
-		while ((wakeAlarm != NULL ? (RTC->MODE2.CLOCK.reg < RTC->MODE2.Mode2Alarm[0].ALARM.reg) : 0) && rtcenable) {
+		while ((rtcenable ? (RTC->MODE2.CLOCK.reg < RTC->MODE2.Mode2Alarm[0].ALARM.reg) : 0)) {
 			LowPower.sleep();
 		}
 		
@@ -121,9 +121,14 @@ void hal_power_sleep() {
 			hal_rtc_enable();
 		}
 		
+		while (rtcenable ? (RTC->MODE2.CLOCK.reg < RTC->MODE2.Mode2Alarm[0].ALARM.reg) : 0) {
+			//wait for interrupt compiler command
+			__asm("WFI");
+		}
 		
-		//deep sleep resets millis() count so deep sleep cannot support millisecond preceicion
-		while ((wakeAlarm != NULL ? (RTC->MODE2.CLOCK.reg < RTC->MODE2.Mode2Alarm[0].ALARM.reg) : 0) && rtcenable) {
+		currentmillis = millis();
+		
+		while (wakeAlarm->ms < millis() - currentmillis) {
 			//wait for interrupt compiler command
 			__asm("WFI");
 		}
@@ -177,14 +182,8 @@ void hal_power_deepSleep() {
 			hal_rtc_enable();
 		}
 		
-		while ((wakeAlarm != NULL ? (RTC->MODE2.CLOCK.reg < RTC->MODE2.Mode2Alarm[0].ALARM.reg) : 0) && rtcenable) {
-			//wait for interrupt compiler command
-			__asm("WFI");
-		}
-		
-		currentmillis = millis();
-		
-		while (wakeAlarm->ms < millis() - currentmillis) {
+		//deep sleep resets millis() count so deep sleep cannot support millisecond preceicion
+		while (rtcenable ? (RTC->MODE2.CLOCK.reg < RTC->MODE2.Mode2Alarm[0].ALARM.reg) : 0) {
 			//wait for interrupt compiler command
 			__asm("WFI");
 		}
