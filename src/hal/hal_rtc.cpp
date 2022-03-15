@@ -2,16 +2,18 @@
 #include "hal_rtc.h"
 
 #if defined(HW_MKRWAN1300_H)
-
-	#include <RTCZero.h>
-	RTCZero rtc;
-	
+	#if defined(HW_ARDUINO)
+		#include <RTCZero.h>
+		RTCZero rtc;
+	#else
+		
+	#endif
 #elif defined(HW_RAK4260_H)
 
-void RTC_Handler(void)                                  // Event System interrupt handler
-{
-
-}
+	void RTC_Handler(void)                                  // Event System interrupt handler
+	{
+		RTC->MODE2.INTFLAG.reg = ~RTC_MODE2_INTFLAG_RESETVALUE;
+	}
 
 #elif defined(HW_RAK4600_H)
 			
@@ -26,7 +28,11 @@ static uint8_t rtcIsInit = 0;
 void hal_rtc_waitForSync(void) {
 	
 	#if defined(HW_MKRWAN1300_H)
-		//none
+		#if defined(HW_ARDUINO)
+			//none
+		#else
+			
+		#endif
 	#elif defined(HW_RAK4260_H)
 	
 		while (RTC->MODE2.SYNCBUSY.reg != 0);
@@ -47,7 +53,11 @@ void hal_rtc_init(void) {
 	
 	
 	#if defined(HW_MKRWAN1300_H)
-		rtc.begin();
+		#if defined(HW_ARDUINO)
+			rtc.begin();
+		#else
+			
+		#endif
 	#elif defined(HW_RAK4260_H)
 	
 		//disable rtc
@@ -60,14 +70,14 @@ void hal_rtc_init(void) {
 		//MCLK->BUPDIV.reg = MCLK_BUPDIV_BUPDIV_DIV32;
 		
 		//uses the internal ultra low power always on 32k occilator auto divided down to 1024Hz
-		OSC32KCTRL->RTCCTRL.bit.RTCSEL = OSC32KCTRL_RTCCTRL_RTCSEL_ULP1K_Val;
+		OSC32KCTRL->RTCCTRL.bit.RTCSEL = OSC32KCTRL_RTCCTRL_RTCSEL_ULP32K;
 		OSC32KCTRL->OSCULP32K.bit.WRTLOCK = 0x1;
 		
 		RTC->MODE2.CTRLA.reg = RTC_MODE2_CTRLA_SWRST;
 
 		hal_rtc_waitForSync();
 		
-		RTC->MODE2.CTRLA.reg = RTC_MODE2_CTRLA_CLOCKSYNC | RTC_MODE2_CTRLA_MODE_CLOCK | RTC_MODE2_CTRLA_MATCHCLR;
+		RTC->MODE2.CTRLA.reg = RTC_MODE2_CTRLA_RESETVALUE | RTC_MODE2_CTRLA_PRESCALER_DIV16 | RTC_MODE2_CTRLA_CLOCKSYNC | RTC_MODE2_CTRLA_MODE_CLOCK | RTC_MODE2_CTRLA_MATCHCLR | RTC_MODE2_CTRLA_CLKREP;
 		RTC->MODE2.INTFLAG.reg = ~RTC_MODE2_INTFLAG_RESETVALUE;
 		RTC->MODE2.Mode2Alarm[0].MASK.reg = RTC_MODE2_MASK_SEL_YYMMDDHHMMSS;
 		RTC->MODE2.EVCTRL.reg = RTC_MODE2_EVCTRL_RESETVALUE;
@@ -98,8 +108,12 @@ void hal_rtc_deinit(void) {
 	hal_rtc_disable();
 	
 	#if defined(HW_MKRWAN1300_H)
-		rtc.disableAlarm();
-		rtc.detachInterrupt();
+		#if defined(HW_ARDUINO)
+			rtc.disableAlarm();
+			rtc.detachInterrupt();
+		#else
+			
+		#endif
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.CTRLA.reg = RTC_MODE2_CTRLA_SWRST;
@@ -127,7 +141,11 @@ bool hal_rtc_isInitialized(void) {
 void hal_rtc_enable(void) {
 	
 	#if defined(HW_MKRWAN1300_H)
-		rtc.enableAlarm(rtc.MATCH_YYMMDDHHMMSS);
+		#if defined(HW_ARDUINO)
+			rtc.enableAlarm(rtc.MATCH_YYMMDDHHMMSS);
+		#else
+			
+		#endif
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.CTRLA.reg |= RTC_MODE2_CTRLA_ENABLE;
@@ -145,9 +163,13 @@ void hal_rtc_enable(void) {
 }
 
 void hal_rtc_disable(void) {
-	
 	#if defined(HW_MKRWAN1300_H)
-		rtc.disableAlarm();
+		
+		#if defined(HW_ARDUINO)
+			rtc.disableAlarm();
+		#else
+			
+		#endif
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.CTRLA.reg &= ~RTC_MODE2_CTRLA_ENABLE;
@@ -169,14 +191,18 @@ void hal_rtc_setClock(struct lib_datetime_s * dt) {
 	hal_rtc_waitForSync();
 	
 	#if defined(HW_MKRWAN1300_H)
-		
-		rtc.setYear(dt->year);
-		rtc.setMonth(dt->month);
-		rtc.setDay(dt->day);
-		rtc.setHours(dt->hour);
-		rtc.setMinutes(dt->min);
-		rtc.setSeconds(dt->sec);
-		
+		#if defined(HW_ARDUINO)
+				
+			rtc.setYear(dt->year);
+			rtc.setMonth(dt->month);
+			rtc.setDay(dt->day);
+			rtc.setHours(dt->hour);
+			rtc.setMinutes(dt->min);
+			rtc.setSeconds(dt->sec);
+			
+		#else
+			
+		#endif
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.CLOCK.bit.YEAR = dt->year;
@@ -203,10 +229,12 @@ void hal_rtc_clearClock(void) {
 	hal_rtc_waitForSync();
 	
 	#if defined(HW_MKRWAN1300_H)
-		
-		rtc.setDate(0x00, 0x00, 0x00);
-		rtc.setTime(0x00, 0x00, 0x00);
-		
+		#if defined(HW_ARDUINO)
+			rtc.setDate(0x00, 0x00, 0x00);
+			rtc.setTime(0x00, 0x00, 0x00);
+		#else
+			
+		#endif
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.CLOCK.reg = RTC_MODE2_CLOCK_RESETVALUE;
@@ -228,14 +256,16 @@ void hal_rtc_getClock(struct lib_datetime_s * val) {
 	hal_rtc_waitForSync();
 	
 	#if defined(HW_MKRWAN1300_H)
-		
-		val->year = rtc.getYear();
-		val->month = rtc.getMonth();
-		val->day = rtc.getDay();
-		val->hour = rtc.getHours();
-		val->min = rtc.getMinutes();
-		val->sec = rtc.getSeconds();
-		
+		#if defined(HW_ARDUINO)
+			val->year = rtc.getYear();
+			val->month = rtc.getMonth();
+			val->day = rtc.getDay();
+			val->hour = rtc.getHours();
+			val->min = rtc.getMinutes();
+			val->sec = rtc.getSeconds();
+		#else
+			
+		#endif
 	#elif defined(HW_RAK4260_H)
 	
 		val->year = RTC->MODE2.CLOCK.bit.YEAR;
@@ -258,10 +288,12 @@ void hal_rtc_getClock(struct lib_datetime_s * val) {
 void hal_rtc_setAlarm(struct lib_datetime_s * dt) {
 	
 	#if defined(HW_MKRWAN1300_H)
-		
-		rtc.setAlarmDate(dt->year, dt->month, dt->day);
-		rtc.setAlarmTime(dt->hour, dt->min, dt->sec);
-		
+		#if defined(HW_ARDUINO)
+			rtc.setAlarmDate(dt->year, dt->month, dt->day);
+			rtc.setAlarmTime(dt->hour, dt->min, dt->sec);
+		#else
+			
+		#endif
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.Mode2Alarm[0].ALARM.bit.YEAR = dt->year;
@@ -288,14 +320,16 @@ void hal_rtc_getAlarm(struct lib_datetime_s * val) {
 	hal_rtc_waitForSync();
 	
 	#if defined(HW_MKRWAN1300_H)
-		
-		val->year = rtc.getAlarmYear();
-		val->month = rtc.getAlarmMonth();
-		val->day = rtc.getAlarmDay();
-		val->hour = rtc.getAlarmHours();
-		val->min = rtc.getAlarmMinutes();
-		val->sec = rtc.getAlarmSeconds();
-		
+		#if defined(HW_ARDUINO)
+			val->year = rtc.getAlarmYear();
+			val->month = rtc.getAlarmMonth();
+			val->day = rtc.getAlarmDay();
+			val->hour = rtc.getAlarmHours();
+			val->min = rtc.getAlarmMinutes();
+			val->sec = rtc.getAlarmSeconds();
+		#else
+			
+		#endif
 	#elif defined(HW_RAK4260_H)
 	
 		val->year = RTC->MODE2.CLOCK.bit.YEAR;
@@ -320,26 +354,30 @@ bool hal_rtc_compareClockToAlarm(void) {
 	hal_rtc_waitForSync();
 	
 	#if defined(HW_MKRWAN1300_H)
+		#if defined(HW_ARDUINO)
+			/*lib_datetime_s * clk, alarm;
+			
+			hal_rtc_getClock(clk);
+			hals_rtc_getAlarm(alarm);
+			
+			if (lib_datetime_cmp(clk, alarm) >= 0) {
+				return true;
+			}
+			else {
+				return false;
+			}*/
+			
+			
+			return (rtc.getYear() >= rtc.getAlarmYear() &&
+					rtc.getMonth() >= rtc.getAlarmMonth() &&
+					rtc.getDay() >= rtc.getAlarmDay() &&
+					rtc.getHours() >= rtc.getAlarmHours() &&
+					rtc.getMinutes() >= rtc.getAlarmMinutes() &&
+					rtc.getSeconds() >= rtc.getAlarmSeconds());
+		#else
+			
+		#endif
 		
-		/*lib_datetime_s * clk, alarm;
-		
-		hal_rtc_getClock(clk);
-		hals_rtc_getAlarm(alarm);
-		
-		if (lib_datetime_cmp(clk, alarm) >= 0) {
-			return true;
-		}
-		else {
-			return false;
-		}*/
-		
-		
-		return (rtc.getYear() >= rtc.getAlarmYear() &&
-				rtc.getMonth() >= rtc.getAlarmMonth() &&
-				rtc.getDay() >= rtc.getAlarmDay() &&
-				rtc.getHours() >= rtc.getAlarmHours() &&
-				rtc.getMinutes() >= rtc.getAlarmMinutes() &&
-				rtc.getSeconds() >= rtc.getAlarmSeconds());
 				
 	#elif defined(HW_RAK4260_H)
 	
@@ -358,7 +396,11 @@ bool hal_rtc_compareClockToAlarm(void) {
 void hal_rtc_enableAlarmInterrupt(void) {
 	
 	#if defined(HW_MKRWAN1300_H)
-		rtc.enableAlarm(rtc.MATCH_YYMMDDHHMMSS);
+		#if defined(HW_ARDUINO)
+			rtc.enableAlarm(rtc.MATCH_YYMMDDHHMMSS);
+		#else
+			
+		#endif
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.INTENSET.reg |= RTC_MODE2_INTENSET_ALARM0;
@@ -379,7 +421,11 @@ void hal_rtc_enableAlarmInterrupt(void) {
 void hal_rtc_disableAlarmInterrupt(void) {
 	
 	#if defined(HW_MKRWAN1300_H)
-		rtc.disableAlarm();
+		#if defined(HW_ARDUINO)
+			rtc.disableAlarm();
+		#else
+			
+		#endif
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.INTENCLR.reg |= RTC_MODE2_INTENCLR_ALARM0;
@@ -400,7 +446,11 @@ void hal_rtc_disableAlarmInterrupt(void) {
 void hal_rtc_enableOverflowInterrupt(void) {
 	
 	#if defined(HW_MKRWAN1300_H)
-		//none
+		#if defined(HW_ARDUINO)
+			//none
+		#else
+			
+		#endif		
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.INTENSET.reg |= RTC_MODE2_INTENSET_OVF;
@@ -421,7 +471,11 @@ void hal_rtc_enableOverflowInterrupt(void) {
 void hal_rtc_disableOverflowInterrupt(void) {
 	
 	#if defined(HW_MKRWAN1300_H)
-		//none
+		#if defined(HW_ARDUINO)
+			//none
+		#else
+			
+		#endif
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.INTENCLR.reg |= RTC_MODE2_INTENCLR_OVF;
@@ -443,7 +497,11 @@ void hal_rtc_disableOverflowInterrupt(void) {
 void hal_rtc_clearAlarmInterrupt(void) {
 	
 	#if defined(HW_MKRWAN1300_H)
-		//none
+		#if defined(HW_ARDUINO)
+			//none
+		#else
+			
+		#endif
 	#elif defined(HW_RAK4260_H)
 	
 		RTC->MODE2.INTFLAG.reg |= RTC_MODE2_INTFLAG_ALARM0;
@@ -463,7 +521,11 @@ void hal_rtc_clearAlarmInterrupt(void) {
 void hal_rtc_clearOverflowInterrupt(void) {
 	
 	#if defined(HW_MKRWAN1300_H)
-		//none
+		#if defined(HW_ARDUINO)
+			//none
+		#else
+			
+		#endif
 	#elif defined(HW_RAK4260_H)
 		
 		RTC->MODE2.INTFLAG.reg |= RTC_MODE2_INTFLAG_OVF;

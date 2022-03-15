@@ -5,7 +5,9 @@
 #include "hal_interrupt.h"
 
 #if defined(HW_MKRWAN1300_H)
-	#include "ArduinoLowPower.h"
+	#if defined(HW_ARDUINO)
+		#include "ArduinoLowPower.h"
+	#endif
 #elif defined(HW_RAK4260_H)
 
 #elif defined(HW_RAK4600_H)
@@ -37,15 +39,19 @@ void hal_power_wake(void) {
 void hal_power_idle() {
 	
 	#if defined(HW_MKRWAN1300_H)
-		while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0) {
-			LowPower.idle();
-		}
-		
-		currentmillis = hal_timer_millis();
-		
-		while (wakeAlarm->ms < hal_timer_millis() - currentmillis) {
-			LowPower.idle(wakeAlarm->ms);
-		}
+		#if defined(HW_ARDUINO)
+			while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0) {
+				LowPower.idle();
+			}
+			
+			//currentmillis = hal_timer_millis();
+			
+			//while (wakeAlarm->ms < hal_timer_millis() - currentmillis) {
+				LowPower.idle(wakeAlarm->ms);
+			//}
+		#else
+			
+		#endif
 	#elif defined(HW_RAK4260_H)
 		
 		//set the sleep mode power reg
@@ -104,15 +110,19 @@ void hal_power_idle() {
 void hal_power_sleep() {
 	
 	#if defined(HW_MKRWAN1300_H)
-		while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0) {
-			LowPower.sleep();
-		}
-		
-		currentmillis = hal_timer_millis();
-		
-		while (wakeAlarm->ms < hal_timer_millis() - currentmillis) {
-			LowPower.sleep(wakeAlarm->ms);
-		}
+		#if defined(HW_ARDUINO)
+			while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0) {
+				LowPower.sleep();
+			}
+			
+			//currentmillis = hal_timer_millis();
+			
+			//while (wakeAlarm->ms < hal_timer_millis() - currentmillis) {
+				LowPower.sleep(wakeAlarm->ms);
+			//}
+		#else
+			
+		#endif
 	#elif defined(HW_RAK4260_H)
 		
 		//set the sleep mode power reg
@@ -173,9 +183,19 @@ void hal_power_sleep() {
 void hal_power_deepSleep() {
 	
 	#if defined(HW_MKRWAN1300_H)
-		while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0) {
-			LowPower.deepSleep();
-		}
+		#if defined(HW_ARDUINO)
+			while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0) {
+				LowPower.deepSleep();
+			}
+			
+			//currentmillis = hal_timer_millis();
+			
+			//while (wakeAlarm->ms < hal_timer_millis() - currentmillis) {
+				LowPower.deepSleep(wakeAlarm->ms);
+			//}
+		#else
+			
+		#endif
 	#elif defined(HW_RAK4260_H)
 		
 		//set the sleep mode power reg
@@ -234,7 +254,13 @@ void hal_power_setMode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s *
 	if (!powertimersetup || !hal_rtc_isInitialized()) {
 		
 		#if defined(HW_MKRWAN1300_H)
-			
+			#if defined(HW_ARDUINO)	
+				//none
+			#else
+				
+				
+				
+			#endif
 		#elif defined(HW_RAK4260_H)
 			
 			//have to use rtc cant use tc in deep sleep
