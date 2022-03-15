@@ -287,6 +287,8 @@ void hal_rtc_getClock(struct lib_datetime_s * val) {
 
 void hal_rtc_setAlarm(struct lib_datetime_s * dt) {
 	
+	hal_rtc_waitForSync();
+	
 	#if defined(HW_MKRWAN1300_H)
 		#if defined(HW_ARDUINO)
 			rtc.setAlarmDate(dt->year, dt->month, dt->day);
@@ -346,6 +348,33 @@ void hal_rtc_getAlarm(struct lib_datetime_s * val) {
 	#else
 		#error "Hardware not yet implemented"
 	#endif
+	
+}
+
+void hal_rtc_clearAlarm(void) {
+	
+	hal_rtc_waitForSync();
+	
+	#if defined(HW_MKRWAN1300_H)
+		#if defined(HW_ARDUINO)
+			rtc.setAlarmDate(0, 0, 0);
+			rtc.setAlarmTime(0, 0, 0);
+		#else
+			
+		#endif
+	#elif defined(HW_RAK4260_H)
+	
+		RTC->MODE2.Mode2Alarm[0].ALARM.reg = 0x00000000;
+		
+	#elif defined(HW_RAK4600_H)
+		
+	#elif defined(HW_RAK11300_H)
+		
+	#else
+		#error "Hardware not yet implemented"
+	#endif
+	
+	hal_rtc_waitForSync();
 	
 }
 

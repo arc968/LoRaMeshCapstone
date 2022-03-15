@@ -24,7 +24,6 @@ extern "C" {
 
 	#define HW_H
 	#define HW_RAK4260_H
-	#define HW_ARDUINO
 	#include "hw_rak4260_registers.h"
 	
 #ifdef __cplusplus

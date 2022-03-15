@@ -191,7 +191,7 @@ void hal_power_deepSleep() {
 			//currentmillis = hal_timer_millis();
 			
 			//while (wakeAlarm->ms < hal_timer_millis() - currentmillis) {
-				LowPower.deepSleep(wakeAlarm->ms);
+				//LowPower.deepSleep(wakeAlarm->ms);
 			//}
 		#else
 			
@@ -239,6 +239,10 @@ void hal_power_deepSleep() {
 		#error "Hardware not yet implemented"
 	#endif
 	
+	hal_rtc_clearClock();
+	hal_rtc_clearAlarm();
+	hal_power_idle();
+	
 	//clear interupt flag to use again
 	hal_rtc_clearAlarmInterrupt();
 	hal_rtc_disable();
@@ -264,7 +268,7 @@ void hal_power_setMode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s *
 		#elif defined(HW_RAK4260_H)
 			
 			//have to use rtc cant use tc in deep sleep
-			//warning any running peripheral in sleep mode that triggers an interrupt triggers a wake event
+			//warning any running peripheral in sleep mode or idle mode that triggers an interrupt triggers a wake event as well
 			
 			hal_rtc_init();
 			
