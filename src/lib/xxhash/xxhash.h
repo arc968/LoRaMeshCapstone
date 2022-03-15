@@ -34,7 +34,7 @@
  */
 
 /*!
- * @mainpage xxHash
+ * @page xxHash
  *
  * xxHash is an extremely fast non-cryptographic hash algorithm, working at RAM speed
  * limits.
@@ -177,7 +177,7 @@ extern "C" {
  *  INLINE mode
  ******************************/
 /*!
- * @defgroup public Public API
+ * @addtogroup Lib Lib Layer
  * Contains details on the public xxHash functions.
  * @{
  */
@@ -508,7 +508,7 @@ typedef uint32_t XXH32_hash_t;
  * @}
  *
  * @defgroup XXH32_family XXH32 family
- * @ingroup public
+ * @ingroup Lib
  * Contains functions used in the classic 32-bit xxHash algorithm.
  *
  * @note
@@ -745,7 +745,7 @@ XXH_PUBLIC_API XXH_PUREF XXH32_hash_t XXH32_hashFromCanonical(const XXH32_canoni
 
 /*!
  * @}
- * @ingroup public
+ * @ingroup Lib
  * @{
  */
 
@@ -780,7 +780,7 @@ typedef uint64_t XXH64_hash_t;
  * @}
  *
  * @defgroup XXH64_family XXH64 family
- * @ingroup public
+ * @ingroup Lib
  * @{
  * Contains functions used in the classic 64-bit xxHash algorithm.
  *
@@ -842,7 +842,7 @@ XXH_PUBLIC_API XXH_PUREF XXH64_hash_t XXH64_hashFromCanonical(const XXH64_canoni
  * @}
  * ************************************************************************
  * @defgroup XXH3_family XXH3 family
- * @ingroup public
+ * @ingroup Lib
  * @{
  *
  * XXH3 is a more recent hash algorithm featuring:
@@ -2135,7 +2135,7 @@ XXH_readLE32_align(const void* ptr, XXH_alignment align)
 /* *************************************
 *  Misc
 ***************************************/
-/*! @ingroup public */
+/*! @ingroup Lib */
 XXH_PUBLIC_API unsigned XXH_versionNumber (void) { return XXH_VERSION_NUMBER; }
 
 
