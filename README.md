@@ -13,6 +13,7 @@ this will open the document as a website to navigate in your web browser of choi
 
 ### Arduino Libraries needed
 
+#### For MKRWAN1300
 1. Arduino Low Power - by Arduino LLC
 2. TimmerInterrupt_Generic - by Khoi Hoang
 3. RTCZero - by Arduino LLC
