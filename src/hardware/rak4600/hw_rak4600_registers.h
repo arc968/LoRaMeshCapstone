@@ -1,7 +1,7 @@
 /**
  * \addtogroup RAK4600Reggroup RAK4600 registers
  * @{
- *	 \ingroup rak4600group
+ *	 \ingroup RAK4600group
  */
  
  /**
