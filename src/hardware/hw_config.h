@@ -25,19 +25,24 @@ extern "C" {
 #endif
 
 
+///////////////////IDE DEFINES/////////////////////////////
 //uncomment this to define using the arduine ide software and its premade libraries
 #define HW_ARDUINO
 
 
-
+///////////////////IC CHIP DEFINES////////////////////////
 //#define MKRWAN1300
 #define RAK4260 //iBug
 //#define RAK4600
 //#define RAK11300
 
+
+///////////////////GPS DEFINES/////////////////////////////
 //#define GPS_NONE
 #define GPS_UBLOX_NEO6
 
+
+///////////////////LORA RADIO DEFINES//////////////////////
 //#define LORA_NONE
 #define LORA_ARDUINO_MKRWAN1300
 //#define LORA_SEMTECH_SX1276
