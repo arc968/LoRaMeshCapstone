@@ -40,19 +40,9 @@ void hal_power_idle() {
 	
 	#if defined(HW_MKRWAN1300_H)
 		#if defined(HW_ARDUINO)
-			//if (wakeAlarm == NULL) {
-			//	LowPower.idle();
-			//else {
 				do {
 					LowPower.idle();
 				} while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0);
-			//}
-			
-			//currentmillis = hal_timer_millis();
-			
-			//while (wakeAlarm->ms < hal_timer_millis() - currentmillis) {
-				//LowPower.idle(wakeAlarm->ms);
-			//}
 		#else
 			
 		#endif
@@ -66,17 +56,19 @@ void hal_power_idle() {
 			hal_rtc_enable();
 		}
 		
-		while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0) {
+		do {
 			//wait for interrupt compiler command
 			__asm("WFI");
-		}
+		} while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0);
+		
 		
 		currentmillis = hal_timer_millis();
 		
-		while (wakeAlarm->ms < hal_timer_millis() - currentmillis) {
+		/*do {
 			//wait for interrupt compiler command
 			__asm("WFI");
-		}
+		} while (wakeAlarm->ms < hal_timer_millis() - currentmillis);*/
+		
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -118,12 +110,6 @@ void hal_power_sleep() {
 			do {
 				LowPower.sleep();
 			} while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0);
-			
-			//currentmillis = hal_timer_millis();
-			
-			//while (wakeAlarm->ms < hal_timer_millis() - currentmillis) {
-				//LowPower.sleep(wakeAlarm->ms);
-			//}
 		#else
 			
 		#endif
@@ -137,17 +123,18 @@ void hal_power_sleep() {
 			hal_rtc_enable();
 		}
 		
-		while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0) {
+		do {
 			//wait for interrupt compiler command
 			__asm("WFI");
-		}
+		} while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0);
 		
-		currentmillis = hal_timer_millis();
 		
-		while (wakeAlarm->ms < hal_timer_millis() - currentmillis) {
+		/*currentmillis = hal_timer_millis();
+		
+		do {
 			//wait for interrupt compiler command
 			__asm("WFI");
-		}
+		} while (wakeAlarm->ms < hal_timer_millis() - currentmillis);*/
 
 		//clear interupt flag to use again
 
@@ -191,12 +178,6 @@ void hal_power_deepSleep() {
 			while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0) {
 				LowPower.deepSleep();
 			}
-			
-			//currentmillis = hal_timer_millis();
-			
-			//while (wakeAlarm->ms < hal_timer_millis() - currentmillis) {
-				//LowPower.deepSleep(wakeAlarm->ms);
-			//}
 		#else
 			
 		#endif
@@ -211,10 +192,10 @@ void hal_power_deepSleep() {
 		}
 		
 		//deep sleep resets millis() count so deep sleep cannot support millisecond preceicion
-		while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0) {
+		do {
 			//wait for interrupt compiler command
 			__asm("WFI");
-		}
+		} while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0);
 		
 	#elif defined(HW_RAK4600_H)
 		
@@ -242,10 +223,6 @@ void hal_power_deepSleep() {
 	#else
 		#error "Hardware not yet implemented"
 	#endif
-	
-	hal_rtc_clearClock();
-	hal_rtc_clearAlarm();
-	hal_power_idle();
 	
 	//clear interupt flag to use again
 	hal_rtc_clearAlarmInterrupt();
@@ -308,11 +285,11 @@ void hal_power_setMode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s *
 	hal_rtc_clearClock();
 	
 	//must ensure that global interrups are enabled to be able to trigger a wake event interrupt
-	interruptwasdisabled = 0;
+	/*interruptwasdisabled = 0;
 	if (!hal_interrupt_isEnabled()) {
 		hal_interrupt_enable();
 		interruptwasdisabled = 1;
-	}
+	}*/
 
 	if (pwrmode == PWR_FULL) {
 		hal_power_wake();
@@ -330,9 +307,9 @@ void hal_power_setMode(enum hw_power_pwrmodes_e pwrmode, struct lib_datetime_s *
 		//hal_power_idle();
 	}
 	
-	if (interruptwasdisabled) {
+	/*if (interruptwasdisabled) {
 		hal_interrupt_disable();
-	}
+	}*/
 
 }
 
