@@ -149,6 +149,50 @@ static void job_getGpsMessage(void * arg) {
 	*/
 	
 	
+	// struct lib_datetime_s dt;
+	// dt.year = 2022;
+	// dt.month = 03;
+	// dt.day = 15;
+	// dt.hour = 10;
+	// dt.min = 00;
+	// dt.sec = 0;
+	// dt.ms = 250; //drv_timer_getMonotonicTime() - timestamp;
+	//ignores flags
+	// drv_timer_setAbsoluteDateTime(&dt);
+	
+	//char tbuf[256];
+	//sprintf(tbuf, "year:%u\nmonth:%u\nday:%u\nhour:%u\nmin:%u\nsec:%u\nms:%u\n",dt.year,dt.month,dt.day,dt.hour,dt.min,dt.sec,dt.ms);
+	//hal_serial_write(hal_serial0, tbuf, strlen(tbuf)+1);
+	
+
+}
+
+#define UBX_MSG_SERIAL_WRITE(serial_port, message) hal_serial_write(serial_port, (uint8_t *)(&(message)), sizeof(typeof(message)));
+
+#define UBX_CFG_MSG_SERIAL_WRITE(serial_port, message) ubx_cfg_write(serial_port, (uint8_t *)(&(message)), sizeof(typeof(message)));
+
+static void checkDateSet(void * arg __attribute__((unused))) {
+	if (drv_timer_absoluteTimeIsAvailable()) {
+		if (!hal_gpio_digitalRead(7)) {
+			hal_gpio_digitalWrite(7, GPIO_HIGH);
+		} else {
+			hal_gpio_digitalWrite(7, GPIO_LOW);
+		}
+	}
+}
+
+static void isr_pps(void) {
+	if (!runonce) {
+		timestamp = drv_timer_getMonotonicTime();
+		// if (hal_gpio_digitalRead(6) == 1) {
+			// hal_gpio_digitalWrite(6, LOW);
+		// } else {
+			// hal_gpio_digitalWrite(6, HIGH);
+		// }
+		//drv_sched_once(job_getGpsMessage, NULL, DRV_SCHED_PRI__NORMAL, 250);
+		drv_sched_repeating(checkDateSet, NULL, DRV_SCHED_PRI__NORMAL, 0, 1000);
+		runonce = true;
+	}
 	struct lib_datetime_s dt;
 	dt.year = 2022;
 	dt.month = 03;
@@ -159,30 +203,6 @@ static void job_getGpsMessage(void * arg) {
 	dt.ms = 250; //drv_timer_getMonotonicTime() - timestamp;
 	//ignores flags
 	drv_timer_setAbsoluteDateTime(&dt);
-	
-	char tbuf[256];
-	sprintf(tbuf, "year:%u\nmonth:%u\nday:%u\nhour:%u\nmin:%u\nsec:%u\nms:%u\n",dt.year,dt.month,dt.day,dt.hour,dt.min,dt.sec,dt.ms);
-	hal_serial_write(hal_serial0, tbuf, strlen(tbuf)+1);
-	
-
-}
-
-#define UBX_MSG_SERIAL_WRITE(serial_port, message) hal_serial_write(serial_port, (uint8_t *)(&(message)), sizeof(typeof(message)));
-
-#define UBX_CFG_MSG_SERIAL_WRITE(serial_port, message) ubx_cfg_write(serial_port, (uint8_t *)(&(message)), sizeof(typeof(message)));
-
-
-static void isr_pps(void) {
-	if (!runonce) {
-		timestamp = drv_timer_getMonotonicTime();
-		// if (hal_gpio_digitalRead(6) == 1) {
-			// hal_gpio_digitalWrite(6, LOW);
-		// } else {
-			// hal_gpio_digitalWrite(6, HIGH);
-		// }
-		drv_sched_once(job_getGpsMessage, NULL, DRV_SCHED_PRI__NORMAL, 250);
-		runonce = true;
-	}
 }
 
 
@@ -296,6 +316,8 @@ void drv_gps_init(struct drv_gps_s * handle) {
 		*/
 	//enable interrupts on GPS pulse GPIO pin
 	hal_interrupt_attachPin(0, isr_pps, INTERRUPT_FALLING);
+	
+	
 
 	// while(true) { //check GPS reply
 		// if (hal_serial_available(hal_serial1) > 0) {

@@ -106,23 +106,26 @@ struct packet_type_data_s {
 	uint8_t data[];
 } __attribute__((packed));
 
+/*
+hash sent/received public key with pre-shared key, then calculate key exchange
+*/
 struct packet_type_disc_s {
 	struct packet_header_s header;
 	struct peer_s peer;
-	//struct ciphermask_s ciphermask;
+	struct ciphermask_s ciphermask; //all capable/allowed bits are set
 } __attribute__((packed));
 
 struct packet_type_discReply_s {
 	struct packet_header_s header;
 	struct peer_s peer;
-	//struct ciphermask_s ciphermask;
-	//uint8_t key_ephemeral[32]; //optional, only if common cipher is found
+	struct ciphermask_s ciphermask; //only a single bit set for selected mode
+	uint8_t key_ephemeral[32]; //optional, only if common cipher is found
 } __attribute__((packed));
 
 struct packet_type_discHandshake_s {
 	struct packet_header_s header;
 	struct peer_s peer;
-	//uint8_t key_ephemeral[32]; //optional, only if common cipher is found
+	uint8_t key_ephemeral[32]; //optional, only if common cipher is found
 } __attribute__((packed));
 
 struct packet_type_ack_s {
