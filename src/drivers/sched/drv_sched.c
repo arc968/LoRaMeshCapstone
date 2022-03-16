@@ -330,7 +330,13 @@ void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle e
 		}
 		#define TIME_SLEEP 1500
 		#define TIME_IDLE 10
+		char abuf[256];
+		sprintf(abuf, "t");
+						hal_serial_write(hal_serial0, abuf, strlen(abuf)+1);
+						hal_serial_flush(hal_serial0);
 		{ //power //TODO manage powerState
+		char tbuf[256];
+			struct lib_datetime_s dt = {0};
 			lib_datetime_interval_t curMonoTime = drv_timer_getMonotonicTime();
 			if (state.head_ready != NULL) {
 				lib_datetime_interval_t timeUntilMono = state.head_ready->time - curMonoTime;
@@ -340,22 +346,22 @@ void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle e
 						lib_datetime_interval_t timeUntilAbsolute = state.head_timed->time - curAbsoluteTime;
 						if (timeUntilAbsolute > TIME_SLEEP) {
 							//SLEEP
-							struct lib_datetime_s dt = (struct lib_datetime_s) {
-								.sec = (timeUntilAbsolute < timeUntilMono) ? timeUntilAbsolute/1000 : timeUntilMono/1000,
-								.ms = 1,
-							};
+							dt.sec = (timeUntilAbsolute < timeUntilMono) ? timeUntilAbsolute/1000 : timeUntilMono/1000;
 							if (state.func_onSleep_ptr != NULL) (*(state.func_onSleep_ptr))();
-							//hal_power_setMode(PWR_SLEEP, &dt);
+							sprintf(tbuf, "s1\n");
+							hal_serial_write(hal_serial0, tbuf, strlen(tbuf)+1);
+							hal_serial_flush(hal_serial0);
+							hal_power_setMode(PWR_SLEEP, &dt);
 							if (state.func_onWake_ptr != NULL) (*(state.func_onWake_ptr))();
 						}
 					} else {
 						//SLEEP
-						struct lib_datetime_s dt = (struct lib_datetime_s) {
-							.sec = timeUntilMono/1000,
-							.ms = 1,
-						};
+						dt.sec = timeUntilMono/1000;
 						if (state.func_onSleep_ptr != NULL) (*(state.func_onSleep_ptr))();
-						//hal_power_setMode(PWR_SLEEP, &dt);
+						sprintf(tbuf, "s2\n");
+						hal_serial_write(hal_serial0, tbuf, strlen(tbuf)+1);
+						hal_serial_flush(hal_serial0);
+						hal_power_setMode(PWR_SLEEP, &dt);
 						if (state.func_onWake_ptr != NULL) (*(state.func_onWake_ptr))();
 					}
 				} else if (timeUntilMono > TIME_IDLE) {
@@ -364,10 +370,16 @@ void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle e
 						lib_datetime_interval_t timeUntilAbsolute = state.head_timed->time - curAbsoluteTime;
 						if (timeUntilAbsolute > TIME_IDLE) {
 							//IDLE
+							sprintf(tbuf, "i1\n");
+							hal_serial_write(hal_serial0, tbuf, strlen(tbuf)+1);
+							hal_serial_flush(hal_serial0);
 							hal_power_setMode(PWR_IDLE, NULL);
 						}
 					} else {
 						//IDLE
+						sprintf(tbuf, "i2\n");
+						hal_serial_write(hal_serial0, tbuf, strlen(tbuf)+1);
+						hal_serial_flush(hal_serial0);
 						hal_power_setMode(PWR_IDLE, NULL);
 					}
 				}
@@ -377,24 +389,28 @@ void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle e
 					lib_datetime_interval_t timeUntilAbsolute = state.head_timed->time - curAbsoluteTime;
 					if (timeUntilAbsolute > TIME_SLEEP) {
 						//SLEEP
-						struct lib_datetime_s dt = (struct lib_datetime_s) {
-							.sec = timeUntilAbsolute/1000,
-							.ms = 1,
-						};
+						dt.sec = timeUntilAbsolute/1000;
 						if (state.func_onSleep_ptr != NULL) (*(state.func_onSleep_ptr))();
-						//hal_power_setMode(PWR_SLEEP, &dt);
+						sprintf(tbuf, "s3\n");
+						hal_serial_write(hal_serial0, tbuf, strlen(tbuf)+1);
+						hal_serial_flush(hal_serial0);
+						hal_power_setMode(PWR_SLEEP, &dt);
 						if (state.func_onWake_ptr != NULL) (*(state.func_onWake_ptr))();
 					} else if (timeUntilAbsolute > TIME_IDLE) {
 						//IDLE
+						sprintf(tbuf, "i3\n");
+						hal_serial_write(hal_serial0, tbuf, strlen(tbuf)+1);
+						hal_serial_flush(hal_serial0);
 						hal_power_setMode(PWR_IDLE, NULL);
 					}
 				} else {
 					//SLEEP
-					struct lib_datetime_s dt = (struct lib_datetime_s) {
-						.year = 2100,
-					};
+					dt.year = 3000;
 					if (state.func_onSleep_ptr != NULL) (*(state.func_onSleep_ptr))();
-					//hal_power_setMode(PWR_SLEEP, &dt);
+					sprintf(tbuf, "s4\n");
+					hal_serial_write(hal_serial0, tbuf, strlen(tbuf)+1);
+					hal_serial_flush(hal_serial0);
+					hal_power_setMode(PWR_SLEEP, &dt);
 					if (state.func_onWake_ptr != NULL) (*(state.func_onWake_ptr))();
 				}
 			}
