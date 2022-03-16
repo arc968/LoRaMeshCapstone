@@ -60,23 +60,54 @@
 #define LORA_US_PADDING_125kHz ((uint64_t)(((LORA_US_FREQ_WIDTH - (LORA_US_CHANNELCOUNT_125kHz * FREQ_125kHz)) / LORA_US_CHANNELCOUNT_125kHz) / 2))
 #define LORA_US_PADDING_62_5kHz ((uint64_t)(((LORA_US_FREQ_WIDTH - (LORA_US_CHANNELCOUNT_62_5kHz * FREQ_62_5kHz)) / LORA_US_CHANNELCOUNT_62_5kHz) / 2))
 
+#include <stdint.h>
+#define RB_CAPACITY(rb) ((uint16_t)(sizeof(rb.buf)/sizeof(__typeof__(rb.buf[0]))))
+#define RB_COUNT(rb) ((uint16_t)rb.count)
+#define RB_GET(rb) ((__typeof__(rb.buf[0]) *)(\
+    (rb.count == 0) ? NULL : \
+        (rb.tail = ((rb.tail+1)%RB_CAPACITY(rb)),\
+        rb.count--,\
+        &(rb.buf[(rb.tail == 0) ? RB_CAPACITY(rb)-1 : rb.tail-1]))\
+))
+#define RB_PEEK(rb) ((__typeof__(rb.buf[0]) *)(\
+    (rb.count == 0) ? NULL : \
+        &(rb.buf[rb.tail])\
+))
+#define RB_PUT(rb) ((__typeof__(rb.buf[0]) *)(\
+    (rb.count == RB_CAPACITY(rb)) ? NULL : \
+        (rb.head = ((rb.head+1)%RB_CAPACITY(rb)),\
+        rb.count++,\
+        &(rb.buf[(rb.head == 0) ? RB_CAPACITY(rb)-1 : rb.head-1]))\
+))
+
 static struct state_s {
 	ip_t ip;
 	struct peer_s peers[PEER_COUNT_MAX];
 	
-	uint8_t buf_relay_head;
-	uint8_t buf_relay_tail;
-	struct packet_ext_s buf_relay[BUFFER_RELAY_SIZE];
+	struct {
+		uint8_t head;
+		uint8_t tail;
+		uint16_t count;
+		struct packet_ext_s buf[BUFFER_RELAY_SIZE];
+	} rb_relay;
 	
-	uint8_t buf_inbound_head;
-	uint8_t buf_inbound_tail;
-	struct packet_ext_s buf_inbound[BUFFER_INBOUND_SIZE];
+	struct {
+		uint8_t head;
+		uint8_t tail;
+		uint16_t count;
+		struct packet_ext_s buf[BUFFER_INBOUND_SIZE];
+	} rb_inbound;
 	
-	uint8_t buf_outbound_head;
-	uint8_t buf_outbound_tail;
-	struct packet_ext_s buf_outbound[BUFFER_OUTBOUND_SIZE];
+	struct {
+		uint8_t head;
+		uint8_t tail;
+		uint16_t count;
+		struct packet_ext_s buf[BUFFER_OUTBOUND_SIZE];
+	} rb_outbound;
 
 	struct appointment_s appointments[BUFFER_APPOINTMENTS_SIZE];
+	
+	struct drv_lora_s radio;
 } state;
 
 //TODO: only works in US, no error handling
@@ -139,15 +170,18 @@ static void drv_mesh_start(void * arg __attribute__((unused))) {
 void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *)) {
 	//initialize datastructures
 	
-	//initialize GPS
-	
+	//initialize GPS 
+	drv_gps_init(NULL);
 	//configure GPS for timekeeping mode as appropriate
 	
 	//initialize LoRa radio
-	
+	//drv_lora_init(&state.radio, DRV_LORA_REGION_US915, 0);
 	//configure LoRa radio
 	
-	drv_sched_onAbsoluteAvailable(drv_mesh_start, NULL);
+	//initialize scheduler
+	drv_sched_init();
+	
+	//drv_sched_onAbsoluteAvailable(drv_mesh_start, NULL);
 }
 
 enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * packet) {

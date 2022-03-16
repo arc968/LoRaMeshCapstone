@@ -69,6 +69,8 @@ void lib_datetime_copyDate(struct lib_datetime_s * src, struct lib_datetime_s * 
 
 void lib_datetime_copyTime(struct lib_datetime_s * src, struct lib_datetime_s * dst);
 
+void lib_datetime_clearDateTime(struct lib_datetime_s * dt);
+
 void lib_datetime_clearDate(struct lib_datetime_s * dt);
 
 void lib_datetime_clearTime(struct lib_datetime_s * dt);

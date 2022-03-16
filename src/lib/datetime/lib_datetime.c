@@ -31,6 +31,11 @@ void lib_datetime_clearTime(struct lib_datetime_s * dt) {
 	dt->ms = 0;
 }
 
+void lib_datetime_clearDateTime(struct lib_datetime_s * dt) {
+	lib_datetime_clearDate(dt);
+	lib_datetime_clearTime(dt);
+}
+
 enum lib_datetime_err_e lib_datetime_validateTime(lib_datetime_time_t time) {
 	if (time > LIB_DATETIME__MS_IN_DAY) return LIB_DATETIME_ERR__TIME_OUT_OF_RANGE;
 	return LIB_DATETIME_ERR__NONE;

@@ -34,8 +34,10 @@
 
 static volatile lib_datetime_interval_t timestamp = 0;
 
+static volatile bool runonce = false;
+
 static void job_getGpsMessage(void * arg) {
-	
+	/*
 	hal_serial_write(hal_serial0, "job_getGpsMessage\n", sizeof("job_getGpsMessage\n"));
 	//uint8_t tmp1 = sizeof(struct ubx_msg__NAV_TIMEUTC__TimeSolution_s);
 	//hal_serial_write(hal_serial0, &tmp1, 1);
@@ -144,6 +146,25 @@ static void job_getGpsMessage(void * arg) {
 	// uint8_t buf[32];
 	// size_t count = hal_serial_readBytes(hal_serial1, buf, sizeof(buf));
 	// hal_serial_write(hal_serial0, buf, count);
+	*/
+	
+	
+	struct lib_datetime_s dt;
+	dt.year = 2022;
+	dt.month = 03;
+	dt.day = 15;
+	dt.hour = 10;
+	dt.min = 00;
+	dt.sec = 0;
+	dt.ms = 250; //drv_timer_getMonotonicTime() - timestamp;
+	//ignores flags
+	drv_timer_setAbsoluteDateTime(&dt);
+	
+	char tbuf[256];
+	sprintf(tbuf, "year:%u\nmonth:%u\nday:%u\nhour:%u\nmin:%u\nsec:%u\nms:%u\n",dt.year,dt.month,dt.day,dt.hour,dt.min,dt.sec,dt.ms);
+	hal_serial_write(hal_serial0, tbuf, strlen(tbuf)+1);
+	
+
 }
 
 #define UBX_MSG_SERIAL_WRITE(serial_port, message) hal_serial_write(serial_port, (uint8_t *)(&(message)), sizeof(typeof(message)));
@@ -152,13 +173,16 @@ static void job_getGpsMessage(void * arg) {
 
 
 static void isr_pps(void) {
-	timestamp = drv_timer_getMonotonicTime();
-	// if (hal_gpio_digitalRead(6) == 1) {
-		// hal_gpio_digitalWrite(6, LOW);
-	// } else {
-		// hal_gpio_digitalWrite(6, HIGH);
-	// }
-	drv_sched_once(job_getGpsMessage, NULL, DRV_SCHED_PRI__NORMAL, 250);
+	if (!runonce) {
+		timestamp = drv_timer_getMonotonicTime();
+		// if (hal_gpio_digitalRead(6) == 1) {
+			// hal_gpio_digitalWrite(6, LOW);
+		// } else {
+			// hal_gpio_digitalWrite(6, HIGH);
+		// }
+		drv_sched_once(job_getGpsMessage, NULL, DRV_SCHED_PRI__NORMAL, 250);
+		runonce = true;
+	}
 }
 
 
@@ -205,6 +229,7 @@ void drv_gps_init(struct drv_gps_s * handle) {
 	//initialize dependencies
 		drv_timer_init();
 		drv_sched_init();
+		/*
 	//initialize serial1 port for communicating with GPS
 		hal_serial_begin(hal_serial1, 9600);
 	//disable NMEA
@@ -268,7 +293,7 @@ void drv_gps_init(struct drv_gps_s * handle) {
 		hal_timer_delay(250);
 		
 	hal_serial_flush(hal_serial1);
-		
+		*/
 	//enable interrupts on GPS pulse GPIO pin
 	hal_interrupt_attachPin(0, isr_pps, INTERRUPT_FALLING);
 

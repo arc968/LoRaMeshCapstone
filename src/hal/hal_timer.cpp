@@ -126,9 +126,9 @@ void hal_timer_delay(uint16_t msdelay) {
 uint64_t hal_timer_millis(void) {
 	
 	#if defined(HW_ARDUINO)
-		return millis();	
+		return millis();
 	#elif defined(HW_MKRWAN1300_H)
-		
+		return millis();
 	#elif defined(HW_RAK4260_H)
 		
 		if (millisisinitialized != 0) {

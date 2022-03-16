@@ -2,6 +2,7 @@
 #include "drv_sched.h"
 
 #include <stdbool.h>
+#include <stdio.h>
 #include "../timer/drv_timer.h"
 
 enum job_type_e {
@@ -73,7 +74,9 @@ void drv_sched_setOnWakeCallback(void (*func_onWake_ptr)(void)) {
 
 static struct job_s * popEmptyJob(void) {
 	struct job_s * job = state.head_empty; //get empty job slot
-	state.head_empty = job->next; //remove from linked list of empty jobs
+	if (job != NULL) {
+		state.head_empty = job->next; //remove from linked list of empty jobs
+	}
 	return job;
 }
 
@@ -136,10 +139,16 @@ static void worker_onAbsoluteAvailable(void) {
 
 //TODO: not yet done
 static enum drv_sched_err_e schedule(void (*func_ptr)(void*), void * func_arg, enum job_type_e type, enum drv_sched_pri_e priority, lib_datetime_interval_t delay_or_timeOfDay, lib_datetime_interval_t interval_ms) {
+	bool interruptsEnabled = hal_interrupt_isEnabled();
+	hal_interrupt_disable();
+	
 	lib_datetime_interval_t currentTime = drv_timer_getMonotonicTime();
 	lib_datetime_time_t curTime; drv_timer_getAbsoluteTime(&curTime);
 	struct job_s * job = popEmptyJob();
-	if (job == NULL) return DRV_SCHED_ERR__NO_JOB_SLOTS; //failed to schedule, no job slots remaining
+	if (job == NULL) {
+		if (interruptsEnabled) hal_interrupt_enable();
+		return DRV_SCHED_ERR__NO_JOB_SLOTS; //failed to schedule, no job slots remaining
+	}
 	
 	job->next = NULL;
 	job->interval = interval_ms;
@@ -162,6 +171,8 @@ static enum drv_sched_err_e schedule(void (*func_ptr)(void*), void * func_arg, e
 	} else {
 		//shouldn't be possible
 	}
+	
+	if (interruptsEnabled) hal_interrupt_enable();
 	
 	return DRV_SCHED_ERR__NONE;
 }
@@ -191,12 +202,18 @@ enum drv_sched_err_e drv_sched_repeating_at(void (*func_ptr)(void*), void * func
 }
 
 enum drv_sched_err_e drv_sched_onAbsoluteAvailable(void (*func_ptr)(void*), void * func_arg) {
+	bool interruptsEnabled = hal_interrupt_isEnabled();
+	hal_interrupt_disable();
 	struct job_s * job = popEmptyJob();
-	if (job == NULL) return DRV_SCHED_ERR__NO_JOB_SLOTS;
+	if (job == NULL) {
+		if (interruptsEnabled) hal_interrupt_enable();
+		return DRV_SCHED_ERR__NO_JOB_SLOTS;
+	}
 	job->func_ptr = func_ptr;
 	job->func_arg = func_arg;
 	job->type = JOB_TYPE__ONCE;
 	insertOnAbsoluteAvailableJob(job);
+	if (interruptsEnabled) hal_interrupt_enable();
 	return DRV_SCHED_ERR__NONE;
 }
 
@@ -205,6 +222,8 @@ static enum power_state_e {
 	STATE_SLEEP,
 } powerState = STATE_AWAKE;
 
+
+static uint16_t num = 0;
 /*
 Will attempt to sleep for as long as possible, only waking for scheduled jobs
 */
@@ -214,13 +233,19 @@ __attribute__((noreturn))
 void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle edge cases well, such as GPS time going back slightly. Also priority does nothing.
 	while (1) {
 		{ //schedule relative jobs
+			bool interruptsEnabled = hal_interrupt_isEnabled();
+			hal_interrupt_disable();
 			lib_datetime_interval_t curTime = drv_timer_getMonotonicTime();
 			struct job_s * job = state.head_ready;
 			if (job != NULL && job->time <= curTime) {
 				state.head_ready = job->next;
 				job->next = NULL;
 				
-				if (job->func_ptr != NULL) (*(job->func_ptr))(job->func_arg); //run job
+				if (job->func_ptr != NULL) {
+					if (interruptsEnabled) hal_interrupt_enable();
+					(*(job->func_ptr))(job->func_arg); //run job
+					hal_interrupt_disable();
+				}
 				
 				if (job->type == JOB_TYPE__ONCE) {
 					insertEmptyJob(job);
@@ -232,9 +257,12 @@ void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle e
 					insertEmptyJob(job);
 				}
 			}
+			if (interruptsEnabled) hal_interrupt_enable();
 		}
 		
 		{ //schedule absolute jobs
+			bool interruptsEnabled = hal_interrupt_isEnabled();
+			hal_interrupt_disable();
 			lib_datetime_time_t curTime;
 			if (drv_timer_getAbsoluteTime(&curTime) == DRV_TIMER_ERR__NONE) { //if absolute time is available
 				if (curTime < state.lastRunTime) { //time rollover (new day), handle accordingly
@@ -248,7 +276,11 @@ void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle e
 							job->next = NULL;
 							
 							if (job->time >= state.lastRunTime) { //if job was missed at end of day
-								if (job->func_ptr != NULL) (*(job->func_ptr))(job->func_arg); //run job
+								if (job->func_ptr != NULL) {
+									if (interruptsEnabled) hal_interrupt_enable();
+									(*(job->func_ptr))(job->func_arg); //run job
+									hal_interrupt_disable();
+								}
 								
 								if (job->type == JOB_TYPE__ONCE_AT) {
 									insertEmptyJob(job);
@@ -278,7 +310,11 @@ void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle e
 					state.head_timed = job->next;
 					job->next = NULL;
 					
-					if (job->func_ptr != NULL) (*(job->func_ptr))(job->func_arg); //run job
+					if (job->func_ptr != NULL) {
+						if (interruptsEnabled) hal_interrupt_enable();
+						(*(job->func_ptr))(job->func_arg); //run job
+						hal_interrupt_disable();
+					}
 					
 					if (job->type == JOB_TYPE__ONCE_AT) {
 						insertEmptyJob(job);
@@ -290,46 +326,76 @@ void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle e
 					state.lastRunTime = curTime;
 				}
 			}
+			if (interruptsEnabled) hal_interrupt_enable();
 		}
-		
-		#define TIME_SLEEP 1000
+		#define TIME_SLEEP 1500
 		#define TIME_IDLE 10
 		{ //power //TODO manage powerState
 			lib_datetime_interval_t curMonoTime = drv_timer_getMonotonicTime();
-			lib_datetime_interval_t timeUntilMono = state.head_ready->time - curMonoTime;
-			if (timeUntilMono > TIME_SLEEP) {
+			if (state.head_ready != NULL) {
+				lib_datetime_interval_t timeUntilMono = state.head_ready->time - curMonoTime;
+				if (timeUntilMono > TIME_SLEEP) {
+					lib_datetime_time_t curAbsoluteTime;
+					if (drv_timer_getAbsoluteTime(&curAbsoluteTime) == DRV_TIMER_ERR__NONE && state.head_timed != NULL) {
+						lib_datetime_interval_t timeUntilAbsolute = state.head_timed->time - curAbsoluteTime;
+						if (timeUntilAbsolute > TIME_SLEEP) {
+							//SLEEP
+							struct lib_datetime_s dt = (struct lib_datetime_s) {
+								.sec = (timeUntilAbsolute < timeUntilMono) ? timeUntilAbsolute/1000 : timeUntilMono/1000,
+								.ms = 1,
+							};
+							if (state.func_onSleep_ptr != NULL) (*(state.func_onSleep_ptr))();
+							//hal_power_setMode(PWR_SLEEP, &dt);
+							if (state.func_onWake_ptr != NULL) (*(state.func_onWake_ptr))();
+						}
+					} else {
+						//SLEEP
+						struct lib_datetime_s dt = (struct lib_datetime_s) {
+							.sec = timeUntilMono/1000,
+							.ms = 1,
+						};
+						if (state.func_onSleep_ptr != NULL) (*(state.func_onSleep_ptr))();
+						//hal_power_setMode(PWR_SLEEP, &dt);
+						if (state.func_onWake_ptr != NULL) (*(state.func_onWake_ptr))();
+					}
+				} else if (timeUntilMono > TIME_IDLE) {
+					lib_datetime_time_t curAbsoluteTime;
+					if (drv_timer_getAbsoluteTime(&curAbsoluteTime) == DRV_TIMER_ERR__NONE && state.head_timed != NULL) {
+						lib_datetime_interval_t timeUntilAbsolute = state.head_timed->time - curAbsoluteTime;
+						if (timeUntilAbsolute > TIME_IDLE) {
+							//IDLE
+							hal_power_setMode(PWR_IDLE, NULL);
+						}
+					} else {
+						//IDLE
+						hal_power_setMode(PWR_IDLE, NULL);
+					}
+				}
+			} else {
 				lib_datetime_time_t curAbsoluteTime;
-				if (drv_timer_getAbsoluteTime(&curAbsoluteTime) == DRV_TIMER_ERR__NONE) {
+				if (drv_timer_getAbsoluteTime(&curAbsoluteTime) == DRV_TIMER_ERR__NONE && state.head_timed != NULL) {
 					lib_datetime_interval_t timeUntilAbsolute = state.head_timed->time - curAbsoluteTime;
 					if (timeUntilAbsolute > TIME_SLEEP) {
 						//SLEEP
 						struct lib_datetime_s dt = (struct lib_datetime_s) {
-							.sec = (timeUntilAbsolute < timeUntilMono) ? timeUntilAbsolute/1000 : timeUntilMono/1000,
+							.sec = timeUntilAbsolute/1000,
+							.ms = 1,
 						};
-						(*(state.func_onSleep_ptr))();
-						hal_power_setMode(PWR_SLEEP, &dt);
-						(*(state.func_onWake_ptr))();
-					}
-				} else {
-					//SLEEP
-					struct lib_datetime_s dt = (struct lib_datetime_s) {
-						.sec = timeUntilMono/1000,
-					};
-					(*(state.func_onSleep_ptr))();
-					hal_power_setMode(PWR_SLEEP, &dt);
-					(*(state.func_onWake_ptr))();
-				}
-			} else if (timeUntilMono > TIME_IDLE) {
-				lib_datetime_time_t curAbsoluteTime;
-				if (drv_timer_getAbsoluteTime(&curAbsoluteTime) == DRV_TIMER_ERR__NONE) {
-					lib_datetime_interval_t timeUntilAbsolute = state.head_timed->time - curAbsoluteTime;
-					if (timeUntilAbsolute > TIME_IDLE) {
+						if (state.func_onSleep_ptr != NULL) (*(state.func_onSleep_ptr))();
+						//hal_power_setMode(PWR_SLEEP, &dt);
+						if (state.func_onWake_ptr != NULL) (*(state.func_onWake_ptr))();
+					} else if (timeUntilAbsolute > TIME_IDLE) {
 						//IDLE
 						hal_power_setMode(PWR_IDLE, NULL);
 					}
 				} else {
-					//IDLE
-					hal_power_setMode(PWR_IDLE, NULL);
+					//SLEEP
+					struct lib_datetime_s dt = (struct lib_datetime_s) {
+						.year = 2100,
+					};
+					if (state.func_onSleep_ptr != NULL) (*(state.func_onSleep_ptr))();
+					//hal_power_setMode(PWR_SLEEP, &dt);
+					if (state.func_onWake_ptr != NULL) (*(state.func_onWake_ptr))();
 				}
 			}
 		}

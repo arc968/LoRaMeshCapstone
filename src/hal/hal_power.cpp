@@ -18,9 +18,9 @@
 	#error "Hardware not yet implemented"
 #endif	
 
-uint8_t rtcenable = 1, interruptwasdisabled = 0;;
-uint64_t currentmillis;
-lib_datetime_s * wakeAlarm;
+static uint8_t rtcenable = 1, interruptwasdisabled = 0;;
+static uint64_t currentmillis;
+static lib_datetime_s * wakeAlarm;
 
 void hal_power_wake(void) {	
 	#if defined(HW_MKRWAN1300_H)
@@ -40,14 +40,18 @@ void hal_power_idle() {
 	
 	#if defined(HW_MKRWAN1300_H)
 		#if defined(HW_ARDUINO)
-			while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0) {
-				LowPower.idle();
-			}
+			//if (wakeAlarm == NULL) {
+			//	LowPower.idle();
+			//else {
+				do {
+					LowPower.idle();
+				} while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0);
+			//}
 			
 			//currentmillis = hal_timer_millis();
 			
 			//while (wakeAlarm->ms < hal_timer_millis() - currentmillis) {
-				LowPower.idle(wakeAlarm->ms);
+				//LowPower.idle(wakeAlarm->ms);
 			//}
 		#else
 			
@@ -111,14 +115,14 @@ void hal_power_sleep() {
 	
 	#if defined(HW_MKRWAN1300_H)
 		#if defined(HW_ARDUINO)
-			while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0) {
+			do {
 				LowPower.sleep();
-			}
+			} while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0);
 			
 			//currentmillis = hal_timer_millis();
 			
 			//while (wakeAlarm->ms < hal_timer_millis() - currentmillis) {
-				LowPower.sleep(wakeAlarm->ms);
+				//LowPower.sleep(wakeAlarm->ms);
 			//}
 		#else
 			

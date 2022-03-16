@@ -31,8 +31,8 @@ extern "C" {
 
 
 ///////////////////IC CHIP DEFINES////////////////////////
-//#define MKRWAN1300
-#define RAK4260 //iBug
+#define MKRWAN1300
+//#define RAK4260 //iBug
 //#define RAK4600
 //#define RAK11300
 
