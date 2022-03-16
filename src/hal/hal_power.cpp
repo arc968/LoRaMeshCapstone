@@ -41,7 +41,11 @@ void hal_power_idle() {
 	#if defined(HW_MKRWAN1300_H)
 		#if defined(HW_ARDUINO)
 				do {
-					LowPower.idle();
+					//LowPower.idle();
+					SCB->SCR &= ~SCB_SCR_SLEEPDEEP_Msk;
+					PM->SLEEP.reg = 0;
+					__DSB();
+					__WFI();
 				} while (rtcenable ? (!hal_rtc_compareClockToAlarm()) : 0);
 		#else
 			
