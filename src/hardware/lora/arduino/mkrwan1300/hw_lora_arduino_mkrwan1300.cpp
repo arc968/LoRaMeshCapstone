@@ -26,15 +26,15 @@ extern "C" {
 #endif //HW_ARDUINO
 
 
-void drv_lora_init(struct drv_lora_s * handle, enum drv_lora_region_e region, pin_t pin) {
+void drv_lora_init(struct drv_lora_s * handle, uint64_t freq, pin_t pin) {
 	
 	#ifdef HW_ARDUINO
-		while (!LoRa.begin(region));
+		while (!LoRa.begin(freq));
 	#else
 		
 	#endif //HW_ARDUINO
 	handle->pin = pin;
-	/*handle->region = region;
+	/*handle->frequency = freq;
 	handle->bandwidth = DRV_LORA_BW__125kHz;
 	handle->spreadingFactor = DRV_LORA_SF__7;
 	handle->codingRate = DRV_LORA_CR__4_5;
@@ -176,6 +176,23 @@ void drv_lora_setCodingRate(struct drv_lora_s * handle, enum drv_lora_codingRate
 /*enum drv_lora_codingRate_e drv_lora_getCodingRate(struct drv_lora_s * handle) {
 	
 	return handle->codingRate;
+	
+}*/
+
+void drv_lora_setFrequency(struct drv_lora_s * handle, uint64_t freq) {
+	
+	#ifdef HW_ARDUINO
+		LoRa.setFrequency(freq);
+	#else
+		
+	#endif //HW_ARDUINO
+	
+	//handle->frequency = freq;
+	
+}
+/*uint64_t drv_lora_getFrequency(struct drv_lora_s * handle) {
+	
+	return handle->frequency;
 	
 }*/
 
