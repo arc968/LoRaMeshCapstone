@@ -5,12 +5,14 @@
 
 static volatile lib_datetime_interval_t timestamp = 0;
 
+static volatile bool absoluteDateTimeInitialized = false;
 static volatile bool absoluteDateInitialized = false;
 static volatile bool absoluteTimeInitialized = false;
 static volatile bool initialized = false;
 
 static struct lib_datetime_s absoluteTime = {0}; //does not handle volatile properly
 
+static void (* volatile cb_onAbsoluteDateTimeAvailable)(void) = NULL;
 static void (* volatile cb_onAbsoluteTimeAvailable)(void) = NULL;
 static void (* volatile cb_onAbsoluteDateAvailable)(void) = NULL;
 
@@ -33,12 +35,20 @@ lib_datetime_interval_t drv_timer_getMonotonicTime(void) {
 	//return monotonic_ms;
 }
 
+bool drv_timer_absoluteDateTimeIsAvailable(void) {
+	return absoluteDateTimeInitialized;
+}
+
 bool drv_timer_absoluteDateIsAvailable(void) {
 	return absoluteDateInitialized;
 }
 
 bool drv_timer_absoluteTimeIsAvailable(void) {
 	return absoluteTimeInitialized;
+}
+
+void drv_timer_setCallbackOnAbsoluteDateTimeAvailable(void (*func_ptr)(void)) {
+	cb_onAbsoluteDateTimeAvailable = func_ptr;
 }
 
 void drv_timer_setCallbackOnAbsoluteTimeAvailable(void (*func_ptr)(void)) {
@@ -51,8 +61,12 @@ void drv_timer_setCallbackOnAbsoluteDateAvailable(void (*func_ptr)(void)) {
 
 void drv_timer_setAbsoluteDateTime(struct lib_datetime_s * dt) {
 	//timestamp = monotonic_ms;
-	timestamp = hal_timer_millis();
+	timestamp = drv_timer_getMonotonicTime();
 	lib_datetime_copy(dt, &absoluteTime);
+	if (!absoluteDateTimeInitialized) {
+		absoluteDateTimeInitialized = true;
+		if (cb_onAbsoluteDateTimeAvailable != NULL) (*cb_onAbsoluteDateTimeAvailable)();
+	}
 	if (!absoluteTimeInitialized) {
 		absoluteTimeInitialized = true;
 		if (cb_onAbsoluteTimeAvailable != NULL) (*cb_onAbsoluteTimeAvailable)();
@@ -65,17 +79,21 @@ void drv_timer_setAbsoluteDateTime(struct lib_datetime_s * dt) {
 
 void drv_timer_setAbsoluteDate(struct lib_datetime_s * dt) {
 	//timestamp = monotonic_ms;
-	timestamp = hal_timer_millis();
+	timestamp = drv_timer_getMonotonicTime();
 	lib_datetime_copyDate(dt, &absoluteTime);
 	if (!absoluteDateInitialized) {
 		absoluteDateInitialized = true;
 		if (cb_onAbsoluteDateAvailable != NULL) (*cb_onAbsoluteDateAvailable)();
 	}
+	if (absoluteTimeInitialized) {
+		absoluteDateTimeInitialized = true;
+		if (cb_onAbsoluteDateTimeAvailable != NULL) (*cb_onAbsoluteDateTimeAvailable)();
+	}
 }
 
 void drv_timer_setAbsoluteTime(lib_datetime_time_t time) {
 	//timestamp = monotonic_ms;
-	timestamp = hal_timer_millis();
+	timestamp = drv_timer_getMonotonicTime();
 	struct lib_datetime_s dt;
 	lib_datetime_convertTimeToDatetime(time, &dt); //TODO error checking
 	lib_datetime_copyTime(&dt, &absoluteTime);
@@ -83,11 +101,32 @@ void drv_timer_setAbsoluteTime(lib_datetime_time_t time) {
 		absoluteTimeInitialized = true;
 		if (cb_onAbsoluteTimeAvailable != NULL) (*cb_onAbsoluteTimeAvailable)();
 	}
+	if (absoluteDateInitialized) {
+		absoluteDateTimeInitialized = true;
+		if (cb_onAbsoluteDateTimeAvailable != NULL) (*cb_onAbsoluteDateTimeAvailable)();
+	}
+}
+
+void drv_timer_setRealtime(lib_datetime_realtime_t realtime) {
+	timestamp = drv_timer_getMonotonicTime();
+	lib_datetime_convertRealtimeToDatetime(realtime, &absoluteTime);
+	if (!absoluteDateTimeInitialized) {
+		absoluteDateTimeInitialized = true;
+		if (cb_onAbsoluteDateTimeAvailable != NULL) (*cb_onAbsoluteDateTimeAvailable)();
+	}
+	if (!absoluteTimeInitialized) {
+		absoluteTimeInitialized = true;
+		if (cb_onAbsoluteTimeAvailable != NULL) (*cb_onAbsoluteTimeAvailable)();
+	}
+	if (!absoluteDateInitialized) {
+		absoluteDateInitialized = true;
+		if (cb_onAbsoluteDateAvailable != NULL) (*cb_onAbsoluteDateAvailable)();
+	}
 }
 
 enum drv_timer_err_e drv_timer_getAbsoluteDateTime(struct lib_datetime_s * dt) {
 	//lib_datetime_interval_t offset = monotonic_ms - timestamp;
-	lib_datetime_interval_t offset = hal_timer_millis() - timestamp;
+	lib_datetime_interval_t offset = drv_timer_getMonotonicTime() - timestamp;
 	if (!absoluteTimeInitialized) return DRV_TIMER_ERR__ABSOLUTE_TIME_TMP_UNAVAILABLE;
 	if (!absoluteDateInitialized) return DRV_TIMER_ERR__ABSOLUTE_DATE_TMP_UNAVAILABLE;
 	*dt = absoluteTime;
@@ -97,7 +136,7 @@ enum drv_timer_err_e drv_timer_getAbsoluteDateTime(struct lib_datetime_s * dt) {
 
 enum drv_timer_err_e drv_timer_getAbsoluteDate(struct lib_datetime_s * dt) {
 	//lib_datetime_interval_t offset = monotonic_ms - timestamp;
-	lib_datetime_interval_t offset = hal_timer_millis() - timestamp;
+	lib_datetime_interval_t offset = drv_timer_getMonotonicTime() - timestamp;
 	if (!absoluteDateInitialized) return DRV_TIMER_ERR__ABSOLUTE_DATE_TMP_UNAVAILABLE;
 	*dt = absoluteTime;
 	lib_datetime_addIntervalToDatetime(dt, offset);
@@ -107,7 +146,7 @@ enum drv_timer_err_e drv_timer_getAbsoluteDate(struct lib_datetime_s * dt) {
 
 enum drv_timer_err_e drv_timer_getAbsoluteTime(lib_datetime_time_t * time) {
 	//lib_datetime_interval_t offset = monotonic_ms - timestamp;
-	lib_datetime_interval_t offset = hal_timer_millis() - timestamp;
+	lib_datetime_interval_t offset = drv_timer_getMonotonicTime() - timestamp;
 	if (!absoluteTimeInitialized) return DRV_TIMER_ERR__ABSOLUTE_TIME_TMP_UNAVAILABLE;
 	lib_datetime_convertDatetimeToTime(&absoluteTime, time);
 	*time = lib_datetime_addIntervalToTime(*time, offset);
