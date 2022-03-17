@@ -17,10 +17,10 @@ typedef uint16_t channel_t;
 typedef uint32_t peer_uid_t;
 
 enum appointment_type_e {
-	APPT_DATA_SEND,
-	APPT_DATA_RECV,
 	APPT_DISC_SEND,
 	APPT_DISC_RECV,
+	APPT_DATA_SEND,
+	APPT_DATA_RECV,
 };
 
 /*
@@ -38,6 +38,8 @@ struct peer_s {
 };
 
 struct appointment_s {
+	struct appointment_s * next;
+	
 	lib_datetime_realtime_t realtime;
 	
 	enum appointment_type_e type;
