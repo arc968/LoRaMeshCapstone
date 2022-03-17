@@ -128,7 +128,7 @@ uint64_t hal_timer_millis(void) {
 	#if defined(HW_ARDUINO)
 		return millis();
 	#elif defined(HW_MKRWAN1300_H)
-		return millis();
+		return 0; //TODO
 	#elif defined(HW_RAK4260_H)
 		
 		if (millisisinitialized != 0) {
