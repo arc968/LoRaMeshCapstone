@@ -25,6 +25,7 @@ void drv_timer_setCallbackOnAbsoluteDateTimeAvailable(void (*func_ptr)(void));
 void drv_timer_setCallbackOnAbsoluteTimeAvailable(void (*func_ptr)(void));
 void drv_timer_setCallbackOnAbsoluteDateAvailable(void (*func_ptr)(void));
 
+void drv_timer_setAbsoluteDateTimeWithTimestamp(struct lib_datetime_s * dt, lib_datetime_interval_t ts);
 void drv_timer_setAbsoluteDateTime(struct lib_datetime_s * dt);
 void drv_timer_setAbsoluteDate(struct lib_datetime_s * dt);
 void drv_timer_setAbsoluteTime(lib_datetime_time_t time);

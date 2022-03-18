@@ -14,7 +14,7 @@ extern "C" {
 
 typedef uint16_t channel_t;
 
-typedef uint32_t peer_uid_t;
+typedef uint64_t peer_uid_t;
 
 enum appointment_type_e {
 	APPT_DISC_SEND,
@@ -33,7 +33,6 @@ enum drv_mesh_bandwidth_e {
 */
 
 struct peer_s {
-	ip_t ip;
 	peer_uid_t uid;
 };
 
@@ -46,7 +45,8 @@ struct appointment_s {
 	
 	struct peer_s * peer;
 	
-	channel_t channel;
+	//channel_t channel;
+	uint64_t frequency;
 	enum drv_lora_bandwidth_e bandwidth;
 	enum drv_lora_spreadingFactor_e spreadingFactor;
 	enum drv_lora_codingRate_e codingRate;
@@ -69,23 +69,23 @@ enum packet_type_e {
 };
 
 enum ciphermask_e {
-	CIPHER__NONE = 0,
-	CIPHER__AES = (0x1 << 0),
-	CIPHER__PSK_AES = (0x1 << 1),
-	CIPHER__XCHACHA20 = (0x1 << 2),
-	CIPHER__PSK_XCHACHA20 = (0x1 << 3),
+	CIPHER__NONE = (0x1 << 0),
+	CIPHER__AES = (0x1 << 1),
+	CIPHER__PSK_AES = (0x1 << 2),
+	CIPHER__XCHACHA20 = (0x1 << 3),
+	CIPHER__PSK_XCHACHA20 = (0x1 << 4),
 };
 
 #pragma scalar_storage_order big-endian
 struct ciphermask_s {
 	union {
-		uint8_t none:1,
+		uint16_t none:1,
 				aes:1,
 				psk_aes:1,
 				xchacha20:1,
 				psk_xchacha20:1,
 				:0;
-		uint8_t mask;
+		uint16_t mask;
 	};
 } __attribute__((packed, aligned(1)));
 #pragma scalar_storage_order default

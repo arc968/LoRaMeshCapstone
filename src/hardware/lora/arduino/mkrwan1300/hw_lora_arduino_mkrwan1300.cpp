@@ -109,11 +109,11 @@ void drv_lora_setTxPower(struct drv_lora_s * handle, uint16_t dB) {
 	
 }*/
 
-void drv_lora_setPreamble(struct drv_lora_s * handle, uint16_t ms) {
+void drv_lora_setPreamble(struct drv_lora_s * handle, uint16_t symbols) {
 	
-	if (ms > 6 && ms < 65535) {
+	if (symbols >= 6 && symbols <= 65535) {
 		#ifdef HW_ARDUINO
-			LoRa.setPreambleLength(ms);
+			LoRa.setPreambleLength(symbols);
 		#else
 			
 		#endif //HW_ARDUINO
@@ -199,28 +199,17 @@ void drv_lora_setFrequency(struct drv_lora_s * handle, uint64_t freq) {
 void drv_lora_recvPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet) {
 	
 	#ifdef HW_ARDUINO
-		uint8_t indx = 0;
-		
-		if (LoRa.parsePacket(packet->size)) {
-			while (LoRa.available() && indx < packet->size) {
-				
-				packet->buf[indx] = LoRa.read();
-				
+		packet->size = 0;
+		int size = LoRa.parsePacket();
+		if (size > 0) {
+			for (int i=0; LoRa.available() && i < size; i++) {
+				packet->buf[i] = LoRa.read();
+				packet->size++;
 			}
 			
 			packet->rssi = LoRa.packetRssi();
 			packet->snr = LoRa.packetSnr();
 			packet->freqerr = LoRa.packetFrequencyError();
-			
-			indx++;
-			
-		}
-		
-		if (indx == 0) {
-			packet->size = 0;
-		}
-		else if (indx < packet->size-1) {
-			packet->size = indx + 1;
 		}
 	#else
 		
@@ -232,11 +221,21 @@ void drv_lora_recvPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * 
 void drv_lora_sendPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet) {
 	
 	#ifdef HW_ARDUINO
-		while (LoRa.beginPacket());
+	//while (LoRa.beginPacket());
+	if (LoRa.beginPacket()) {
+		LoRa.write(packet->buf, packet->size);
+		LoRa.endPacket();
+	}
+	#else
+		
+	#endif //HW_ARDUINO
 	
-	LoRa.write(packet->buf, packet->size);
+}
+
+uint8_t drv_lora_random(struct drv_lora_s * handle) {
 	
-	LoRa.endPacket();
+	#ifdef HW_ARDUINO
+		return LoRa.random();
 	#else
 		
 	#endif //HW_ARDUINO

@@ -14,23 +14,23 @@ enum job_type_e {
 };
 
 struct job_s {
-	struct job_s * next;
-	lib_datetime_interval_t interval;
-	lib_datetime_interval_t time;
-	void (*func_ptr)(void*);
-	void * func_arg;
-	enum drv_sched_pri_e priority;
-	enum job_type_e type;
+	volatile struct job_s * next;
+	volatile lib_datetime_interval_t interval;
+	volatile lib_datetime_interval_t time;
+	volatile void (*func_ptr)(void*);
+	volatile void * func_arg;
+	volatile enum drv_sched_pri_e priority;
+	volatile enum job_type_e type;
 };
 
 struct state_s {
-	struct job_s * head_ready;
-	struct job_s * head_timed;
+	volatile struct job_s * head_ready;
+	volatile struct job_s * head_timed;
 	//struct job_s * head_later;
-	struct job_s * head_empty;
-	struct job_s * head_onAbsoluteAvailable;
-	void (*func_onSleep_ptr)(void);
-	void (*func_onWake_ptr)(void);
+	volatile struct job_s * head_empty;
+	volatile struct job_s * head_onAbsoluteAvailable;
+	volatile void (*func_onSleep_ptr)(void);
+	volatile void (*func_onWake_ptr)(void);
 	//lib_datetime_time_t lastRunTime;
 	struct job_s jobs[DRV_SCHED__MAX_JOBS];
 } state;
@@ -253,7 +253,9 @@ void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle e
 				
 				if (job->func_ptr != NULL) {
 					if (interruptsEnabled) hal_interrupt_enable();
+					__DSB();
 					(*(job->func_ptr))(job->func_arg); //run job
+					__DSB();
 					hal_interrupt_disable();
 				}
 				
@@ -321,7 +323,9 @@ void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle e
 					
 					if (job->func_ptr != NULL) {
 						if (interruptsEnabled) hal_interrupt_enable();
+						__DSB();
 						(*(job->func_ptr))(job->func_arg); //run job
+						__DSB();
 						hal_interrupt_disable();
 					}
 					
@@ -338,7 +342,7 @@ void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle e
 			}
 			if (interruptsEnabled) hal_interrupt_enable();
 		}
-		//hal_power_setMode(PWR_IDLE, NULL);
+		hal_power_setMode(PWR_IDLE, NULL);
 		/*
 		#define TIME_SLEEP 1500
 		#define TIME_IDLE 1

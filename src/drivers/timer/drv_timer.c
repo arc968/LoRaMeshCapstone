@@ -60,8 +60,12 @@ void drv_timer_setCallbackOnAbsoluteDateAvailable(void (*func_ptr)(void)) {
 }
 
 void drv_timer_setAbsoluteDateTime(struct lib_datetime_s * dt) {
+	drv_timer_setAbsoluteDateTimeWithTimestamp(dt, drv_timer_getMonotonicTime());
+}
+
+void drv_timer_setAbsoluteDateTimeWithTimestamp(struct lib_datetime_s * dt, lib_datetime_interval_t ts) {
 	//timestamp = monotonic_ms;
-	timestamp = drv_timer_getMonotonicTime();
+	timestamp = ts;
 	lib_datetime_copy(dt, &absoluteTime);
 	if (!absoluteDateTimeInitialized) {
 		absoluteDateTimeInitialized = true;

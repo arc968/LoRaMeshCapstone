@@ -38,12 +38,13 @@ static volatile bool runonce = false;
 
 static void job_getGpsMessage(void * arg) {
 	
-	hal_serial_write(hal_serial0, "job_getGpsMessage\n", sizeof("job_getGpsMessage\n"));
+	hal_serial_write(hal_serial0, "job_getGpsMessage()\n", sizeof("job_getGpsMessage()\n")-1);
 	//uint8_t tmp1 = sizeof(struct ubx_msg__NAV_TIMEUTC__TimeSolution_s);
 	//hal_serial_write(hal_serial0, &tmp1, 1);
-	
+	while (true) {
 	int msg_byte = hal_serial_read(hal_serial1);
 	for (int i=0; i<128; i++) {
+		if (msg_byte < 0) break;
 		if (msg_byte == ubx_msg_sync_s_default.syncChar1) {
 			msg_byte = hal_serial_read(hal_serial1);
 			if (msg_byte == ubx_msg_sync_s_default.syncChar2) goto MSG_SYNC_FOUND;
@@ -52,7 +53,7 @@ static void job_getGpsMessage(void * arg) {
 		}
 	}
 	
-	hal_serial_write(hal_serial0, "no msg sync bytes found\n", sizeof("no msg sync bytes found\n"));
+	//hal_serial_write(hal_serial0, "no msg sync bytes found\n", sizeof("no msg sync bytes found\n"));
 	return; //no msg sync bytes found
 	
 	struct ubx_msg_header_s msg_header;
@@ -74,7 +75,7 @@ static void job_getGpsMessage(void * arg) {
 		if (msg_header.raw[i] != ubx_msg__NAV_TIMEUTC__TimeSolution_s_default.header.raw[i]) return;
 	}
 	
-	hal_serial_write(hal_serial0, "header match\n", sizeof("header match\n"));
+	//hal_serial_write(hal_serial0, "header match\n", sizeof("header match\n"));
 	
 	struct ubx_msg__NAV_TIMEUTC__TimeSolution_s timeutc = ubx_msg__NAV_TIMEUTC__TimeSolution_s_default;
 	for (int i=0; i<sizeof(ubx_msg__NAV_TIMEUTC__TimeSolution_s_default.payload); i++) {
@@ -90,7 +91,7 @@ static void job_getGpsMessage(void * arg) {
 		((uint8_t*)(&(timeutc.payload)))[i] = msg_byte;
 	}
 	
-	hal_serial_write(hal_serial0, "payload copied\n", sizeof("payload copied\n"));
+	//hal_serial_write(hal_serial0, "payload copied\n", sizeof("payload copied\n"));
 	
 	msg_byte = hal_serial_read(hal_serial1);
 	for (int cnt=0; cnt<10; cnt++) {
@@ -113,17 +114,20 @@ static void job_getGpsMessage(void * arg) {
 	}
 	uint8_t tmp_ck_b = msg_byte;
 	
-	hal_serial_write(hal_serial0, "checksum copied\n", sizeof("checksum copied\n"));
+	//hal_serial_write(hal_serial0, "checksum copied\n", sizeof("checksum copied\n"));
 	
 	UBX_MSG_CHECKSUM(timeutc);
 	
-	hal_serial_write(hal_serial0, "checksum calculated\n", sizeof("checksum calculated\n"));
+	//hal_serial_write(hal_serial0, "checksum calculated\n", sizeof("checksum calculated\n"));
 	
 	//hal_serial_write(hal_serial0, ((uint8_t*)(&(timeutc))), sizeof(timeutc));
 	
-	if (!(timeutc.checksum.ck_a == tmp_ck_a && timeutc.checksum.ck_b == tmp_ck_b)) return;
+	if (!(timeutc.checksum.ck_a == tmp_ck_a && timeutc.checksum.ck_b == tmp_ck_b)) {
+		hal_serial_write(hal_serial0, "checksum failure\n", sizeof("checksum failure\n"));
+		return;
+	}
 	
-	hal_serial_write(hal_serial0, "checksum validated\n", sizeof("checksum validated\n"));
+	//hal_serial_write(hal_serial0, "checksum validated\n", sizeof("checksum validated\n"));
 	
 	struct lib_datetime_s dt;
 	dt.year = timeutc.payload.year;
@@ -132,13 +136,15 @@ static void job_getGpsMessage(void * arg) {
 	dt.hour = timeutc.payload.hour;
 	dt.min = timeutc.payload.min;
 	dt.sec = timeutc.payload.sec;
-	dt.ms = drv_timer_getMonotonicTime() - timestamp;
+	dt.ms = 0;
 	//ignores flags
-	drv_timer_setAbsoluteDateTime(&dt);
+	//drv_timer_setAbsoluteDateTime(&dt);
+	drv_timer_setAbsoluteDateTimeWithTimestamp(&dt, timestamp);
 	
 	char tbuf[256];
-	sprintf(tbuf, "year:%u\nmonth:%u\nday:%u\nhour:%u\nmin:%u\nsec:%u\nms:%u\n",dt.year,dt.month,dt.day,dt.hour,dt.min,dt.sec,dt.ms);
-	hal_serial_write(hal_serial0, tbuf, strlen(tbuf)+1);
+	sprintf(tbuf, "\tyear:%u,month:%u,day:%u,hour:%u,min:%u,sec:%u,ms:%u\n",dt.year,dt.month,dt.day,dt.hour,dt.min,dt.sec,dt.ms);
+	hal_serial_write(hal_serial0, tbuf, strlen(tbuf));
+	}
 	
 	// uint8_t tmp[1] = {dt.ms};
 	// hal_serial_write(hal_serial0, tmp, 1);
@@ -147,10 +153,10 @@ static void job_getGpsMessage(void * arg) {
 	// size_t count = hal_serial_readBytes(hal_serial1, buf, sizeof(buf));
 	// hal_serial_write(hal_serial0, buf, count);
 	
-	msg_byte = hal_serial_read(hal_serial1);
+	/* msg_byte = hal_serial_read(hal_serial1);
 	while (msg_byte >= 0) {
 		msg_byte = hal_serial_read(hal_serial1);
-	}
+	} */
 	
 	// struct lib_datetime_s dt;
 	// dt.year = 2022;
@@ -208,7 +214,7 @@ static void isr_pps(void) {
 		// runonce = true;
 	// }
 	
-	drv_sched_once(job_getGpsMessage, NULL, DRV_SCHED_PRI__NORMAL, 100);
+	drv_sched_once(job_getGpsMessage, NULL, DRV_SCHED_PRI__NORMAL, 250);
 	
 	// lib_datetime_realtime_t rt;
 	// drv_timer_getRealtime(&rt);
@@ -337,7 +343,7 @@ void drv_gps_init(struct drv_gps_s * handle) {
 	//enable interrupts on GPS pulse GPIO pin
 	hal_interrupt_attachPin(0, isr_pps, INTERRUPT_FALLING);
 	
-	msg_byte = hal_serial_read(hal_serial1);
+	int msg_byte = hal_serial_read(hal_serial1);
 	while (msg_byte >= 0) {
 		msg_byte = hal_serial_read(hal_serial1);
 	}

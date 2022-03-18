@@ -77,7 +77,7 @@ void drv_lora_setMode(struct drv_lora_s * handle, enum drv_lora_mode_e mode);
 void drv_lora_setTxPower(struct drv_lora_s * handle, uint16_t dB);
 //uint16_t drv_lora_getTxPower(struct drv_lora_s * handle);
 
-void drv_lora_setPreamble(struct drv_lora_s * handle, uint16_t ms);
+void drv_lora_setPreamble(struct drv_lora_s * handle, uint16_t symbols);
 //uint16_t drv_lora_getPreamble(struct drv_lora_s * handle);
 
 void drv_lora_setBandwidth(struct drv_lora_s * handle, enum drv_lora_bandwidth_e);
@@ -95,6 +95,8 @@ void drv_lora_setFrequency(struct drv_lora_s * handle, uint64_t freq);
 void drv_lora_recvPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet);
 
 void drv_lora_sendPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet);
+
+uint8_t drv_lora_random(struct drv_lora_s * handle);
 
 #if defined (__cplusplus)
 }

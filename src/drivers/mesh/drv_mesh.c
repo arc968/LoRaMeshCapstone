@@ -81,14 +81,17 @@
         &(rb.buf[(rb.head == 0) ? RB_CAPACITY(rb)-1 : rb.head-1]))\
 ))
 
-#define DEBUG_PRINT_FUNCTION() {char tbuf[256]; sprintf(tbuf, "%s()\n",__func__); hal_serial_write(hal_serial0, tbuf, strlen(tbuf)+1);}
+#define DEBUG_PRINT_FUNCTION() {char tbuf[256]; sprintf(tbuf, "%s()\n",__func__); hal_serial_write(hal_serial0, tbuf, strlen(tbuf));}
 
-#define DEBUG_PRINT(...) {char tbuf[256]; sprintf(tbuf, __VA_ARGS__); hal_serial_write(hal_serial0, tbuf, strlen(tbuf)+1);}
+#define DEBUG_PRINT(...) {char tbuf[256]; sprintf(tbuf, __VA_ARGS__); hal_serial_write(hal_serial0, tbuf, strlen(tbuf));}
 
-#define DEBUG_PRINT_TIMESTAMP() {char tbuf[256]; sprintf(tbuf, "[%lu] ", drv_timer_getMonotonicTime()); hal_serial_write(hal_serial0, tbuf, strlen(tbuf)+1);}
+#define DEBUG_PRINT_TIMESTAMP() {char tbuf[256]; sprintf(tbuf, "[%lu] ", (uint32_t)drv_timer_getMonotonicTime()); hal_serial_write(hal_serial0, tbuf, strlen(tbuf));}
+
+#define DEBUG_PRINT_REALTIME() {char tbuf[256]; lib_datetime_realtime_t trt; drv_timer_getRealtime(&trt); sprintf(tbuf, "[rt:%lu] ", (uint32_t)trt); hal_serial_write(hal_serial0, tbuf, strlen(tbuf));}
 
 static struct state_s {
 	ip_t ip;
+	peer_uid_t uid;
 	struct peer_s peers[PEER_COUNT_MAX];
 	
 	struct {
@@ -164,34 +167,34 @@ static void getChannelConfiguration(struct channel_settings_s * settings, struct
 */
 
 static struct appointment_s * getNextGlobalDiscoveryChannelAppointment(void) {
-	DEBUG_PRINT_TIMESTAMP(); DEBUG_PRINT_FUNCTION();
+	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
 	struct appointment_s * appt = popEmptyAppt();
 	if (appt == NULL) return NULL;
 	struct lib_datetime_s dt;
 	drv_timer_getAbsoluteDateTime(&dt); //safe to ignore error
 	//DEBUG_PRINT("pre:\nmin:%u\nsec:%u\nms:%u\n",dt.min,dt.sec,dt.ms);
 	dt.sec = (dt.sec / 15) * 15;
-	if (dt.sec == 45) {
-		lib_datetime_addIntervalToDatetime(&dt, 1000*60);
-		dt.sec = 0;
-	} else {
-		dt.sec += 15;
-	}
 	dt.ms = 0;
 	
 	lib_datetime_realtime_t rt;
 	lib_datetime_convertDatetimeToRealtime(&dt, &rt);
+	rt += 1000*15;
 	
-	uint32_t tmp = lib_misc_fastrange32(lib_misc_XORshiftLFSR32((uint32_t)lib_misc_mix64(rt)), 15*1000);
+	uint32_t tmp = lib_misc_fastrange32(lib_misc_XORshiftLFSR32((uint32_t)lib_misc_mix64(rt)), 5*1000);
 	appt->realtime = rt + tmp;
-	appt->type = APPT_DISC_SEND;
+	if (lib_misc_fastrange32(lib_misc_XORshiftLFSR32((uint32_t)lib_misc_mix64(state.uid^drv_timer_getMonotonicTime())), 2)) { //TESTING
+		appt->type = APPT_DISC_RECV;
+	} else {
+		appt->type = APPT_DISC_SEND;
+	}
 	appt->peer = NULL;
-	appt->channel = 0;
+	//appt->channel = 0;
 	appt->bandwidth = DRV_LORA_BW__125kHz;
+	appt->frequency = getCenterFrequency(lib_misc_fastrange32(tmp, 128), appt->bandwidth); //TESTING
 	appt->spreadingFactor = DRV_LORA_SF__9;
 	appt->codingRate = DRV_LORA_CR__4_6;
 	
-	DEBUG_PRINT("tmp:%u\n", tmp); 
+	DEBUG_PRINT("tmp:%lu\n", tmp); 
 	//DEBUG_PRINT("post:\nmin:%u\nsec:%u\nms:%u\n",dt.min,dt.sec,dt.ms);
 	//DEBUG_PRINT("year:%u\nmonth:%u\nday:%u\nhour:%u\nmin:%u\nsec:%u\nms:%u\n",dt.year,dt.month,dt.day,dt.hour,dt.min,dt.sec,dt.ms);
 	return appt;
@@ -208,47 +211,97 @@ static struct appointment_s * getNextGlobalDiscoveryChannelAppointment(void) {
 }*/
 
 static void drv_mesh_worker_disc_send(void * arg) {
-	DEBUG_PRINT_TIMESTAMP(); DEBUG_PRINT_FUNCTION();
+	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
+	
+	struct drv_lora_packet_s lora_packet = {0};
+	lora_packet.size = sizeof(struct packet_type_disc_s);
+	
+	struct packet_type_disc_s * disc_packet = (struct packet_type_disc_s *)&(lora_packet.buf[0]);
+	disc_packet->header.type = PACKET_TYPE__DISC;
+	disc_packet->peer.uid = lib_misc_XORshiftLFSR64(lib_misc_mix64(state.uid^drv_timer_getMonotonicTime()));
+	disc_packet->ciphermask.mask = CIPHER__NONE;
+	
 	struct appointment_s * appt = (struct appointment_s *) arg;
+	//drv_lora_setMode(&state.radio, DRV_LORA_MODE__IDLE);
+	drv_lora_setPreamble(&state.radio, 32);
+	drv_lora_setBandwidth(&state.radio, appt->bandwidth);
+	drv_lora_setSpreadingFactor(&state.radio, appt->spreadingFactor);
+	drv_lora_setCodingRate(&state.radio, appt->codingRate);
+	drv_lora_setFrequency(&state.radio, appt->frequency);
+	hal_timer_delay(100);
+	DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Sending packet as [%lu]...\n", (uint32_t)disc_packet->peer.uid);
+	drv_lora_sendPacket(&state.radio, &lora_packet);
+	DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Packet sent.\n");
+	//drv_lora_setMode(&state.radio, DRV_LORA_MODE__SEND);
+	
 	insertEmptyAppt(appt);
 }
 
 static void drv_mesh_worker_disc_recv(void * arg) {
-	DEBUG_PRINT_TIMESTAMP(); DEBUG_PRINT_FUNCTION();
+	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
+	
+	struct drv_lora_packet_s lora_packet = {0};
+	
+	struct packet_type_disc_s * disc_packet = (struct packet_type_disc_s *)&(lora_packet.buf[0]);
+	
 	struct appointment_s * appt = (struct appointment_s *) arg;
+	//drv_lora_setMode(&state.radio, DRV_LORA_MODE__IDLE);
+	drv_lora_setPreamble(&state.radio, 16);
+	drv_lora_setBandwidth(&state.radio, appt->bandwidth);
+	drv_lora_setSpreadingFactor(&state.radio, appt->spreadingFactor);
+	drv_lora_setCodingRate(&state.radio, appt->codingRate);
+	drv_lora_setFrequency(&state.radio, appt->frequency);
+	
+	DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Receiving packet...\n");
+	
+	lib_datetime_interval_t start = drv_timer_getMonotonicTime();
+	while (lora_packet.size == 0 && drv_timer_getMonotonicTime() - start < 5000) {
+		drv_lora_recvPacket(&state.radio, &lora_packet);
+	}
+	
+	//hal_timer_delay(2000);
+	
+	//drv_lora_recvPacket(&state.radio, &lora_packet);
+	
+	if (lora_packet.size > 0) {
+		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Packet received from [%lu].\n", (uint32_t)disc_packet->peer.uid);
+	} else {
+		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("No packet received.\n");
+	}
+	
 	insertEmptyAppt(appt);
 }
 
 static void drv_mesh_worker_data_send(void * arg) {
-	DEBUG_PRINT_TIMESTAMP(); DEBUG_PRINT_FUNCTION();
+	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
 	struct appointment_s * appt = (struct appointment_s *) arg;
 	insertEmptyAppt(appt);
 }
 
 static void drv_mesh_worker_data_recv(void * arg) {
-	DEBUG_PRINT_TIMESTAMP(); DEBUG_PRINT_FUNCTION();
+	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
 	struct appointment_s * appt = (struct appointment_s *) arg;
 	insertEmptyAppt(appt);
 }
 
 static void drv_mesh_worker_scheduler(void * arg) {
-	DEBUG_PRINT_TIMESTAMP(); DEBUG_PRINT_FUNCTION();
+	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
 	struct appointment_s * appt = getNextGlobalDiscoveryChannelAppointment();
 	if (appt == NULL) return;
-	if (appt->type = APPT_DISC_SEND) {
+	if (appt->type == APPT_DISC_SEND) {
 		enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_disc_send, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
-	} else if (appt->type = APPT_DISC_RECV) {
+	} else if (appt->type == APPT_DISC_RECV) {
 		enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_disc_recv, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
-	} else if (appt->type = APPT_DATA_SEND) {
+	} else if (appt->type == APPT_DATA_SEND) {
 		enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_data_send, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
-	} else if (appt->type = APPT_DATA_RECV) {
+	} else if (appt->type == APPT_DATA_RECV) {
 		enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_data_recv, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
 	}
 }
 
 //runs once absolute scheduling is available
 static void drv_mesh_start(void * arg __attribute__((unused))) {
-	DEBUG_PRINT_TIMESTAMP(); DEBUG_PRINT_FUNCTION();
+	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
 
 	//drv_sched_once_at(drv_mesh_worker_disc_listener, appt, DRV_SCHED_PRI__REALTIME, lib_datetime_convertRealtimeToTime(appt->realtime));
 	struct lib_datetime_s dt;
@@ -262,6 +315,7 @@ static void drv_mesh_start(void * arg __attribute__((unused))) {
 	enum drv_sched_err_e err = drv_sched_repeating_at(drv_mesh_worker_scheduler, NULL, DRV_SCHED_PRI__REALTIME, rt+14000, 1000*15); //run 1 second before each 15 second block
 }
 
+//add runonce guard
 void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *)) {
 	DEBUG_PRINT_TIMESTAMP(); DEBUG_PRINT_FUNCTION();
 	//initialize datastructures
@@ -281,10 +335,14 @@ void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *)) {
 	//configure GPS for timekeeping mode as appropriate
 	
 	//initialize LoRa radio
-	//drv_lora_init(&state.radio, DRV_LORA_REGION_US915, 0);
+	drv_lora_init(&state.radio, getCenterFrequency(0, DRV_LORA_BW__125kHz), 0); //TESTING
 	//configure LoRa radio
+	drv_lora_setMode(&state.radio, DRV_LORA_MODE__IDLE);
 	
-	
+	for (int i=0; i<sizeof(state.uid); i++) {
+		state.uid <<= 8;
+		state.uid |= drv_lora_random(&state.radio);
+	}
 }
 
 enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * packet) {
