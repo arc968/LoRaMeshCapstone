@@ -92,9 +92,17 @@ void drv_lora_setCodingRate(struct drv_lora_s * handle, enum drv_lora_codingRate
 void drv_lora_setFrequency(struct drv_lora_s * handle, uint64_t freq);
 //uint64_t drv_lora_getFrequency(struct drv_lora_s * handle);
 
+uint16_t drv_lora_available(struct drv_lora_s * handle);
+
+uint16_t drv_lora_parsePacket(struct drv_lora_s * handle);
+
+void drv_lora_getPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet);
+
 void drv_lora_recvPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet);
 
 void drv_lora_sendPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet);
+
+void drv_lora_sendPacket_async(struct drv_lora_s * handle, struct drv_lora_packet_s * packet);
 
 uint8_t drv_lora_random(struct drv_lora_s * handle);
 
