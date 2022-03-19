@@ -115,10 +115,10 @@ void drv_lora_setMode(struct drv_lora_s * handle, enum drv_lora_mode_e mode) {
 		case DRV_LORA_MODE__IDLE_CLEAR:
 			#ifdef HW_ARDUINO
 				{
-				// clear IRQ's
-				int tirqFlags = drv_lora_readRegister(REG_IRQ_FLAGS);
-				drv_lora_writeRegister(REG_IRQ_FLAGS, tirqFlags);
-				LoRa.idle();
+					// clear IRQ's
+					int tirqFlags = drv_lora_readRegister(REG_IRQ_FLAGS);
+					drv_lora_writeRegister(REG_IRQ_FLAGS, tirqFlags);
+					LoRa.idle();
 				}
 			#else
 				
@@ -141,13 +141,13 @@ void drv_lora_setMode(struct drv_lora_s * handle, enum drv_lora_mode_e mode) {
 		case DRV_LORA_MODE__RECV_ONCE:
 			#ifdef HW_ARDUINO
 				{
-				// clear IRQ's
-				int tirqFlags = drv_lora_readRegister(REG_IRQ_FLAGS);
-				drv_lora_writeRegister(REG_IRQ_FLAGS, tirqFlags);
-				// reset FIFO address
-				drv_lora_writeRegister(REG_FIFO_ADDR_PTR, 0);
-				// put in single RX mode
-				drv_lora_writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_RX_SINGLE);
+					// clear IRQ's
+					int tirqFlags = drv_lora_readRegister(REG_IRQ_FLAGS);
+					drv_lora_writeRegister(REG_IRQ_FLAGS, tirqFlags);
+					// reset FIFO address
+					drv_lora_writeRegister(REG_FIFO_ADDR_PTR, 0);
+					// put in single RX mode
+					drv_lora_writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_RX_SINGLE);
 				}
 			#else
 				
@@ -299,14 +299,20 @@ uint16_t drv_lora_parsePacket(struct drv_lora_s * handle) {
 }
 
 void drv_lora_getPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet) {
-	packet->size = 0;
-	for (int i=0; LoRa.available() && i < 255; i++) {
-		packet->buf[i] = LoRa.read();
-		packet->size++;
-	}
-	packet->rssi = LoRa.packetRssi();
-	packet->snr = LoRa.packetSnr();
-	packet->freqerr = LoRa.packetFrequencyError();
+	
+	#ifdef HW_ARDUINO
+		packet->size = 0;
+		for (int i=0; LoRa.available() && i < 255; i++) {
+			packet->buf[i] = LoRa.read();
+			packet->size++;
+		}
+		packet->rssi = LoRa.packetRssi();
+		packet->snr = LoRa.packetSnr();
+		packet->freqerr = LoRa.packetFrequencyError();
+	#else
+		
+	#endif //HW_ARDUINO
+	
 }
 
 void drv_lora_recvPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet) {
@@ -328,17 +334,16 @@ void drv_lora_recvPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * 
 		
 	#endif //HW_ARDUINO
 	
-	
 }
 
 void drv_lora_sendPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet) {
 	
 	#ifdef HW_ARDUINO
-	//while (LoRa.beginPacket());
-	if (LoRa.beginPacket()) {
-		LoRa.write(packet->buf, packet->size);
-		LoRa.endPacket();
-	}
+		//while (LoRa.beginPacket());
+		if (LoRa.beginPacket()) {
+			LoRa.write(packet->buf, packet->size);
+			LoRa.endPacket();
+		}
 	#else
 		
 	#endif //HW_ARDUINO
@@ -348,11 +353,11 @@ void drv_lora_sendPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * 
 void drv_lora_sendPacket_async(struct drv_lora_s * handle, struct drv_lora_packet_s * packet) {
 	
 	#ifdef HW_ARDUINO
-	//while (LoRa.beginPacket());
-	if (LoRa.beginPacket()) {
-		LoRa.write(packet->buf, packet->size);
-		LoRa.endPacket(true);
-	}
+		//while (LoRa.beginPacket());
+		if (LoRa.beginPacket()) {
+			LoRa.write(packet->buf, packet->size);
+			LoRa.endPacket(true);
+		}
 	#else
 		
 	#endif //HW_ARDUINO
@@ -370,18 +375,24 @@ uint8_t drv_lora_random(struct drv_lora_s * handle) {
 }
 
 uint8_t drv_lora_singleTransfer(uint8_t address, uint8_t value) {
-	uint8_t response;
+	
+	#ifdef HW_ARDUINO
+		uint8_t response;
 
-	digitalWrite(LORA_DEFAULT_SS_PIN, LOW);
+		digitalWrite(LORA_DEFAULT_SS_PIN, LOW);
 
-	(&LORA_DEFAULT_SPI)->beginTransaction(SPISettings(LORA_DEFAULT_SPI_FREQUENCY, MSBFIRST, SPI_MODE0));
-	(&LORA_DEFAULT_SPI)->transfer(address);
-	response = (&LORA_DEFAULT_SPI)->transfer(value);
-	(&LORA_DEFAULT_SPI)->endTransaction();
+		(&LORA_DEFAULT_SPI)->beginTransaction(SPISettings(LORA_DEFAULT_SPI_FREQUENCY, MSBFIRST, SPI_MODE0));
+		(&LORA_DEFAULT_SPI)->transfer(address);
+		response = (&LORA_DEFAULT_SPI)->transfer(value);
+		(&LORA_DEFAULT_SPI)->endTransaction();
 
-	digitalWrite(LORA_DEFAULT_SS_PIN, HIGH);
+		digitalWrite(LORA_DEFAULT_SS_PIN, HIGH);
 
-	return response;
+		return response;
+	#else
+		
+	#endif //HW_ARDUINO
+	
 }
 
 uint8_t drv_lora_readRegister(uint8_t address) {
