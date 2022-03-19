@@ -22,6 +22,7 @@
 #include "../lora/drv_lora.h"
 #include "../sched/drv_sched.h"
 #include "../timer/drv_timer.h"
+#include "../rand/drv_rand.h"
 #include "../../lib/misc/lib_misc.h"
 #include "../../lib/datetime/lib_datetime.h"
 #include "drv_mesh.h"
@@ -253,7 +254,7 @@ static void drv_mesh_worker_disc_send(void * arg) {
 		
 		struct packet_type_disc_s * disc_packet = (struct packet_type_disc_s *)&(lora_packet.buf[0]);
 		disc_packet->header.type = PACKET_TYPE__DISC;
-		disc_packet->peer.uid = lib_misc_XORshiftLFSR64(lib_misc_mix64(state.uid^drv_timer_getMonotonicTime()));
+		disc_packet->sender_peer_uid = lib_misc_XORshiftLFSR64(lib_misc_mix64(state.uid^drv_timer_getMonotonicTime()));
 		disc_packet->ciphermask.mask = CIPHER__NONE;
 		
 		//drv_lora_setMode(&state.radio, DRV_LORA_MODE__IDLE);
@@ -263,7 +264,7 @@ static void drv_mesh_worker_disc_send(void * arg) {
 		drv_lora_setCodingRate(&state.radio, appt->codingRate);
 		drv_lora_setFrequency(&state.radio, appt->frequency);
 
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Sending packet as [%lu]...\n", (uint32_t)disc_packet->peer.uid);
+		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Sending packet as [%lu]...\n", (uint32_t)disc_packet->sender_peer_uid);
 		drv_lora_sendPacket_async(&state.radio, &lora_packet);
 		
 		//drv_lora_setMode(&state.radio, DRV_LORA_MODE__SEND);
@@ -299,7 +300,7 @@ static void drv_mesh_worker_disc_recv_finish(void * arg) {
 	drv_lora_recvPacket(&state.radio, &lora_packet);
 	
 	if (lora_packet.size > 0) {
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Packet received from [%lu].\n", (uint32_t)disc_packet->peer.uid);
+		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Packet received from [%lu].\n", (uint32_t)disc_packet->sender_peer_uid);
 	} else {
 		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("No packet received.\n");
 	}

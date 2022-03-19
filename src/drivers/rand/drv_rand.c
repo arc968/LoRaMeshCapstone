@@ -11,7 +11,7 @@
 #include "drv_rand.h"
 
 
-
+/*
 //#include "../../lib/printf/printf.h"
 int  snprintf_(char* buffer, size_t count, const char* format, ...);
 
@@ -22,7 +22,7 @@ int  snprintf_(char* buffer, size_t count, const char* format, ...);
 #define DEBUG_PRINT_TIMESTAMP() {char tbuf[256]; snprintf_(tbuf, sizeof(tbuf), "[%lu] ", (uint32_t)drv_timer_getMonotonicTime()); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}
 
 #define DEBUG_PRINT_REALTIME() {char tbuf[256]; lib_datetime_realtime_t trt; drv_timer_getRealtime(&trt); snprintf_(tbuf, sizeof(tbuf), "[rt:%lu] ", (uint32_t)trt); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}
-
+*/
 
 static struct state_s {
 	bool initialized;
@@ -110,14 +110,18 @@ uint64_t drv_rand_getU64(void) {
 	if (!state.initialized) drv_rand_seedFromMisc();
 	if (state.availableBytes < sizeof(uint64_t)) drv_rand_regenBuffer();
 	state.availableBytes -= sizeof(uint64_t);
+	/*
 	uint64_t out = 0;
-	for (int i=0; i<sizeof(uint64_t); i++) {
-		DEBUG_PRINT("%X", state.bufferedBytes[state.availableBytes+i]);
+	for (uint32_t i=0; i<sizeof(uint64_t); i++) {
+		//DEBUG_PRINT("%X", state.bufferedBytes[state.availableBytes+i]);
 		out <<= 8;
-		out |= state.bufferedBytes[state.availableBytes+i];
+		out |= state.bufferedBytes[state.availableBytes+i] & 0xFF;
 	}
-	DEBUG_PRINT("\n");
+	//DEBUG_PRINT("\n");
+	hal_serial_flush(hal_serial0);
 	return out;
+	*/
 	//return *((uint64_t*)&(state.bufferedBytes[state.availableBytes]));
+	return ((uint64_t)*((uint32_t*)&(state.bufferedBytes[state.availableBytes]))) * 4294967296 + (uint64_t)*((uint32_t*)&(state.bufferedBytes[state.availableBytes+4]));
 }
 

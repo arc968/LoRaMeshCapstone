@@ -16,6 +16,8 @@ typedef uint16_t channel_t;
 
 typedef uint64_t peer_uid_t;
 
+#include "drv_mesh_air.h"
+
 enum appointment_type_e {
 	APPT_DISC_SEND,
 	APPT_DISC_RECV,
@@ -34,6 +36,7 @@ enum drv_mesh_bandwidth_e {
 
 struct peer_s {
 	peer_uid_t uid;
+	uint8_t key[32];
 };
 
 struct appointment_s {
@@ -56,89 +59,6 @@ enum packet_status_e {
 	PACKET_FREE,
 	PACKET_READY
 };
-
-enum packet_type_e {
-	//layer 3 (Network) (Relayable)
-	PACKET_TYPE__DATA,
-	//layer 2 (Data Link)
-	PACKET_TYPE__DISC,
-	PACKET_TYPE__DISC_REPLY,
-	PACKET_TYPE__DISC_HANDSHAKE,
-	PACKET_TYPE__ACK,
-	PACKET_TYPE__NACK,
-};
-
-enum ciphermask_e {
-	CIPHER__NONE = (0x1 << 0),
-	CIPHER__AES = (0x1 << 1),
-	CIPHER__PSK_AES = (0x1 << 2),
-	CIPHER__XCHACHA20 = (0x1 << 3),
-	CIPHER__PSK_XCHACHA20 = (0x1 << 4),
-};
-
-#pragma scalar_storage_order big-endian
-struct ciphermask_s {
-	union {
-		uint16_t none:1,
-				aes:1,
-				psk_aes:1,
-				xchacha20:1,
-				psk_xchacha20:1,
-				:0;
-		uint16_t mask;
-	};
-} __attribute__((packed, aligned(1)));
-#pragma scalar_storage_order default
-
-struct packet_header_s {
-	enum packet_type_e type;
-} __attribute__((packed));
-
-struct packet_type_data_s {
-	struct packet_header_s header;
-	//dynamic, "public"
-	uint8_t ttl; //decrements on each hop
-	uint32_t puid; //random on each hop for ACK purposes
-	//static, "public"
-	ip_t src;
-	ip_t dst;
-	//"private"
-	uint16_t seq_num;
-	uint16_t ack_num;
-	uint8_t data[];
-} __attribute__((packed));
-
-/*
-hash sent/received public key with pre-shared key, then calculate key exchange
-*/
-struct packet_type_disc_s {
-	struct packet_header_s header;
-	struct peer_s peer;
-	struct ciphermask_s ciphermask; //all capable/allowed bits are set
-} __attribute__((packed));
-
-struct packet_type_discReply_s {
-	struct packet_header_s header;
-	struct peer_s peer;
-	struct ciphermask_s ciphermask; //only a single bit set for selected mode
-	uint8_t key_ephemeral[32]; //optional, only if common cipher is found
-} __attribute__((packed));
-
-struct packet_type_discHandshake_s {
-	struct packet_header_s header;
-	struct peer_s peer;
-	uint8_t key_ephemeral[32]; //optional, only if common cipher is found
-} __attribute__((packed));
-
-struct packet_type_ack_s {
-	struct packet_header_s header;
-	uint32_t puid;
-} __attribute__((packed));
-
-struct packet_type_nack_s {
-	struct packet_header_s header;
-	uint32_t puid;
-} __attribute__((packed));
 
 struct packet_int_s {
 	union {
