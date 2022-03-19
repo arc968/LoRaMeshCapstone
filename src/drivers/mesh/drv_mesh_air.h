@@ -49,22 +49,26 @@ struct packet_header_s {
 hash sent/received public key with pre-shared key, then calculate key exchange
 */
 #pragma scalar_storage_order big-endian
-struct packet_type_disc_s {
+static struct packet_type_disc_s {
 	struct packet_header_s header;
-	peer_uid_t sender_peer_uid;
+	peer_uid_t broadcast_peer_uid;
 	struct ciphermask_s ciphermask; //all capable/allowed bits are set
 	uint8_t key_ephemeral[32];
-} __attribute__((packed, aligned(1)));
+} __attribute__((packed, aligned(1))) const packet_type_disc_s_default = {
+	.header.type = PACKET_TYPE__DISC,
+};
 #pragma scalar_storage_order default
 
 #pragma scalar_storage_order big-endian
 struct packet_type_discReply_s {
 	struct packet_header_s header;
-	peer_uid_t receiver_peer_uid;
-	peer_uid_t sender_peer_uid;
+	peer_uid_t broadcast_peer_uid;
+	peer_uid_t reply_peer_uid;
 	struct ciphermask_s ciphermask; //only a single bit set for selected mode
 	uint8_t key_ephemeral[32]; //optional, only if common cipher is found
-} __attribute__((packed, aligned(1)));
+} __attribute__((packed, aligned(1))) const packet_type_disc_s_default = {
+	.header.type = PACKET_TYPE__DISC,
+};
 #pragma scalar_storage_order default
 
 #pragma scalar_storage_order big-endian

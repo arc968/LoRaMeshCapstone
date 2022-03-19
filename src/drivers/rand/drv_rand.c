@@ -24,6 +24,11 @@ int  snprintf_(char* buffer, size_t count, const char* format, ...);
 #define DEBUG_PRINT_REALTIME() {char tbuf[256]; lib_datetime_realtime_t trt; drv_timer_getRealtime(&trt); snprintf_(tbuf, sizeof(tbuf), "[rt:%lu] ", (uint32_t)trt); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}
 */
 
+#define MISC_MIN_SEED_ROUNDS 128
+#define MISC_MIN_DURATION_MS 1000
+#define LORA_MIN_SEED_ROUNDS 128
+#define LORA_MIN_DURATION_MS 1000
+
 static struct state_s {
 	bool initialized;
 	uint64_t nonce;
@@ -35,29 +40,45 @@ static struct state_s {
 /*
 Pulls from several random-ish sources of noise in an attempt to seed the RNG
 */
-static void fillBufFromMisc(uint8_t * buf, size_t size) {
-	crypto_blake2b_ctx ctx;
-	crypto_blake2b_general_init(&ctx, size, &(state.key[0]), sizeof(state.key));
-	
-	for (uint32_t i=0; i<64; i++) for (uint32_t aPins=0; aPins<7; aPins++) crypto_blake2b_update(&ctx, (uint8_t *)&(uint16_t){hal_gpio_analogRead(aPins)}, sizeof(uint16_t));
-	crypto_blake2b_update(&ctx, (uint8_t *)&(uint64_t){drv_timer_getMonotonicTime()}, sizeof(uint64_t));
-	crypto_blake2b_update(&ctx, (uint8_t *)&(uint16_t){hal_serial_available(hal_serial0)}, sizeof(uint16_t));
-	crypto_blake2b_update(&ctx, (uint8_t *)&(uint16_t){hal_serial_available(hal_serial1)}, sizeof(uint16_t));
-	
-	lib_datetime_realtime_t rt = 0;
-	drv_timer_getRealtime(&rt); //don't care if unavailable
-	crypto_blake2b_update(&ctx, (uint8_t *)&(uint64_t){rt}, sizeof(uint64_t));
-	
-	crypto_blake2b_final(&ctx, buf);
-}
-
 void drv_rand_seedFromMisc(void) {
-	fillBufFromMisc(&(state.key[0]), sizeof(state.key));
+	crypto_blake2b_ctx ctx;
+	crypto_blake2b_general_init(&ctx, sizeof(state.key), state.key, sizeof(state.key));
+	
+	lib_datetime_realtime_t start = drv_timer_getMonotonicTime();
+	for (uint32_t i=0; i<MISC_MIN_SEED_ROUNDS || drv_timer_getMonotonicTime()-start < MISC_MIN_DURATION_MS; i++) {
+		for (uint32_t aPins=0; aPins<7; aPins++) crypto_blake2b_update(&ctx, (uint8_t *)&(uint16_t){hal_gpio_analogRead(aPins)}, sizeof(uint16_t));
+		crypto_blake2b_update(&ctx, (uint8_t *)&(uint64_t){drv_timer_getMonotonicTime()}, sizeof(uint64_t));
+		crypto_blake2b_update(&ctx, (uint8_t *)&(uint16_t){hal_serial_available(hal_serial0)}, sizeof(uint16_t));
+		crypto_blake2b_update(&ctx, (uint8_t *)&(uint16_t){hal_serial_available(hal_serial1)}, sizeof(uint16_t));
+		{lib_datetime_realtime_t rt = 0; drv_timer_getRealtime(&rt); //don't care if unavailable
+			crypto_blake2b_update(&ctx, (uint8_t *)&(uint64_t){rt}, sizeof(uint64_t));}
+	}
+	
+	crypto_blake2b_final(&ctx, state.key);
+	//crypto_blake2b_final(&ctx, &(state.key[0]));
 	state.initialized = true;
 }
 
 void drv_rand_seedFromLoRa(struct drv_lora_s * handle) {
-	uint8_t tempKey[32];
+	crypto_blake2b_ctx ctx;
+	crypto_blake2b_general_init(&ctx, sizeof(state.key), state.key, sizeof(state.key));
+	
+	uint8_t prev = 0;
+	uint8_t randByte = 0;
+	drv_rand_seedFromMisc();
+	lib_datetime_realtime_t start = drv_timer_getMonotonicTime();
+	for (uint32_t i=0; i<LORA_MIN_SEED_ROUNDS || drv_timer_getMonotonicTime()-start < LORA_MIN_DURATION_MS; i++) {
+		drv_lora_setMode(handle, DRV_LORA_MODE__RECV_ONCE);
+		while (randByte == prev) randByte = drv_lora_random(handle);
+		drv_lora_setMode(handle, DRV_LORA_MODE__IDLE_CLEAR);
+		crypto_blake2b_update(&ctx, &(uint8_t){randByte}, sizeof(uint8_t));
+		prev = randByte;
+	}
+	drv_lora_setMode(handle, DRV_LORA_MODE__SLEEP);
+	
+	crypto_blake2b_final(&ctx, state.key);
+	state.initialized = true;
+/* 	uint8_t tempKey[32];
 	uint8_t prev = 0;
 	uint8_t randByte = 0;
 	fillBufFromMisc(&(tempKey[0]), sizeof(tempKey));
@@ -71,7 +92,7 @@ void drv_rand_seedFromLoRa(struct drv_lora_s * handle) {
 	drv_lora_setMode(handle, DRV_LORA_MODE__SLEEP);
 	crypto_blake2b_general(&(state.key[0]), sizeof(state.key), &(tempKey[0]), sizeof(tempKey), &(state.key[0]), sizeof(state.key));
 	crypto_wipe(&(tempKey[0]), sizeof(tempKey));
-	state.initialized = true;
+	state.initialized = true; */
 }
 
 void drv_rand_fillBuf(uint8_t * buf, size_t size) {

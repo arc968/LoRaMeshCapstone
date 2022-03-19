@@ -21,6 +21,9 @@ typedef uint64_t peer_uid_t;
 enum appointment_type_e {
 	APPT_DISC_SEND,
 	APPT_DISC_RECV,
+	APPT_DISC_REPLY_SEND,
+	APPT_DISC_REPLY_RECV,
+	APPT_DISC_RECV,
 	APPT_DATA_SEND,
 	APPT_DATA_RECV,
 };
@@ -46,9 +49,10 @@ struct appointment_s {
 	
 	enum appointment_type_e type;
 	
-	struct peer_s * peer;
+	struct peer_s peer;
 	
 	//channel_t channel;
+	uint16_t preamble;
 	uint64_t frequency;
 	enum drv_lora_bandwidth_e bandwidth;
 	enum drv_lora_spreadingFactor_e spreadingFactor;
@@ -60,7 +64,8 @@ enum packet_status_e {
 	PACKET_READY
 };
 
-struct packet_int_s {
+struct packet_type_raw_s {
+	uint8_t size;
 	union {
 		struct packet_header_s header;
 		struct packet_type_data_s asData;
@@ -73,23 +78,21 @@ struct packet_int_s {
 	};
 } __attribute__((packed));
 
-struct packet_s {
+/* struct packet_s {
 	uint16_t totalLen;
 	uint16_t dataLen;
 	bool crcEnabled;
-	struct packet_int_s payload;
-};
+	struct packet_raw_s payload;
+}; */
 
 /* static struct packet_data_s {
 	uint16_t len;
 	uint8_t buf[DRV_MESH__PACKET_SIZE_MAX];
 }; */
 
-struct packet_ext_s {
-	ip_t ip;
+struct packet_internal_s {
 	enum packet_status_e status;
-	enum drv_lora_codingRate_e codingRate;
-	struct packet_s packet;
+	struct packet_type_raw_s packet;
 };
 
 #if defined (__cplusplus)
