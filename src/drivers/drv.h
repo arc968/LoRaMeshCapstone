@@ -27,6 +27,12 @@ extern "C" {
 	#include "mesh/drv_mesh.h"
 #endif
 
+#if defined(LORA_NONE)
+	#warning "'rand/drv_rand.h' not included because LORA_NONE is defined."
+#else
+	#include "rand/drv_rand.h"
+#endif
+
 #include "timer/drv_timer.h"
 #include "sched/drv_sched.h"
 

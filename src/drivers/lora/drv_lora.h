@@ -44,8 +44,10 @@ enum drv_lora_codingRate_e {
 
 enum drv_lora_mode_e {
 	DRV_LORA_MODE__IDLE,
+	DRV_LORA_MODE__IDLE_CLEAR,
 	DRV_LORA_MODE__SLEEP,
 	DRV_LORA_MODE__RECV,
+	DRV_LORA_MODE__RECV_ONCE,
 	DRV_LORA_MODE__SEND,
 };
 
@@ -105,6 +107,12 @@ void drv_lora_sendPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * 
 void drv_lora_sendPacket_async(struct drv_lora_s * handle, struct drv_lora_packet_s * packet);
 
 uint8_t drv_lora_random(struct drv_lora_s * handle);
+
+uint8_t drv_lora_singleTransfer(uint8_t address, uint8_t value);
+
+uint8_t drv_lora_readRegister(uint8_t address);
+
+void drv_lora_writeRegister(uint8_t address, uint8_t value);
 
 #if defined (__cplusplus)
 }

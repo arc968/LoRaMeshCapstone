@@ -13,6 +13,17 @@ extern "C" {
 * possible outputs as uniformly as possible.
 */
 // Adapted from: https://github.com/lemire/fastrange
+static inline uint8_t lib_misc_fastrange8(uint8_t w, uint8_t p) {
+  return (uint8_t)(((uint16_t)w * (uint16_t)p) >> 8);
+}
+
+/**
+* Given a value "word", produces an integer in [0,p) without division.
+* The function is as fair as possible in the sense that if you iterate
+* through all possible values of "word", then you will generate all
+* possible outputs as uniformly as possible.
+*/
+// Adapted from: https://github.com/lemire/fastrange
 static inline uint16_t lib_misc_fastrange16(uint16_t w, uint16_t p) {
   return (uint16_t)(((uint32_t)w * (uint32_t)p) >> 16);
 }
