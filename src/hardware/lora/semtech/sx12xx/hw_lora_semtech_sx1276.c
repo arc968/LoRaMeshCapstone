@@ -282,33 +282,38 @@ void drv_lora_setFrequency(struct drv_lora_s * handle, uint64_t freq) {
 	
 }*/
 
-uint16_t drv_lora_available(struct drv_lora_s * handle) {
+/* uint16_t drv_lora_available(struct drv_lora_s * handle) {
+	
 	#ifdef HW_ARDUINO
 		return LoRa.available();
 	#else
 	
 	#endif //HW_ARDUINO
-}
+	
+} */
 
-uint16_t drv_lora_parsePacket(struct drv_lora_s * handle) {
+/* uint16_t drv_lora_parsePacket(struct drv_lora_s * handle) {
+	
 	#ifdef HW_ARDUINO
 		return LoRa.parsePacket();
 	#else
 	
 	#endif //HW_ARDUINO
-}
+	
+} */
 
-void drv_lora_getPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet) {
+uint8_t drv_lora_getRawPacket(struct drv_lora_s * handle, uint8_t * buf) {
 	
 	#ifdef HW_ARDUINO
-		packet->size = 0;
-		for (int i=0; LoRa.available() && i < 255; i++) {
-			packet->buf[i] = LoRa.read();
-			packet->size++;
+		uint8_t sizeOut = 0;
+		uint8_t size = LoRa.parsePacket();
+		if (size > 0) {
+			for (uint16_t i=0; LoRa.available() && i < size; i++) {
+				buf[i] = LoRa.read();
+				sizeOut++;
+			}
 		}
-		packet->rssi = LoRa.packetRssi();
-		packet->snr = LoRa.packetSnr();
-		packet->freqerr = LoRa.packetFrequencyError();
+		return sizeOut;
 	#else
 		
 	#endif //HW_ARDUINO
@@ -350,12 +355,11 @@ void drv_lora_sendPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * 
 	
 }
 
-void drv_lora_sendPacket_async(struct drv_lora_s * handle, struct drv_lora_packet_s * packet) {
-	
+void drv_lora_sendRawPacket_async(struct drv_lora_s * handle, uint8_t * buf, size_t size) {
 	#ifdef HW_ARDUINO
 		//while (LoRa.beginPacket());
 		if (LoRa.beginPacket()) {
-			LoRa.write(packet->buf, packet->size);
+			LoRa.write(buf, size);
 			LoRa.endPacket(true);
 		}
 	#else

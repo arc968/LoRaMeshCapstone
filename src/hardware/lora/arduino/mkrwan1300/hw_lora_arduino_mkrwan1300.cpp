@@ -283,22 +283,27 @@ void drv_lora_setFrequency(struct drv_lora_s * handle, uint64_t freq) {
 }*/
 
 /* uint16_t drv_lora_available(struct drv_lora_s * handle) {
+	
 	#ifdef HW_ARDUINO
 		return LoRa.available();
 	#else
 	
 	#endif //HW_ARDUINO
+	
 } */
 
 /* uint16_t drv_lora_parsePacket(struct drv_lora_s * handle) {
+	
 	#ifdef HW_ARDUINO
 		return LoRa.parsePacket();
 	#else
 	
 	#endif //HW_ARDUINO
+	
 } */
 
 uint8_t drv_lora_getRawPacket(struct drv_lora_s * handle, uint8_t * buf) {
+	
 	#ifdef HW_ARDUINO
 		uint8_t sizeOut = 0;
 		uint8_t size = LoRa.parsePacket();
