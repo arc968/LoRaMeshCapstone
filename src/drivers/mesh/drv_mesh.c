@@ -330,23 +330,24 @@ static void drv_mesh_worker_disc_recv_finish(void * arg) {
 	raw_packet.size = drv_lora_getRawPacket(&state.radio, raw_packet.raw);
 	
 	if (raw_packet.size > 0) {
-		if (raw_packet.header.type == PACKET_TYPE__DISC) {
+		if (raw_packet.header.type == PACKET_TYPE__DISC && appt->type == APPT_DISC_RECV) {
 			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Discovery packet received from [%llX] (%lu bytes).\n", raw_packet.asDisc.broadcast_peer_uid, raw_packet.size);
+			appt->type = APPT_DISC_REPLY_SEND;
+			appt->peer.uid = raw_packet.asDisc.broadcast_peer_uid;
+			//appt->realtime = ???;
+			//appt->peer.key = ???;
+			enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_disc_send, arg, DRV_SCHED_PRI__REALTIME, appt->realtime);
+			if (err != DRV_SCHED_ERR__NONE) {
+				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule drv_mesh_worker_disc_recv() for discovery reply.\n");
+				insertEmptyAppt(appt);
+			}
+		} else if (raw_packet.header.type == PACKET_TYPE__DISC_REPLY) {
+			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Discovery reply packet received from [%llX] (%lu bytes).\n", raw_packet.asDiscReply.reply_peer_uid, raw_packet.size);
 		} else {
-			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Unexpected non-discovery packet received.\n");
+			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Unexpected packet received.\n");
 		}
 	} else {
 		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("No packet received.\n");
-	}
-	
-	if (appt->type == APPT_DISC_SEND) {
-		appt->type = APPT_DISC_REPLY_RECV;
-		//appt->realtime = ???; //TODO set time of next appt
-		enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_disc_recv, arg, DRV_SCHED_PRI__REALTIME, appt->realtime);
-		if (err != DRV_SCHED_ERR__NONE) {
-			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule drv_mesh_worker_disc_recv() for discovery reply.\n");
-			insertEmptyAppt(appt);
-		}
 	}
 	
 	drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
