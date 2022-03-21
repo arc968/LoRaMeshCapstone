@@ -2,14 +2,22 @@
 #include "hal_timer.h"
 
 #if defined(HW_MKRWAN1300_H)
-	#include "TimerInterrupt_Generic.h"
-	#include "ISR_Timer_Generic.h"
-	SAMDTimer ITimer(TIMER_TC3);
-	//ISR_Timer hal_ISR_Timer;
+	
+	#if defined(HW_ARDUINO)	
+		#include "TimerInterrupt_Generic.h"
+		#include "ISR_Timer_Generic.h"
+		SAMDTimer ITimer(TIMER_TC3);
+		//ISR_Timer hal_ISR_Timer;
 
-	//void hal_timer_handler(void) {
-	//	hal_ISR_Timer.run();
-	//}
+		//void hal_timer_handler(void) {
+		//	hal_ISR_Timer.run();
+		//}
+	#else
+		
+		
+		
+	#endif
+	
 #elif defined(HW_RAK4260_H)
 
 	static volatile uint64_t currentMillisRunTime = 0;
@@ -48,7 +56,15 @@ void hal_timer_init(void (*isr)(void), uint16_t interval_us) {
 	if (timerIsInitialized == 1) {
 		timerIsInitialized = 0;
 		#if defined(HW_MKRWAN1300_H)
-			ITimer.attachInterruptInterval(interval_us, isr);
+		
+			#if defined(HW_ARDUINO)	
+				ITimer.attachInterruptInterval(interval_us, isr);
+			#else
+				
+				
+				
+			#endif
+			
 		#elif defined(HW_RAK4260_H)
 			
 			TC2->COUNT16.CTRLA.reg &= ~TC_CTRLA_ENABLE;
@@ -190,14 +206,23 @@ uint64_t hal_timer_millis(void) {
 }
 
 
+#if defined(HW_MKRWAN1300_H)
+	#if defined(HW_ARDUINO)	
+		/*
+		void hal_timer_setInterruptInterval(void (*isr)(void), uint32_t interval) {
+			
+			hal_ISR_Timer.setInterval(interval, isr);
+			
+		}
+		*/
+	#else
+		
+		
+		
+	#endif
+#endif //HW_MKRWAN1300_H
 
 
 
-/*
-void hal_timer_setInterruptInterval(void (*isr)(void), uint32_t interval) {
-	
-	hal_ISR_Timer.setInterval(interval, isr);
-	
-}
-*/
+
 
