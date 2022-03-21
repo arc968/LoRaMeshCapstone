@@ -66,7 +66,7 @@ struct packet_type_discReply_s {
 	peer_uid_t reply_peer_uid;
 	struct ciphermask_s ciphermask; //only a single bit set for selected mode
 	uint8_t key_ephemeral[32]; //optional, only if common cipher is found
-} __attribute__((packed, aligned(1))) const packet_type_disc_s_default = {
+} __attribute__((packed, aligned(1))) const packet_type_discReply_s_default = {
 	.header.type = PACKET_TYPE__DISC,
 };
 #pragma scalar_storage_order default

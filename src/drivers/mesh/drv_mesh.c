@@ -230,7 +230,7 @@ static struct appointment_s * getNextGlobalDiscoveryChannelAppointment(void) {
 	} else {
 		appt->type = APPT_DISC_SEND;
 	}
-	appt->peer = NULL;
+	//appt->peer = NULL;
 	setApptValsFromSeed(appt, short_rt);
 	DEBUG_PRINT("bandwidth:%lu, frequency:%llu, spreadingFactor:%lu, codingRate:%lu\n", appt->bandwidth, appt->frequency, appt->spreadingFactor, appt->codingRate); 
 	
@@ -250,6 +250,8 @@ static struct appointment_s * getNextGlobalDiscoveryChannelAppointment(void) {
 	return appt;
 }*/
 
+static void drv_mesh_worker_disc_recv(void * arg);
+
 static void drv_mesh_worker_disc_send_finish(void * arg) {
 	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
 	DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Packet sent.\n");
@@ -257,7 +259,7 @@ static void drv_mesh_worker_disc_send_finish(void * arg) {
 	
 	if (appt->type == APPT_DISC_SEND) {
 		appt->type = APPT_DISC_REPLY_RECV;
-		appt->realtime = ???;
+		//appt->realtime = ???; //TODO set time of next appt
 		enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_disc_recv, arg, DRV_SCHED_PRI__REALTIME, appt->realtime);
 		if (err != DRV_SCHED_ERR__NONE) {
 			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule drv_mesh_worker_disc_recv() for discovery reply.\n");
@@ -284,7 +286,7 @@ static void drv_mesh_worker_disc_send(void * arg) {
 		
 		if (appt->type == APPT_DISC_SEND) {
 			raw_packet.asDisc = packet_type_disc_s_default;
-			raw_packet.asDisc.broadcast_peer_uid = state.peer_uid; //drv_rand_getU64();
+			raw_packet.asDisc.broadcast_peer_uid = state.uid; //drv_rand_getU64();
 			raw_packet.asDisc.ciphermask.mask = CIPHER__NONE;
 			drv_rand_fillBuf(raw_packet.asDisc.key_ephemeral, sizeof(raw_packet.asDisc.key_ephemeral));
 			
@@ -339,7 +341,7 @@ static void drv_mesh_worker_disc_recv_finish(void * arg) {
 	
 	if (appt->type == APPT_DISC_SEND) {
 		appt->type = APPT_DISC_REPLY_RECV;
-		appt->realtime = ???;
+		//appt->realtime = ???; //TODO set time of next appt
 		enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_disc_recv, arg, DRV_SCHED_PRI__REALTIME, appt->realtime);
 		if (err != DRV_SCHED_ERR__NONE) {
 			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule drv_mesh_worker_disc_recv() for discovery reply.\n");
