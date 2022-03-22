@@ -319,17 +319,28 @@ static void drv_mesh_worker_send(void * arg) {
 		
 		if (appt->type == APPT_SEND_DISC) {
 			raw_packet.asDisc = packet_type_disc_s_default;
-			raw_packet.asDisc.broadcast_peer_uid = state.uid; //drv_rand_getU64();
-			raw_packet.asDisc.ciphermask.mask = CIPHER__XCHACHA20;
+			raw_packet.asDisc.broadcast_peer_uid = state.uid;
+			raw_packet.asDisc.ciphermask.mask = CIPHER__PSK_XCHACHA20;
 			memcpy(state.pubkey, raw_packet.asDisc.key_ephemeral, sizeof(state.pubkey));
 			crypto_blake2b_general(raw_packet.asDisc.hmac, sizeof(raw_packet.asDisc.hmac), state.psk, sizeof(state.psk), &(raw_packet.asDisc), sizeof(raw_packet.asDisc)-sizeof(raw_packet.asDisc.hmac));
 			
 			raw_packet.size = sizeof(struct packet_type_disc_s);
 			
 			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Sending discovery packet as [%llX]...\n", raw_packet.asDisc.broadcast_peer_uid);
+		} else if (appt->type == APPT_SEND_DISC_REPLY) {
+			raw_packet.asDiscReply = packet_type_discReply_s_default;
+			raw_packet.asDiscReply.reply_peer_uid = state.uid;
+			raw_packet.asDiscReply.broadcast_peer_uid = appt->peer->uid;
+			raw_packet.asDiscReply.ciphermask.mask = CIPHER__PSK_XCHACHA20;
+			
+			memcpy(state.pubkey, raw_packet.asDiscReply.key_ephemeral, sizeof(state.pubkey));
+			crypto_blake2b_general(raw_packet.asDiscReply.hmac, sizeof(raw_packet.asDiscReply.hmac), state.psk, sizeof(state.psk), &(raw_packet.asDiscReply), sizeof(raw_packet.asDiscReply)-sizeof(raw_packet.asDiscReply.hmac));
+			
+			raw_packet.size = sizeof(struct packet_type_discReply_s);
+			
+			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Sending discovery reply packet as [%llX] to [%llX]...\n", raw_packet.asDiscReply.reply_peer_uid, raw_packet.asDiscReply.broadcast_peer_uid);
 		} else {
 			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Unexpected appointment type in drv_mesh_worker_disc_send(), unable to send.\n");
-			insertEmptyAppt(appt);
 		}
 		
 		state.radio_mutex = 1;
@@ -348,12 +359,11 @@ static void drv_mesh_worker_send(void * arg) {
 			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule drv_mesh_worker_disc_send_finish()\n");
 			drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
 			state.radio_mutex = 0;
-			insertEmptyAppt(appt);
 		}
 	} else {
 		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Radio locked, unable to send discovery packet.\n");
-		insertEmptyAppt(appt);
 	}
+	insertEmptyAppt(appt);
 }
 
 static void drv_mesh_worker_recv_finish(void * arg) {
