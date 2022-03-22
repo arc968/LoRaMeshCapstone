@@ -88,6 +88,7 @@ void drv_lora_init(struct drv_lora_s * handle, uint64_t freq) {
 	
 	#ifdef HW_ARDUINO
 		LoRa.setPins(PIN_SPI_SS, RFM_RST, RFM_DIO0);
+		LoRa.setSPI(SPI);
 		while (!LoRa.begin(freq));
 		LoRa.enableCrc();
 	#else
@@ -390,14 +391,14 @@ uint8_t drv_lora_singleTransfer(uint8_t address, uint8_t value) {
 	#ifdef HW_ARDUINO
 		uint8_t response;
 
-		digitalWrite(LORA_DEFAULT_SS_PIN, LOW);
+		digitalWrite(PIN_SPI_SS, LOW);
 
 		(&LORA_DEFAULT_SPI)->beginTransaction(SPISettings(LORA_DEFAULT_SPI_FREQUENCY, MSBFIRST, SPI_MODE0));
 		(&LORA_DEFAULT_SPI)->transfer(address);
 		response = (&LORA_DEFAULT_SPI)->transfer(value);
 		(&LORA_DEFAULT_SPI)->endTransaction();
 
-		digitalWrite(LORA_DEFAULT_SS_PIN, HIGH);
+		digitalWrite(PIN_SPI_SS, HIGH);
 
 		return response;
 	#else
