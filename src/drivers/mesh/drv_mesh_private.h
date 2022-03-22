@@ -18,27 +18,38 @@ typedef uint64_t peer_uid_t;
 
 #include "drv_mesh_air.h"
 
-enum appointment_type_e {
-	APPT_DISC_SEND,
-	APPT_DISC_RECV,
-	APPT_DISC_REPLY_SEND,
-	APPT_DISC_REPLY_RECV,
-	APPT_DATA_SEND,
-	APPT_DATA_RECV,
+enum peer_status_e {
+	PEER_EMPTY = 0,
+	PEER_PASSERBY, //only heard their broadcast
+	PEER_STRANGER, //they heard our broadcast, but we did not hear theirs
+	PEER_ACQUAINTANCE, //handshake complete
+	PEER_FRIEND, //PSK handshake complete
 };
-
-/*
-enum drv_mesh_bandwidth_e {
-	BW__500kHz,
-	BW__250kHz,
-	BW__125kHz,
-	BW__62_5kHz,
-};
-*/
 
 struct peer_s {
+	struct peer_s * next;
+	enum peer_status_e status;
 	peer_uid_t uid;
 	uint8_t key[32];
+};
+
+struct radio_cfg_s {
+	uint16_t preamble;
+	uint64_t frequency;
+	enum drv_lora_bandwidth_e bandwidth;
+	enum drv_lora_spreadingFactor_e spreadingFactor;
+	enum drv_lora_codingRate_e codingRate;
+};
+
+enum appointment_type_e {
+	APPT_RECV,
+	APPT_SEND_DISC,
+	APPT_SEND_DISC_REPLY,
+	APPT_SEND_DATA,
+/* 	APPT_DISC_RECV,
+	APPT_DISC_REPLY_SEND,
+	APPT_DISC_REPLY_RECV,
+	APPT_DATA_SEND, */
 };
 
 struct appointment_s {
@@ -48,22 +59,15 @@ struct appointment_s {
 	
 	enum appointment_type_e type;
 	
-	struct peer_s peer;
+	struct peer_s * peer;
 	
-	//channel_t channel;
-	uint16_t preamble;
-	uint64_t frequency;
-	enum drv_lora_bandwidth_e bandwidth;
-	enum drv_lora_spreadingFactor_e spreadingFactor;
-	enum drv_lora_codingRate_e codingRate;
+	struct packet_s * packet;
+	
+	struct radio_cfg_s radio_cfg;
 } __attribute__((packed));
 
-enum packet_status_e {
-	PACKET_FREE,
-	PACKET_READY
-};
-
-struct packet_type_raw_s {
+struct packet_s {
+	struct packet_s * next;
 	uint8_t size;
 	union {
 		struct packet_header_s header;
@@ -89,10 +93,10 @@ struct packet_type_raw_s {
 	uint8_t buf[DRV_MESH__PACKET_SIZE_MAX];
 }; */
 
-struct packet_internal_s {
+/* struct packet_internal_s {
 	enum packet_status_e status;
 	struct packet_type_raw_s packet;
-};
+}; */
 
 #if defined (__cplusplus)
 }

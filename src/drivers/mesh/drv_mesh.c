@@ -41,16 +41,19 @@ int  snprintf_(char* buffer, size_t count, const char* format, ...);
 #define XXH_FORCE_ALIGN_CHECK
 #include "../../lib/xxhash/xxhash.h"
 
-#define PEER_COUNT_MAX 16
-#define BUFFER_RELAY_SIZE 10
-#define BUFFER_INBOUND_SIZE 3
-#define BUFFER_OUTBOUND_SIZE 3
+#define BUFFER_PEERS_SIZE 16
+//#define BUFFER_RELAY_SIZE 10
+//#define BUFFER_INBOUND_SIZE 3
+//#define BUFFER_OUTBOUND_SIZE 3
+#define BUFFER_PACKETS_SIZE 16
 #define BUFFER_APPOINTMENTS_SIZE 16
 
 #define FREQ_500kHz 500000
 #define FREQ_250kHz 250000
 #define FREQ_125kHz 125000
 #define FREQ_62_5kHz 62500
+
+#define PREAMBLE_LENGTH 32
 
 #define LORA_US_FREQ 902000000
 #define LORA_US_FREQ_MIN LORA_US_FREQ
@@ -96,35 +99,73 @@ int  snprintf_(char* buffer, size_t count, const char* format, ...);
 static struct state_s {
 	ip_t ip;
 	peer_uid_t uid;
-	//struct peer_s peers[PEER_COUNT_MAX];
-	
-	struct {
-		uint8_t head;
-		uint8_t tail;
-		uint16_t count;
-		struct packet_internal_s buf[BUFFER_RELAY_SIZE];
-	} rb_relay;
-	
-	struct {
-		uint8_t head;
-		uint8_t tail;
-		uint16_t count;
-		struct packet_internal_s buf[BUFFER_INBOUND_SIZE];
-	} rb_inbound;
-	
-	struct {
-		uint8_t head;
-		uint8_t tail;
-		uint16_t count;
-		struct packet_internal_s buf[BUFFER_OUTBOUND_SIZE];
-	} rb_outbound;
+	uint8_t pubkey[32];
+	uint8_t privkey[32];
+	uint8_t psk[32];
+
+	struct peer_s * head_peer_empty;
+	struct peer_s * head_peer_ready;
+	struct peer_s peers[BUFFER_PEERS_SIZE];
+
+	struct packet_s * head_packet_empty;
+	struct packet_s packets[BUFFER_PACKETS_SIZE];
 
 	struct appointment_s * head_appt_empty;
 	struct appointment_s appointments[BUFFER_APPOINTMENTS_SIZE];
-	
+
 	volatile bool radio_mutex;
 	struct drv_lora_s radio;
 } state;
+
+static struct peer_s * popEmptyPeer(void) {
+	struct peer_s * peer = state.head_peer_empty;
+	if (peer != NULL) {
+		state.head_peer_empty = peer->next;
+	}
+	peer->next = NULL;
+	return peer;
+}
+
+static void insertEmptyPeer(struct peer_s * peer) {
+	peer->next = state.head_peer_empty;
+	state.head_peer_empty = peer;
+}
+
+static void removeReadyPeer(struct peer_s * peer) {
+	if (state.head_peer_ready == peer) {
+		state.head_peer_ready = NULL;
+	} else {
+		struct peer_s * prev_peer = state.head_peer_ready;
+		while (prev_peer->next != peer) prev_peer = prev_peer->next;
+		prev_peer->next = peer->next;
+		peer->next = NULL;
+	}
+}
+
+static struct peer_s * getPeerByUID(peer_uid_t uid) {
+	struct peer_s * peer = state.head_peer_ready;
+	while (peer != NULL && peer->uid != uid) peer = peer->next;
+	return peer;
+}
+
+static void insertReadyPeer(struct peer_s * peer) {
+	peer->next = state.head_peer_ready;
+	state.head_peer_ready = peer;
+}
+
+static struct packet_s * popEmptyPacket(void) {
+	struct packet_s * packet = state.head_packet_empty;
+	if (packet != NULL) {
+		state.head_packet_empty = packet->next;
+	}
+	packet->next = NULL;
+	return packet;
+}
+
+static void insertEmptyPacket(struct packet_s * packet) {
+	packet->next = state.head_packet_empty;
+	state.head_packet_empty = packet;
+}
 
 static struct appointment_s * popEmptyAppt(void) {
 	struct appointment_s * appt = state.head_appt_empty;
@@ -171,7 +212,7 @@ static void getChannelConfiguration(struct channel_settings_s * settings, struct
 }
 */
 
-uint64_t constrainU64(uint64_t x, uint64_t a, uint64_t b) {
+static uint64_t constrainU64(uint64_t x, uint64_t a, uint64_t b) {
 	if(x < a) {
 		return a;
 	} else if(b < x) {
@@ -181,7 +222,7 @@ uint64_t constrainU64(uint64_t x, uint64_t a, uint64_t b) {
 	}
 }
 
-uint64_t map(uint64_t x, uint64_t in_min, uint64_t in_max, uint64_t out_min, uint64_t out_max) {
+static uint64_t map(uint64_t x, uint64_t in_min, uint64_t in_max, uint64_t out_min, uint64_t out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
@@ -198,10 +239,10 @@ DRV_LORA_BW__62_5kHz DRV_LORA_SF__8 DRV_LORA_CR__4_6
 DRV_LORA_BW__500kHz DRV_LORA_SF__12 DRV_LORA_CR__4_5
 */
 static void setApptValsFromSeed(struct appointment_s * appt, uint32_t seed) {
-	appt->bandwidth = drv_lora_bandwidth_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_bandwidth_e_arr))];
-	appt->frequency = getCenterFrequency(lib_misc_fastrange32(seed, getChannelCount(appt->bandwidth)), appt->bandwidth);
-	appt->spreadingFactor = drv_lora_spreadingFactor_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_spreadingFactor_e_arr))];
-	appt->codingRate = drv_lora_codingRate_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_codingRate_e_arr))];
+	appt->radio_cfg.bandwidth = drv_lora_bandwidth_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_bandwidth_e_arr)/sizeof(drv_lora_bandwidth_e_arr[0]))];
+	appt->radio_cfg.frequency = getCenterFrequency(lib_misc_fastrange32(seed, getChannelCount(appt->radio_cfg.bandwidth)), appt->radio_cfg.bandwidth);
+	appt->radio_cfg.spreadingFactor = drv_lora_spreadingFactor_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_spreadingFactor_e_arr)/sizeof(drv_lora_spreadingFactor_e_arr[0]))];
+	appt->radio_cfg.codingRate = drv_lora_codingRate_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_codingRate_e_arr)/sizeof(drv_lora_codingRate_e_arr[0]))];
 }
 
 //small issue, starts backing off on boot not after initialization
@@ -210,6 +251,7 @@ static struct appointment_s * getNextGlobalDiscoveryChannelAppointment(void) {
 	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
 	struct appointment_s * appt = popEmptyAppt();
 	if (appt == NULL) return NULL;
+	
 	struct lib_datetime_s dt;
 	drv_timer_getAbsoluteDateTime(&dt); //safe to ignore error
 	//DEBUG_PRINT("pre:\nmin:%u\nsec:%u\nms:%u\n",dt.min,dt.sec,dt.ms);
@@ -220,21 +262,21 @@ static struct appointment_s * getNextGlobalDiscoveryChannelAppointment(void) {
 	rt += 1000*15;
 	
 	uint32_t short_rt = lib_misc_XORshiftLFSR32((uint32_t)lib_misc_mix64(rt));
-	uint32_t tmp = lib_misc_fastrange32(short_rt, 5*1000); //Will be in first 5 seconds of block
+	uint32_t tmp = 0;//lib_misc_fastrange32(short_rt, 5*1000); //Will be in first 5 seconds of block
 	appt->realtime = rt + tmp;
 	lib_datetime_interval_t curTime = drv_timer_getMonotonicTime();
 	uint32_t tmp2 = (uint32_t)constrainU64(map(curTime, 0, LIB_DATETIME__MS_IN_DAY/24, 2, 20), 2, 20); // Ends at sending 1/n times
 	uint32_t tmp3 = lib_misc_fastrange32(drv_rand_getU32(), tmp2);
 	if (tmp3) { //TESTING
-		appt->type = APPT_DISC_RECV;
+		appt->type = APPT_RECV;
 	} else {
-		appt->type = APPT_DISC_SEND;
+		appt->type = APPT_SEND_DISC;
 	}
-	//appt->peer = NULL;
+
 	setApptValsFromSeed(appt, short_rt);
-	DEBUG_PRINT("bandwidth:%lu, frequency:%llu, spreadingFactor:%lu, codingRate:%lu\n", appt->bandwidth, appt->frequency, appt->spreadingFactor, appt->codingRate); 
+	DEBUG_PRINT("\tbandwidth:%lu, frequency:%llu, spreadingFactor:%lu, codingRate:%lu\n", appt->radio_cfg.bandwidth, appt->radio_cfg.frequency, appt->radio_cfg.spreadingFactor, appt->radio_cfg.codingRate); 
 	
-	DEBUG_PRINT("tmp:%lu, tmp2:%lu, tmp3:%lu\n", tmp, tmp2, tmp3); 
+	DEBUG_PRINT("\ttmp:%lu, tmp2:%lu, tmp3:%lu\n", tmp, tmp2, tmp3); 
 	//DEBUG_PRINT("post:\nmin:%u\nsec:%u\nms:%u\n",dt.min,dt.sec,dt.ms);
 	//DEBUG_PRINT("year:%u\nmonth:%u\nday:%u\nhour:%u\nmin:%u\nsec:%u\nms:%u\n",dt.year,dt.month,dt.day,dt.hour,dt.min,dt.sec,dt.ms);
 	return appt;
@@ -250,45 +292,37 @@ static struct appointment_s * getNextGlobalDiscoveryChannelAppointment(void) {
 	return appt;
 }*/
 
-static void drv_mesh_worker_disc_recv(void * arg);
-
-static void drv_mesh_worker_disc_send_finish(void * arg) {
+static void drv_mesh_worker_send_finish(void * arg) {
 	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
 	DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Packet sent.\n");
 	struct appointment_s * appt = (struct appointment_s *) arg;
 	
-	if (appt->type == APPT_DISC_SEND) {
-		appt->type = APPT_DISC_REPLY_RECV;
-		//appt->realtime = ???; //TODO set time of next appt
-		enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_disc_recv, arg, DRV_SCHED_PRI__REALTIME, appt->realtime);
-		if (err != DRV_SCHED_ERR__NONE) {
-			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule drv_mesh_worker_disc_recv() for discovery reply.\n");
-			insertEmptyAppt(appt);
-		}
-	} else if (appt->type == APPT_DISC_REPLY_SEND) {
-		//need to add info to permanent list somewhere
-		insertEmptyAppt(appt);
-	} else {
-		//?????
-	}
-	
 	drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
 	state.radio_mutex = 0;
+	
+	insertEmptyAppt(appt);
 }
 
-static void drv_mesh_worker_disc_send(void * arg) {
+static void drv_mesh_worker_send(void * arg) {
 	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
 	struct appointment_s * appt = (struct appointment_s *) arg;
 	
+	if (appt->type == APPT_RECV) {
+		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("ERROR: Unexpected appointment type in drv_mesh_worker_send()\n");
+		insertEmptyAppt(appt);
+		return;
+	}
+	
 	if (!state.radio_mutex) {
 		
-		struct packet_type_raw_s raw_packet = {0};
+		struct packet_s raw_packet = {0};
 		
-		if (appt->type == APPT_DISC_SEND) {
+		if (appt->type == APPT_SEND_DISC) {
 			raw_packet.asDisc = packet_type_disc_s_default;
 			raw_packet.asDisc.broadcast_peer_uid = state.uid; //drv_rand_getU64();
-			raw_packet.asDisc.ciphermask.mask = CIPHER__NONE;
-			drv_rand_fillBuf(raw_packet.asDisc.key_ephemeral, sizeof(raw_packet.asDisc.key_ephemeral));
+			raw_packet.asDisc.ciphermask.mask = CIPHER__XCHACHA20;
+			memcpy(state.pubkey, raw_packet.asDisc.key_ephemeral, sizeof(state.pubkey));
+			crypto_blake2b_general(raw_packet.asDisc.hmac, sizeof(raw_packet.asDisc.hmac), state.psk, sizeof(state.psk), &(raw_packet.asDisc), sizeof(raw_packet.asDisc)-sizeof(raw_packet.asDisc.hmac));
 			
 			raw_packet.size = sizeof(struct packet_type_disc_s);
 			
@@ -301,15 +335,15 @@ static void drv_mesh_worker_disc_send(void * arg) {
 		state.radio_mutex = 1;
 		drv_lora_setMode(&state.radio, DRV_LORA_MODE__IDLE);
 		
-		drv_lora_setPreamble(&state.radio, 32);
-		drv_lora_setBandwidth(&state.radio, appt->bandwidth);
-		drv_lora_setSpreadingFactor(&state.radio, appt->spreadingFactor);
-		drv_lora_setCodingRate(&state.radio, appt->codingRate);
-		drv_lora_setFrequency(&state.radio, appt->frequency);
+		drv_lora_setPreamble(&state.radio, PREAMBLE_LENGTH);
+		drv_lora_setBandwidth(&state.radio, appt->radio_cfg.bandwidth);
+		drv_lora_setSpreadingFactor(&state.radio, appt->radio_cfg.spreadingFactor);
+		drv_lora_setCodingRate(&state.radio, appt->radio_cfg.codingRate);
+		drv_lora_setFrequency(&state.radio, appt->radio_cfg.frequency);
 		
 		drv_lora_sendRawPacket_async(&state.radio, raw_packet.raw, raw_packet.size);
 		
-		enum drv_sched_err_e err = drv_sched_once(drv_mesh_worker_disc_send_finish, arg, DRV_SCHED_PRI__REALTIME, 5000);
+		enum drv_sched_err_e err = drv_sched_once(drv_mesh_worker_send_finish, arg, DRV_SCHED_PRI__REALTIME, 5000);
 		if (err != DRV_SCHED_ERR__NONE) {
 			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule drv_mesh_worker_disc_send_finish()\n");
 			drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
@@ -322,62 +356,142 @@ static void drv_mesh_worker_disc_send(void * arg) {
 	}
 }
 
-static void drv_mesh_worker_disc_recv_finish(void * arg) {
+static void drv_mesh_worker_recv_finish(void * arg) {
 	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
 	struct appointment_s * appt = (struct appointment_s *) arg;
 	
-	struct packet_type_raw_s raw_packet = {0};
+	struct packet_s raw_packet = {0};
 	raw_packet.size = drv_lora_getRawPacket(&state.radio, raw_packet.raw);
 	
+	drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
+	state.radio_mutex = 0;
+	
 	if (raw_packet.size > 0) {
-		if (raw_packet.header.type == PACKET_TYPE__DISC && appt->type == APPT_DISC_RECV) {
+		if (raw_packet.header.type == PACKET_TYPE__DISC) {
 			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Discovery packet received from [%llX] (%lu bytes).\n", raw_packet.asDisc.broadcast_peer_uid, raw_packet.size);
-			appt->type = APPT_DISC_REPLY_SEND;
-			appt->peer.uid = raw_packet.asDisc.broadcast_peer_uid;
-			//appt->realtime = ???;
-			//appt->peer.key = ???;
-			enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_disc_send, arg, DRV_SCHED_PRI__REALTIME, appt->realtime);
-			if (err != DRV_SCHED_ERR__NONE) {
-				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule drv_mesh_worker_disc_recv() for discovery reply.\n");
+			if (raw_packet.size != sizeof(struct packet_type_disc_s)) {
+				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Packet size does not match type.\n");
 				insertEmptyAppt(appt);
+				return;
+			};
+			
+			struct peer_s * peer = getPeerByUID(raw_packet.asDisc.broadcast_peer_uid);
+			if (peer == NULL) {
+				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Discovery packet from unknown peer (new peer found).\n");
+				peer = popEmptyPeer();
+				if (peer == NULL) {
+					DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Unable to save new peer, no peer slots remaining.\n");
+					insertEmptyAppt(appt);
+					return;
+				}
+				peer->status = PEER_PASSERBY;
+				peer->uid = raw_packet.asDisc.broadcast_peer_uid;
+				//memcpy(raw_packet.asDisc.key_ephemeral, peer->key, sizeof(peer->key));
+				crypto_x25519(peer->key, state.privkey, raw_packet.asDisc.key_ephemeral);
+				crypto_blake2b_general(peer->key, sizeof(peer->key), state.psk, sizeof(state.psk), peer->key, sizeof(peer->key));
+				
+				uint8_t tmp_hmac[sizeof(raw_packet.asDisc.hmac)];
+				crypto_blake2b_general(tmp_hmac, sizeof(tmp_hmac), state.psk, sizeof(state.psk), &(raw_packet.asDisc), sizeof(raw_packet.asDisc)-sizeof(tmp_hmac));
+				if (memcmp(tmp_hmac, raw_packet.asDisc.hmac, sizeof(tmp_hmac)) != 0) {
+					DEBUG_PRINT_REALTIME(); DEBUG_PRINT("HMAC mismatch.\n");
+					insertEmptyPeer(peer);
+				} else {
+					insertReadyPeer(peer);
+				}
+			} else {
+				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Discovery packet from known peer.\n");
+				//peer already known
+				if (peer->status == PEER_PASSERBY) {
+					//heard their broadcast again, check if key is the same
+				} else if (peer->status == PEER_ACQUAINTANCE) {
+					//can't check if peer's key has changed since we wiped it... oops.
+				} else if (peer->status == PEER_FRIEND) {
+					//can't check if peer's key has changed since we wiped it... oops.
+				} else {
+					//shouldn't be possible
+				}
 			}
 		} else if (raw_packet.header.type == PACKET_TYPE__DISC_REPLY) {
 			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Discovery reply packet received from [%llX] (%lu bytes).\n", raw_packet.asDiscReply.reply_peer_uid, raw_packet.size);
+			if (raw_packet.size != sizeof(struct packet_type_discReply_s)) {
+				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Packet size does not match type.\n");
+				insertEmptyAppt(appt);
+				return;
+			};
+			
+			if (raw_packet.asDiscReply.broadcast_peer_uid != state.uid) {
+				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Discovery reply packet intended for different broadcaster.\n");
+				insertEmptyAppt(appt);
+				return;
+			}
+			
+			struct peer_s * peer = getPeerByUID(raw_packet.asDiscReply.reply_peer_uid);
+			if (peer == NULL) { //PEER_STRANGER
+				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Discovery reply packet received from unknown peer.\n");
+				peer = popEmptyPeer();
+				if (peer == NULL) {
+					DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Unable to save new peer, no peer slots remaining.\n");
+					insertEmptyAppt(appt);
+					return;
+				}
+				peer->status = PEER_ACQUAINTANCE;
+				peer->uid = raw_packet.asDiscReply.reply_peer_uid;
+				crypto_x25519(peer->key, state.privkey, raw_packet.asDiscReply.key_ephemeral);
+				crypto_blake2b_general(peer->key, sizeof(peer->key), state.psk, sizeof(state.psk), peer->key, sizeof(peer->key));
+				
+				uint8_t tmp_hmac[sizeof(raw_packet.asDiscReply.hmac)];
+				crypto_blake2b_general(tmp_hmac, sizeof(tmp_hmac), state.psk, sizeof(state.psk), &(raw_packet.asDiscReply), sizeof(raw_packet.asDiscReply)-sizeof(tmp_hmac));
+				if (memcmp(tmp_hmac, raw_packet.asDiscReply.hmac, sizeof(tmp_hmac)) != 0) {
+					DEBUG_PRINT_REALTIME(); DEBUG_PRINT("HMAC mismatch.\n");
+					insertEmptyPeer(peer);
+				} else {
+					insertReadyPeer(peer);
+				}
+			} else {
+				if (peer->status == PEER_PASSERBY) {
+					//do basically the same as above?
+				} else if (peer->status == PEER_ACQUAINTANCE) {
+					
+				} else if (peer->status == PEER_FRIEND) {
+					
+				} else {
+					//shouldn't be possible
+				}
+			}
 		} else {
-			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Unexpected packet received.\n");
+			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Unknown packet received.\n");
 		}
 	} else {
 		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("No packet received.\n");
 	}
-	
-	drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
-	state.radio_mutex = 0;
+	insertEmptyAppt(appt);
 }
 
-static void drv_mesh_worker_disc_recv(void * arg) {
+static void drv_mesh_worker_recv(void * arg) {
 	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
 	struct appointment_s * appt = (struct appointment_s *) arg;
 	
+	if (appt->type != APPT_RECV) {
+		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("ERROR: Unexpected appointment type in drv_mesh_worker_recv()\n");
+		insertEmptyAppt(appt);
+		return;
+	}
+	
 	if (!state.radio_mutex) {
-		if (appt->type == APPT_DISC_RECV) {
-			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Receiving discovery packet...\n");
-		} if (appt->type == APPT_DISC_REPLY_RECV) {
-			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Receiving discovery reply packet...\n");
-		} else {
-			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Unexpected appointment type in drv_mesh_worker_disc_send(), unable to receive.\n");
-			insertEmptyAppt(appt);
-		}
+		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Listening for packet...\n");
 		state.radio_mutex = 1;
 		
 		drv_lora_setMode(&state.radio, DRV_LORA_MODE__IDLE);
-		drv_lora_setPreamble(&state.radio, 32);
-		drv_lora_setBandwidth(&state.radio, appt->bandwidth);
-		drv_lora_setSpreadingFactor(&state.radio, appt->spreadingFactor);
-		drv_lora_setCodingRate(&state.radio, appt->codingRate);
-		drv_lora_setFrequency(&state.radio, appt->frequency);
+		
+		drv_lora_setPreamble(&state.radio, PREAMBLE_LENGTH);
+		drv_lora_setBandwidth(&state.radio, appt->radio_cfg.bandwidth);
+		drv_lora_setSpreadingFactor(&state.radio, appt->radio_cfg.spreadingFactor);
+		drv_lora_setCodingRate(&state.radio, appt->radio_cfg.codingRate);
+		drv_lora_setFrequency(&state.radio, appt->radio_cfg.frequency);
 		
 		drv_lora_setMode(&state.radio, DRV_LORA_MODE__RECV_ONCE);
-		enum drv_sched_err_e err = drv_sched_once(drv_mesh_worker_disc_recv_finish, NULL, DRV_SCHED_PRI__REALTIME, 5000);
+		
+		enum drv_sched_err_e err = drv_sched_once(drv_mesh_worker_recv_finish, arg, DRV_SCHED_PRI__REALTIME, 5000);
 		if (err != DRV_SCHED_ERR__NONE) {
 			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule drv_mesh_worker_disc_recv_finish()\n");
 			drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
@@ -385,35 +499,39 @@ static void drv_mesh_worker_disc_recv(void * arg) {
 			insertEmptyAppt(appt);
 		}
 	} else {
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Radio locked, unable to receive discovery packet.\n");
+		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Radio locked, unable to listen for packet.\n");
 		insertEmptyAppt(appt);
 	}
 }
 
-static void drv_mesh_worker_data_send(void * arg) {
-	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
-	struct appointment_s * appt = (struct appointment_s *) arg;
-	insertEmptyAppt(appt);
-}
-
-static void drv_mesh_worker_data_recv(void * arg) {
-	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
-	struct appointment_s * appt = (struct appointment_s *) arg;
-	insertEmptyAppt(appt);
-}
-
 static void drv_mesh_worker_scheduler(void * arg) {
 	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
-	struct appointment_s * appt = getNextGlobalDiscoveryChannelAppointment();
-	if (appt == NULL) return;
-	if (appt->type == APPT_DISC_SEND) {
-		enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_disc_send, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
-	} else if (appt->type == APPT_DISC_RECV) {
-		enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_disc_recv, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
-	} else if (appt->type == APPT_DATA_SEND) {
-		enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_data_send, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
-	} else if (appt->type == APPT_DATA_RECV) {
-		enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_data_recv, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
+	
+	{ //schedule global discovery broadcast/receive
+		struct appointment_s * appt = getNextGlobalDiscoveryChannelAppointment();
+		if (appt == NULL) {
+			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to get next global discovery appointment\n");
+			return;
+		}
+		enum drv_sched_err_e err;
+		if (appt->type == APPT_RECV) {
+			err = drv_sched_once_at(drv_mesh_worker_recv, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
+		} else {
+			err = drv_sched_once_at(drv_mesh_worker_send, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
+		}
+		if (err != DRV_SCHED_ERR__NONE) {
+			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule next global discovery appointment\n");
+			insertEmptyAppt(appt);
+			return;
+		}
+	}
+	
+	{ //schedule own receive periods
+		
+	}
+	
+	{ //schedule per-peer sends
+		
 	}
 }
 
@@ -445,6 +563,24 @@ void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *)) {
 				state.appointments[i].next = &(state.appointments[i+1]);
 			}
 		}
+		
+		state.head_peer_empty = &(state.peers[0]);
+		for (int i=0; i<BUFFER_PEERS_SIZE; i++) {
+			if (i == BUFFER_PEERS_SIZE-1) {
+				state.peers[i].next = NULL;
+			} else {
+				state.peers[i].next = &(state.peers[i+1]);
+			}
+		}
+		
+		state.head_packet_empty = &(state.packets[0]);
+		for (int i=0; i<BUFFER_PACKETS_SIZE; i++) {
+			if (i == BUFFER_PACKETS_SIZE-1) {
+				state.packets[i].next = NULL;
+			} else {
+				state.packets[i].next = &(state.packets[i+1]);
+			}
+		}
 	//initialize scheduler
 		drv_sched_init();
 		drv_sched_onAbsoluteAvailable(drv_mesh_start, NULL);
@@ -461,6 +597,8 @@ void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *)) {
 		drv_rand_seedFromLoRa(&state.radio);
 		DEBUG_PRINT_TIMESTAMP(); DEBUG_PRINT("DONE SEEDING RNG.\n");
 		state.uid = drv_rand_getU64();
+		drv_rand_fillBuf(state.privkey, sizeof(state.privkey));
+		crypto_x25519_public_key(state.pubkey, state.privkey);
 		//DEBUG_PRINT("UID: [%llu]\n", state.uid);
 		DEBUG_PRINT("UID: [%llX]\n", state.uid);
 }

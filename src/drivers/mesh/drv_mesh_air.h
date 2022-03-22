@@ -54,6 +54,7 @@ static struct packet_type_disc_s {
 	peer_uid_t broadcast_peer_uid;
 	struct ciphermask_s ciphermask; //all capable/allowed bits are set
 	uint8_t key_ephemeral[32];
+	uint8_t hmac[8];
 } __attribute__((packed, aligned(1))) const packet_type_disc_s_default = {
 	.header.type = PACKET_TYPE__DISC,
 };
@@ -65,7 +66,8 @@ struct packet_type_discReply_s {
 	peer_uid_t broadcast_peer_uid;
 	peer_uid_t reply_peer_uid;
 	struct ciphermask_s ciphermask; //only a single bit set for selected mode
-	uint8_t key_ephemeral[32]; //optional, only if common cipher is found
+	uint8_t key_ephemeral[32];
+	uint8_t hmac[8];
 } __attribute__((packed, aligned(1))) const packet_type_discReply_s_default = {
 	.header.type = PACKET_TYPE__DISC,
 };
