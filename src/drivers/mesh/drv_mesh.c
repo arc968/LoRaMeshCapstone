@@ -116,7 +116,7 @@ static struct state_s {
 	volatile bool radio_mutex;
 	struct drv_lora_s radio;
 	
-	struct drv_mesh_stats_s
+	struct drv_mesh_stats_s stats;
 } state;
 
 static struct peer_s * popEmptyPeer(void) {
