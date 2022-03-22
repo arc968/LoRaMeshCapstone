@@ -630,7 +630,7 @@ enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * packet) {
 void drv_mesh_getStats(struct drv_mesh_stats_s * stats) {
 	memcpy(&(state.stats), stats, sizeof(struct drv_mesh_stats_s));
 	stats->peer_count = 0;
-	struct peer_s * peer = head_peer_ready;
+	struct peer_s * peer = state.head_peer_ready;
 	while(peer != NULL) {
 		stats->peer_count++;
 		peer = peer->next;
