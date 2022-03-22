@@ -115,6 +115,8 @@ static struct state_s {
 
 	volatile bool radio_mutex;
 	struct drv_lora_s radio;
+	
+	struct drv_mesh_stats_s
 } state;
 
 static struct peer_s * popEmptyPeer(void) {
@@ -300,6 +302,10 @@ static void drv_mesh_worker_send_finish(void * arg) {
 	drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
 	state.radio_mutex = 0;
 	
+	if (appt->type == APPT_SEND_DISC) {
+		state.stats.broadcasts_sent++;
+	}
+	
 	insertEmptyAppt(appt);
 }
 
@@ -385,6 +391,8 @@ static void drv_mesh_worker_recv_finish(void * arg) {
 				return;
 			};
 			
+			state.stats.broadcasts_recv++;
+			
 			struct peer_s * peer = getPeerByUID(raw_packet.asDisc.broadcast_peer_uid);
 			if (peer == NULL) {
 				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Discovery packet from unknown peer (new peer found).\n");
@@ -404,6 +412,7 @@ static void drv_mesh_worker_recv_finish(void * arg) {
 				crypto_blake2b_general(tmp_hmac, sizeof(tmp_hmac), state.psk, sizeof(state.psk), &(raw_packet.asDisc), sizeof(raw_packet.asDisc)-sizeof(tmp_hmac));
 				if (memcmp(tmp_hmac, raw_packet.asDisc.hmac, sizeof(tmp_hmac)) != 0) {
 					DEBUG_PRINT_REALTIME(); DEBUG_PRINT("HMAC mismatch.\n");
+					state.stats.mac_failures++;
 					insertEmptyPeer(peer);
 				} else {
 					insertReadyPeer(peer);
@@ -453,6 +462,7 @@ static void drv_mesh_worker_recv_finish(void * arg) {
 				crypto_blake2b_general(tmp_hmac, sizeof(tmp_hmac), state.psk, sizeof(state.psk), &(raw_packet.asDiscReply), sizeof(raw_packet.asDiscReply)-sizeof(tmp_hmac));
 				if (memcmp(tmp_hmac, raw_packet.asDiscReply.hmac, sizeof(tmp_hmac)) != 0) {
 					DEBUG_PRINT_REALTIME(); DEBUG_PRINT("HMAC mismatch.\n");
+					state.stats.mac_failures++;
 					insertEmptyPeer(peer);
 				} else {
 					insertReadyPeer(peer);
@@ -615,6 +625,16 @@ void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *)) {
 
 enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * packet) {
 	return 0;
+}
+
+void drv_mesh_getStats(struct drv_mesh_stats_s * stats) {
+	memcpy(&(state.stats), stats, sizeof(struct drv_mesh_stats_s));
+	stats->peer_count = 0;
+	struct peer_s * peer = head_peer_ready;
+	while(peer != NULL) {
+		stats->peer_count++;
+		peer = peer->next;
+	}
 }
 
 #endif

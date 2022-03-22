@@ -1,4 +1,4 @@
-#define HW_LORA_SEMTECH_SX1276_C
+#define HW_LORA_SEMTECH_SX1276_CPP
 //#include "hw_lora_semtech_sx1276.h"
 #include "../../../hardware.h"
 
@@ -414,4 +414,4 @@ void drv_lora_writeRegister(uint8_t address, uint8_t value) {
 
 #endif // HW_LORA_SEMTECH_SX1276_H
 
-#undef HW_LORA_SEMTECH_SX1276_C
+#undef HW_LORA_SEMTECH_SX1276_CPP

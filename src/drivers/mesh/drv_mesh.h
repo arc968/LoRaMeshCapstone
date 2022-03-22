@@ -29,6 +29,7 @@ struct drv_mesh_stats_s {
 	uint32_t packets_dropped;
 	uint32_t packets_forwarded;
 	uint32_t checksum_failures;
+	uint32_t mac_failures;
 	uint32_t broadcasts_sent;
 	uint32_t broadcasts_recv;
 	uint32_t peer_count;
