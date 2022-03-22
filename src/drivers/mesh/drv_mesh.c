@@ -609,7 +609,7 @@ void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *)) {
 	//configure GPS for timekeeping mode as appropriate
 	
 	//initialize LoRa radio
-		drv_lora_init(&state.radio, getCenterFrequency(0, DRV_LORA_BW__125kHz), 0); //TESTING
+		drv_lora_init(&state.radio, getCenterFrequency(0, DRV_LORA_BW__125kHz)); //TESTING
 	//configure LoRa radio
 		drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
 	//seed RNG

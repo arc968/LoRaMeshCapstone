@@ -100,7 +100,9 @@ struct drv_lora_s {
 	uint16_t preamblelen;*/
 };
 
-void drv_lora_init(struct drv_lora_s * handle, uint64_t freq, pin_t pin);
+void drv_lora_init(struct drv_lora_s * handle, uint64_t freq);
+
+//pin_t drv_lora_getPin(struct drv_lora_s * handle);
 
 void drv_lora_setMode(struct drv_lora_s * handle, enum drv_lora_mode_e mode);
 //enum drv_lora_mode_e drv_lora_getMode(struct drv_lora_s * handle);

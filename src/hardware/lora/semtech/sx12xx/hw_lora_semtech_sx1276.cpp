@@ -84,16 +84,17 @@ extern "C" {
 #endif //HW_ARDUINO
 
 
-void drv_lora_init(struct drv_lora_s * handle, uint64_t freq, pin_t pin) {
+void drv_lora_init(struct drv_lora_s * handle, uint64_t freq) {
 	
 	#ifdef HW_ARDUINO
+		LoRa.setPins(PIN_SPI_SS, RFM_RST, RFM_DIO0);
 		while (!LoRa.begin(freq));
 		LoRa.enableCrc();
 	#else
 		
 	#endif //HW_ARDUINO
-	handle->pin = pin;
-	/*handle->frequency = freq;
+	/*handle->pin = RFM_DIO0;
+	handle->frequency = freq;
 	handle->bandwidth = DRV_LORA_BW__125kHz;
 	handle->spreadingFactor = DRV_LORA_SF__7;
 	handle->codingRate = DRV_LORA_CR__4_5;
@@ -101,6 +102,12 @@ void drv_lora_init(struct drv_lora_s * handle, uint64_t freq, pin_t pin) {
 	handle->preamblelen = 8;*/
 	
 }
+
+/*pin_t drv_lora_getPin(struct drv_lora_s * handle) {
+	
+	return handle->pin;
+	
+}*/
 
 void drv_lora_setMode(struct drv_lora_s * handle, enum drv_lora_mode_e mode) {
 	
