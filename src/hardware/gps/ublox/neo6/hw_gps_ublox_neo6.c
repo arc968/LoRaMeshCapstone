@@ -341,7 +341,18 @@ void drv_gps_init(struct drv_gps_s * handle) {
 	hal_serial_flush(hal_serial1);
 		
 	//enable interrupts on GPS pulse GPIO pin
-	hal_interrupt_attachPin(0, isr_pps, INTERRUPT_FALLING);
+	#if defined(HW_MKRWAN1300_H)
+		hal_interrupt_attachPin(0, isr_pps, INTERRUPT_FALLING);
+	#elif defined(HW_RAK4260_H)
+		hal_interrupt_attachPin(5, isr_pps, INTERRUPT_FALLING);
+	#elif defined(HW_RAK4600_H)
+			
+	#elif defined(HW_RAK11300_H)
+		
+	#else
+		#error "Hardware not yet implemented"
+	#endif
+	
 	
 	int msg_byte = hal_serial_read(hal_serial1);
 	while (msg_byte >= 0) {
