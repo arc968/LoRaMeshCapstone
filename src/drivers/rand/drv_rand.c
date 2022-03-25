@@ -37,6 +37,10 @@ static struct state_s {
 	uint32_t availableBytes;
 } state;
 
+
+#ifndef HW_ARDUINO
+	#define NUM_ANALOG_INPUTS 0
+#endif
 /*
 Pulls from several random-ish sources of noise in an attempt to seed the RNG
 */
@@ -46,7 +50,7 @@ void drv_rand_seedFromMisc(void) {
 	
 	lib_datetime_realtime_t start = drv_timer_getMonotonicTime();
 	for (uint32_t i=0; i<MISC_MIN_SEED_ROUNDS || drv_timer_getMonotonicTime()-start < MISC_MIN_DURATION_MS; i++) {
-		for (uint32_t aPins=0; aPins<7; aPins++) crypto_blake2b_update(&ctx, (uint8_t *)&(uint16_t){hal_gpio_analogRead(aPins)}, sizeof(uint16_t));
+		for (uint32_t aPins=0; aPins<NUM_ANALOG_INPUTS; aPins++) crypto_blake2b_update(&ctx, (uint8_t *)&(uint16_t){hal_gpio_analogRead(aPins)}, sizeof(uint16_t));
 		crypto_blake2b_update(&ctx, (uint8_t *)&(uint64_t){drv_timer_getMonotonicTime()}, sizeof(uint64_t));
 		crypto_blake2b_update(&ctx, (uint8_t *)&(uint16_t){hal_serial_available(hal_serial0)}, sizeof(uint16_t));
 		crypto_blake2b_update(&ctx, (uint8_t *)&(uint16_t){hal_serial_available(hal_serial1)}, sizeof(uint16_t));

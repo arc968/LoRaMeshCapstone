@@ -6,7 +6,7 @@ extern "C" {
 
 #include "../../lib/datetime/lib_datetime.h"
 
-#define DRV_SCHED__MAX_JOBS 16
+#define DRV_SCHED__MAX_JOBS 32
 #if (!((DRV_SCHED__MAX_JOBS) >= 1))
 	#error DRV_SCHED__MAX_JOBS must be >= 1
 #endif

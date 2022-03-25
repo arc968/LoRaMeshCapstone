@@ -28,7 +28,7 @@ static enum drv_lora_bandwidth_e drv_lora_bandwidth_e_arr[] = {
 	DRV_LORA_BW__500kHz,
 	DRV_LORA_BW__250kHz,
 	DRV_LORA_BW__125kHz,
-	DRV_LORA_BW__62_5kHz,
+	//DRV_LORA_BW__62_5kHz,
 };
 
 enum drv_lora_spreadingFactor_e {
@@ -137,6 +137,11 @@ void drv_lora_sendRawPacket_async(struct drv_lora_s * handle, uint8_t * buf, siz
 void drv_lora_recvPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet);
 
 void drv_lora_sendPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet);
+
+bool drv_lora_isSignalDetected(struct drv_lora_s * handle);
+bool drv_lora_isSignalSynchronized(struct drv_lora_s * handle);
+bool drv_lora_isHeaderValid(struct drv_lora_s * handle);
+bool drv_lora_isRecvTimeout(struct drv_lora_s * handle);
 
 uint8_t drv_lora_random(struct drv_lora_s * handle);
 

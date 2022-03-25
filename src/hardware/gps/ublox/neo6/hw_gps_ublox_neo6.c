@@ -32,28 +32,45 @@
 
 //static uint8_t recv_buf[128];
 
+int  snprintf_(char* buffer, size_t count, const char* format, ...);
+#define DEBUG_PRINT_FUNCTION() {char tbuf[256]; snprintf_(tbuf, sizeof(tbuf), "%s()\n",__func__); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}
+
+#define DEBUG_PRINT(...) {char tbuf[256]; snprintf_(tbuf, sizeof(tbuf), __VA_ARGS__); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}
+
+#define DEBUG_PRINT_TIMESTAMP() {char tbuf[256]; snprintf_(tbuf, sizeof(tbuf), "[%lu] ", (uint32_t)drv_timer_getMonotonicTime()); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}
+
+#define DEBUG_PRINT_REALTIME() {char tbuf[256]; lib_datetime_realtime_t trt; drv_timer_getRealtime(&trt); snprintf_(tbuf, sizeof(tbuf), "[rt:%lu] ", (uint32_t)trt); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}
+
+
 static volatile lib_datetime_interval_t timestamp = 0;
 
 static volatile bool runonce = false;
 
 static void job_getGpsMessage(void * arg) {
 	
-	hal_serial_write(hal_serial0, "job_getGpsMessage()\n", sizeof("job_getGpsMessage()\n")-1);
+	DEBUG_PRINT_FUNCTION();
+	
 	//uint8_t tmp1 = sizeof(struct ubx_msg__NAV_TIMEUTC__TimeSolution_s);
 	//hal_serial_write(hal_serial0, &tmp1, 1);
 	while (true) {
 	int msg_byte = hal_serial_read(hal_serial1);
-	for (int i=0; i<128; i++) {
-		if (msg_byte < 0) break;
+	for (int i=0; i<50; i++) {
+		if (msg_byte < 0) {
+			hal_timer_delay(5);
+			msg_byte = hal_serial_read(hal_serial1);
+			continue;
+		}
 		if (msg_byte == ubx_msg_sync_s_default.syncChar1) {
 			msg_byte = hal_serial_read(hal_serial1);
 			if (msg_byte == ubx_msg_sync_s_default.syncChar2) goto MSG_SYNC_FOUND;
 		} else {
 			msg_byte = hal_serial_read(hal_serial1);
 		}
+		
 	}
 	
 	//hal_serial_write(hal_serial0, "no msg sync bytes found\n", sizeof("no msg sync bytes found\n"));
+	//DEBUG_PRINT("No msg sync bytes found\n");
 	return; //no msg sync bytes found
 	
 	struct ubx_msg_header_s msg_header;
@@ -72,7 +89,10 @@ static void job_getGpsMessage(void * arg) {
 	}
 	
 	for (int i=0; i<UBX_MSG_HEADER_SIZE; i++) {
-		if (msg_header.raw[i] != ubx_msg__NAV_TIMEUTC__TimeSolution_s_default.header.raw[i]) return;
+		if (msg_header.raw[i] != ubx_msg__NAV_TIMEUTC__TimeSolution_s_default.header.raw[i]) {
+			//DEBUG_PRINT("ubx_msg__NAV_TIMEUTC__TimeSolution_s_default header does not match\n");
+			return;
+		}
 	}
 	
 	//hal_serial_write(hal_serial0, "header match\n", sizeof("header match\n"));

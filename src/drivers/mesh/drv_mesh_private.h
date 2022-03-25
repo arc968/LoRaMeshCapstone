@@ -34,7 +34,7 @@ struct peer_s {
 };
 
 struct radio_cfg_s {
-	uint16_t preamble;
+	uint16_t preambleSymbols;
 	uint64_t frequency;
 	enum drv_lora_bandwidth_e bandwidth;
 	enum drv_lora_spreadingFactor_e spreadingFactor;
@@ -64,7 +64,7 @@ struct appointment_s {
 	struct packet_s * packet;
 	
 	struct radio_cfg_s radio_cfg;
-} __attribute__((packed));
+}; //__attribute__((packed)); //PACKED CAUSES HARD LOCKUP
 
 struct packet_s {
 	struct packet_s * next;

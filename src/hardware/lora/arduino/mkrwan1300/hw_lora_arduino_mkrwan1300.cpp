@@ -36,6 +36,7 @@ extern "C" {
 	#define REG_FIFO_RX_CURRENT_ADDR 0x10
 	#define REG_IRQ_FLAGS            0x12
 	#define REG_RX_NB_BYTES          0x13
+	#define REG_MODEM_STATUS         0x18
 	#define REG_PKT_SNR_VALUE        0x19
 	#define REG_PKT_RSSI_VALUE       0x1a
 	#define REG_RSSI_VALUE           0x1b
@@ -383,6 +384,26 @@ uint8_t drv_lora_random(struct drv_lora_s * handle) {
 	#endif //HW_ARDUINO
 	
 }
+
+bool drv_lora_isSignalDetected(struct drv_lora_s * handle) { 
+	return drv_lora_readRegister(REG_MODEM_STATUS) & (0x1 << 0);
+}
+
+bool drv_lora_isSignalSynchronized(struct drv_lora_s * handle) { 
+	return drv_lora_readRegister(REG_MODEM_STATUS) & (0x1 << 1);
+}
+
+bool drv_lora_isHeaderValid(struct drv_lora_s * handle) {
+	return drv_lora_readRegister(REG_MODEM_STATUS) & (0x1 << 3);
+}
+
+bool drv_lora_isRecvTimeout(struct drv_lora_s * handle) {
+	//return drv_lora_readRegister(REG_MODEM_STATUS) & (0x1 << 3);
+	uint8_t tirqFlags = drv_lora_readRegister(REG_IRQ_FLAGS);
+	//drv_lora_writeRegister(REG_IRQ_FLAGS, tirqFlags);
+	return tirqFlags & (0x1 << 7);
+}
+
 
 uint8_t drv_lora_singleTransfer(uint8_t address, uint8_t value) {
 	
