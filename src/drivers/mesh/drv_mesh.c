@@ -29,9 +29,6 @@
 #include "drv_mesh.h"
 #include "drv_mesh_private.h"
 
-//#include "../../lib/printf/printf.h"
-int  snprintf_(char* buffer, size_t count, const char* format, ...);
-
 #include "../../lib/monocypher/monocypher.h"
 
 #define XXH_NO_STREAM
@@ -91,14 +88,6 @@ int  snprintf_(char* buffer, size_t count, const char* format, ...);
         rb.count++,\
         &(rb.buf[(rb.head == 0) ? RB_CAPACITY(rb)-1 : rb.head-1]))\
 ))
-
-#define DEBUG_PRINT_FUNCTION() {char tbuf[256]; snprintf_(tbuf, sizeof(tbuf), "%s()\n",__func__); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}
-
-#define DEBUG_PRINT(...) {char tbuf[256]; snprintf_(tbuf, sizeof(tbuf), __VA_ARGS__); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}
-
-#define DEBUG_PRINT_TIMESTAMP() {char tbuf[256]; snprintf_(tbuf, sizeof(tbuf), "[%lu] ", (uint32_t)drv_timer_getMonotonicTime()); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}
-
-#define DEBUG_PRINT_REALTIME() {char tbuf[256]; lib_datetime_realtime_t trt; drv_timer_getRealtime(&trt); snprintf_(tbuf, sizeof(tbuf), "[rt:%lu] ", (uint32_t)trt); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}
 
 static struct state_s {
 	ip_t ip;
@@ -259,68 +248,8 @@ static void setupRadioFromConfig(struct drv_lora_s * radio, struct radio_cfg_s *
 	drv_lora_setCodingRate(radio, cfg->codingRate);
 }
 
-
 static lib_datetime_realtime_t roundRealtimeToBlock(lib_datetime_realtime_t rt) {
 	return 0;
-}
-
-static void setRadioCfgAtTimeFromSeed(struct radio_cfg_s * cfg, lib_datetime_realtime_t rt, uint32_t seed) {
-	seed = LIB_BYTEORDER_HTON_U32(seed);
-	rt = LIB_BYTEORDER_HTON_U64(rt); //probably doesn't work properly
-	crypto_blake2b_general((uint8_t *)&seed, sizeof(seed), (uint8_t *)&seed, sizeof(seed), (uint8_t *)&rt, sizeof(rt));
-	seed = LIB_BYTEORDER_NTOH_U32(seed);
-	
-	cfg->preambleSymbols = PREAMBLE_LENGTH;
-	cfg->bandwidth = drv_lora_bandwidth_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_bandwidth_e_arr)/sizeof(drv_lora_bandwidth_e_arr[0]))];
-	cfg->frequency = getCenterFrequency(lib_misc_fastrange32(seed, getChannelCount(cfg->bandwidth)), cfg->bandwidth);
-	cfg->spreadingFactor = drv_lora_spreadingFactor_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_spreadingFactor_e_arr)/sizeof(drv_lora_spreadingFactor_e_arr[0]))];
-	cfg->codingRate = drv_lora_codingRate_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_codingRate_e_arr)/sizeof(drv_lora_codingRate_e_arr[0]))];
-}
-
-//small issue, starts backing off on boot not after initialization
-//also needs to change bandwidth based on time, not seed
-static struct appointment_s * getNextGlobalDiscoveryChannelAppointment(void) {
-	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
-	struct appointment_s * appt = popEmptyAppt();
-	if (appt == NULL) return NULL;
-	
-	/*
-	struct lib_datetime_s dt;
-	drv_timer_getAbsoluteDateTime(&dt); //safe to ignore error
-	//DEBUG_PRINT("pre:\nmin:%u\nsec:%u\nms:%u\n",dt.min,dt.sec,dt.ms);
-	dt.sec = (dt.sec / 15) * 15;
-	dt.ms = 0;
-	lib_datetime_realtime_t rt;
-	lib_datetime_convertDatetimeToRealtime(&dt, &rt);
-	rt += 1000*15;
-	*/
-	lib_datetime_realtime_t rt;
-	drv_timer_getRealtime(&rt);
-	rt = (rt / DISCOVERY_INTERVAL_MILLIS) * DISCOVERY_INTERVAL_MILLIS;
-	rt += DISCOVERY_INTERVAL_MILLIS;
-	
-	//uint32_t short_rt = lib_misc_XORshiftLFSR32((uint32_t)lib_misc_mix64(rt));
-	uint32_t tmp = 0;//lib_misc_fastrange32(short_rt, 5*1000); //Will be in first 5 seconds of block
-	appt->realtime = rt + tmp;
-	lib_datetime_interval_t curTime = drv_timer_getMonotonicTime();
-	uint32_t tmp2 = (uint32_t)constrainU64(map(curTime, 0, LIB_DATETIME__MS_IN_DAY/24, 2, 20), 2, 20); // Ends at sending 1/n times
-	uint32_t tmp3 = lib_misc_fastrange32(drv_rand_getU32(), tmp2);
-	if (tmp3) { //TESTING
-		appt->type = APPT_RECV;
-	} else {
-		appt->type = APPT_SEND_DISC;
-	}
-
-	//setApptValsFromSeed(appt, short_rt);
-	//appt->radio_cfg.bandwidth = drv_lora_bandwidth_e_arr[lib_misc_fastrange32(short_rt, sizeof(drv_lora_bandwidth_e_arr)/sizeof(drv_lora_bandwidth_e_arr[0]))];
-	setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), rt, 0); //0 for global
-	
-	DEBUG_PRINT("\tbandwidth:%lu, frequency:%llu, spreadingFactor:%lu, codingRate:%lu\n", appt->radio_cfg.bandwidth, appt->radio_cfg.frequency, appt->radio_cfg.spreadingFactor, appt->radio_cfg.codingRate); 
-	
-	DEBUG_PRINT("\ttmp:%lu, tmp2:%lu, tmp3:%lu\n", tmp, tmp2, tmp3); 
-	//DEBUG_PRINT("post:\nmin:%u\nsec:%u\nms:%u\n",dt.min,dt.sec,dt.ms);
-	//DEBUG_PRINT("year:%u\nmonth:%u\nday:%u\nhour:%u\nmin:%u\nsec:%u\nms:%u\n",dt.year,dt.month,dt.day,dt.hour,dt.min,dt.sec,dt.ms);
-	return appt;
 }
 
 /*static struct appointment_s * getNextPrivateDiscoveryChannelAppointment(void) {
@@ -394,7 +323,9 @@ static void drv_mesh_worker_send(void * arg) {
 			
 			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Sending discovery reply packet as [%llX] to [%llX]...\n", raw_packet.asDiscReply.reply_peer_uid, raw_packet.asDiscReply.broadcast_peer_uid);
 		} else {
-			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Unexpected appointment type in drv_mesh_worker_disc_send(), unable to send.\n");
+			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Unexpected appointment type in drv_mesh_worker_send(), unable to send.\n");
+			insertEmptyAppt(appt);
+			return;
 		}
 		
 		state.radio_mutex = 1;
@@ -406,14 +337,17 @@ static void drv_mesh_worker_send(void * arg) {
 		
 		enum drv_sched_err_e err = drv_sched_once(drv_mesh_worker_send_finish, arg, DRV_SCHED_PRI__REALTIME, 5000);
 		if (err != DRV_SCHED_ERR__NONE) {
-			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule drv_mesh_worker_disc_send_finish()\n");
+			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule drv_mesh_worker_send_finish()\n");
 			drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
 			state.radio_mutex = 0;
+			insertEmptyAppt(appt);
+			return;
 		}
 	} else {
 		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Radio locked, unable to send discovery packet.\n");
+		insertEmptyAppt(appt);
+		return;
 	}
-	insertEmptyAppt(appt);
 }
 
 static void drv_mesh_worker_recv_finish(void * arg) {
@@ -513,7 +447,8 @@ static void drv_mesh_worker_recv_finish(void * arg) {
 				}
 			} else {
 				if (peer->status == PEER_PASSERBY) {
-					//do basically the same as above?
+					DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Discovery reply packet received from unknown peer.\n");
+					//TODO same as above?
 				} else if (peer->status == PEER_ACQUAINTANCE) {
 					
 				} else if (peer->status == PEER_FRIEND) {
@@ -561,30 +496,94 @@ static void drv_mesh_worker_recv(void * arg) {
 		drv_lora_setMode(&state.radio, DRV_LORA_MODE__RECV_ONCE);
 		hal_timer_delay(250); //idk if this value makes sense
 		if (!drv_lora_isSignalDetected(&state.radio)) {
-			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: No preamble detected in drv_mesh_worker_disc_recv(), aborting receive.\n");
+			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: No preamble detected in drv_mesh_worker_recv(), aborting receive.\n");
 			drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
 			state.radio_mutex = 0;
 			insertEmptyAppt(appt);
+			return;
 		} else {
 			enum drv_sched_err_e err = drv_sched_once(drv_mesh_worker_recv_finish, arg, DRV_SCHED_PRI__REALTIME, 5000); //the interval should be calculated
 			if (err != DRV_SCHED_ERR__NONE) {
-				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule drv_mesh_worker_disc_recv_finish()\n");
+				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule drv_mesh_worker_recv_finish()\n");
 				drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
 				state.radio_mutex = 0;
 				insertEmptyAppt(appt);
+				return;
 			}
 		}
 	} else {
 		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Radio locked, unable to listen for packet.\n");
 		insertEmptyAppt(appt);
+		return;
 	}
+}
+
+static void setRadioCfgAtTimeFromSeed(struct radio_cfg_s * cfg, lib_datetime_realtime_t rt, uint32_t seed) {
+	seed = LIB_BYTEORDER_HTON_U32(seed);
+	rt = LIB_BYTEORDER_HTON_U64(rt); //probably doesn't work properly
+	crypto_blake2b_general((uint8_t *)&seed, sizeof(seed), (uint8_t *)&seed, sizeof(seed), (uint8_t *)&rt, sizeof(rt));
+	seed = LIB_BYTEORDER_NTOH_U32(seed);
+	
+	cfg->preambleSymbols = PREAMBLE_LENGTH;
+	cfg->bandwidth = drv_lora_bandwidth_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_bandwidth_e_arr)/sizeof(drv_lora_bandwidth_e_arr[0]))];
+	cfg->frequency = getCenterFrequency(lib_misc_fastrange32(seed, getChannelCount(cfg->bandwidth)), cfg->bandwidth);
+	cfg->spreadingFactor = drv_lora_spreadingFactor_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_spreadingFactor_e_arr)/sizeof(drv_lora_spreadingFactor_e_arr[0]))];
+	cfg->codingRate = drv_lora_codingRate_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_codingRate_e_arr)/sizeof(drv_lora_codingRate_e_arr[0]))];
+}
+
+//small issue, starts backing off on boot not after initialization
+//also needs to change bandwidth based on time, not seed
+static struct appointment_s * getNextGlobalDiscoveryChannelAppointment(lib_datetime_realtime_t rt) {
+	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
+	struct appointment_s * appt = popEmptyAppt();
+	if (appt == NULL) return NULL;
+	
+	/*
+	struct lib_datetime_s dt;
+	drv_timer_getAbsoluteDateTime(&dt); //safe to ignore error
+	//DEBUG_PRINT("pre:\nmin:%u\nsec:%u\nms:%u\n",dt.min,dt.sec,dt.ms);
+	dt.sec = (dt.sec / 15) * 15;
+	dt.ms = 0;
+	lib_datetime_realtime_t rt;
+	lib_datetime_convertDatetimeToRealtime(&dt, &rt);
+	rt += 1000*15;
+	*/
+
+	
+	//uint32_t short_rt = lib_misc_XORshiftLFSR32((uint32_t)lib_misc_mix64(rt));
+	uint32_t tmp = 0;//lib_misc_fastrange32(short_rt, 5*1000); //Will be in first 5 seconds of block
+	appt->realtime = rt + tmp;
+	lib_datetime_interval_t curTime = drv_timer_getMonotonicTime();
+	uint32_t tmp2 = (uint32_t)constrainU64(map(curTime, 0, LIB_DATETIME__MS_IN_DAY/24, 2, 20), 2, 20); // Ends at sending 1/n times
+	uint32_t tmp3 = lib_misc_fastrange32(drv_rand_getU32(), tmp2);
+	if (tmp3) { //TESTING
+		appt->type = APPT_RECV;
+	} else {
+		appt->type = APPT_SEND_DISC;
+	}
+
+	//setApptValsFromSeed(appt, short_rt);
+	//appt->radio_cfg.bandwidth = drv_lora_bandwidth_e_arr[lib_misc_fastrange32(short_rt, sizeof(drv_lora_bandwidth_e_arr)/sizeof(drv_lora_bandwidth_e_arr[0]))];
+	setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), rt, 0); //0 for global
+	
+	DEBUG_PRINT("\tbandwidth:%lu, frequency:%llu, spreadingFactor:%lu, codingRate:%lu\n", appt->radio_cfg.bandwidth, appt->radio_cfg.frequency, appt->radio_cfg.spreadingFactor, appt->radio_cfg.codingRate); 
+	
+	DEBUG_PRINT("\ttmp:%lu, tmp2:%lu, tmp3:%lu\n", tmp, tmp2, tmp3); 
+	//DEBUG_PRINT("post:\nmin:%u\nsec:%u\nms:%u\n",dt.min,dt.sec,dt.ms);
+	//DEBUG_PRINT("year:%u\nmonth:%u\nday:%u\nhour:%u\nmin:%u\nsec:%u\nms:%u\n",dt.year,dt.month,dt.day,dt.hour,dt.min,dt.sec,dt.ms);
+	return appt;
 }
 
 static void drv_mesh_worker_scheduler(void * arg) {
 	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
 	
+	lib_datetime_realtime_t rt_disc;
+	drv_timer_getRealtime(&rt_disc);
+	rt_disc = (rt_disc / DISCOVERY_INTERVAL_MILLIS) * DISCOVERY_INTERVAL_MILLIS;
+	rt_disc += DISCOVERY_INTERVAL_MILLIS;
+	
 	{ //schedule global discovery broadcast/receive
-		struct appointment_s * appt = getNextGlobalDiscoveryChannelAppointment();
+		struct appointment_s * appt = getNextGlobalDiscoveryChannelAppointment(rt_disc);
 		if (appt == NULL) {
 			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to get next global discovery appointment\n");
 			return;
@@ -602,12 +601,88 @@ static void drv_mesh_worker_scheduler(void * arg) {
 		}
 	}
 	
-	{ //schedule own receive periods
-		
+	{ //schedule per-peer sends
+		struct peer_s * peer = state.head_peer_ready;
+		for (; peer != NULL; peer = peer->next) {
+			if ((peer->status != PEER_ACQUAINTANCE) && (peer->status != PEER_FRIEND)) {
+				struct appointment_s * appt = popEmptyAppt();
+				if (appt == NULL) {
+					DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule peer send discReply appointment, no empty appointments available\n");
+					return;
+				}
+				
+				uint32_t tmp;
+				crypto_blake2b_general((uint8_t *)&tmp, sizeof(tmp), state.psk, sizeof(state.psk), (uint8_t *)&(peer->uid), sizeof(peer->uid)); //doesn't handle byteorder correctly
+				tmp = LIB_BYTEORDER_HTON_U32(tmp);
+				
+				uint32_t offset = lib_misc_fastrange32(tmp, DISCOVERY_INTERVAL_MILLIS - 5000) + 5000;
+				appt->realtime = rt_disc + offset;
+				appt->type = APPT_SEND_DISC_REPLY;
+				appt->peer = peer;
+				appt->packet = NULL;
+				setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), appt->realtime, tmp);
+				
+				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Scheduling discReply send at t+%lu\n", offset);
+				
+				enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_send, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
+				if (err != DRV_SCHED_ERR__NONE) {
+					DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule peer send discReply appointment\n");
+					insertEmptyAppt(appt);
+					return;
+				}
+			} else {
+				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Skipping discReply for peer [%llX], handshake already complete.\n", peer->uid);
+			}
+		}
 	}
 	
-	{ //schedule per-peer sends
-		
+	{ //schedule own receive periods
+		{ //discovery reply periods
+			struct appointment_s * appt = popEmptyAppt();
+			if (appt == NULL) {
+				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule receive appointment, no empty appointments available\n");
+				return;
+			}
+			
+			uint32_t tmp;
+			crypto_blake2b_general((uint8_t *)&tmp, sizeof(tmp), state.psk, sizeof(state.psk), (uint8_t *)&(state.uid), sizeof(state.uid)); //doesn't handle byteorder correctly
+			tmp = LIB_BYTEORDER_HTON_U32(tmp);
+			
+			uint32_t offset = lib_misc_fastrange32(tmp, DISCOVERY_INTERVAL_MILLIS - 5000) + 5000;
+			appt->realtime = rt_disc + offset;
+			appt->type = APPT_RECV;
+			appt->peer = NULL;
+			appt->packet = NULL;
+			setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), appt->realtime, tmp);
+			
+			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Scheduling discReply listen at t+%lu\n", offset);
+			
+			enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_recv, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
+			if (err != DRV_SCHED_ERR__NONE) {
+				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule receive appointment\n");
+				insertEmptyAppt(appt);
+				return;
+			}
+		}
+		/*{ //per-peer receive periods
+			struct peer_s * peer = state.head_peer_ready;
+			for (; peer != NULL; peer = peer->next) {
+				struct appointment_s * appt = popEmptyAppt();
+				if (appt == NULL) {
+					DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule peer receive appointment, no empty appointments available\n");
+					return;
+				}
+				
+				appt->
+				
+				enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_recv, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
+				if (err != DRV_SCHED_ERR__NONE) {
+					DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule peer receive appointment\n");
+					insertEmptyAppt(appt);
+					return;
+				}
+			}
+		}*/
 	}
 }
 

@@ -30,18 +30,6 @@
 #endif
 */
 
-//static uint8_t recv_buf[128];
-
-int  snprintf_(char* buffer, size_t count, const char* format, ...);
-#define DEBUG_PRINT_FUNCTION() {char tbuf[256]; snprintf_(tbuf, sizeof(tbuf), "%s()\n",__func__); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}
-
-#define DEBUG_PRINT(...) {char tbuf[256]; snprintf_(tbuf, sizeof(tbuf), __VA_ARGS__); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}
-
-#define DEBUG_PRINT_TIMESTAMP() {char tbuf[256]; snprintf_(tbuf, sizeof(tbuf), "[%lu] ", (uint32_t)drv_timer_getMonotonicTime()); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}
-
-#define DEBUG_PRINT_REALTIME() {char tbuf[256]; lib_datetime_realtime_t trt; drv_timer_getRealtime(&trt); snprintf_(tbuf, sizeof(tbuf), "[rt:%lu] ", (uint32_t)trt); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}
-
-
 static volatile lib_datetime_interval_t timestamp = 0;
 
 static volatile bool runonce = false;
@@ -143,7 +131,7 @@ static void job_getGpsMessage(void * arg) {
 	//hal_serial_write(hal_serial0, ((uint8_t*)(&(timeutc))), sizeof(timeutc));
 	
 	if (!(timeutc.checksum.ck_a == tmp_ck_a && timeutc.checksum.ck_b == tmp_ck_b)) {
-		hal_serial_write(hal_serial0, "checksum failure\n", sizeof("checksum failure\n"));
+		hal_serial_write(hal_serial0, "\tchecksum failure\n", sizeof("\tchecksum failure\n"));
 		return;
 	}
 	

@@ -5,16 +5,17 @@ extern "C" {
 #endif
 
 enum packet_type_e {
+	PACKET_TYPE__NONE = 0,
 	//layer 3 (Network) (Relayable)
-	PACKET_TYPE__DATA,
+	PACKET_TYPE__DATA = 1,
 	//layer 2 (Data Link)
-	PACKET_TYPE__DISC,
-	PACKET_TYPE__DISC_REPLY,
-	PACKET_TYPE__DISC_HANDSHAKE,
-	PACKET_TYPE__ACK,
-	PACKET_TYPE__NACK,
-	PACKET_TYPE__REKEY,
-	PACKET_TYPE__REKEY_REPLY,
+	PACKET_TYPE__DISC = 2,
+	PACKET_TYPE__DISC_REPLY = 3,
+	PACKET_TYPE__DISC_HANDSHAKE = 4,
+	PACKET_TYPE__ACK = 5,
+	PACKET_TYPE__NACK = 6,
+	PACKET_TYPE__REKEY = 7,
+	PACKET_TYPE__REKEY_REPLY = 8,
 };
 
 enum ciphermask_e {
@@ -41,7 +42,8 @@ struct ciphermask_s {
 
 #pragma scalar_storage_order big-endian
 struct packet_header_s {
-	enum packet_type_e type;
+	uint8_t type;
+	uint8_t reserved[3];
 } __attribute__((packed, aligned(1)));
 #pragma scalar_storage_order default
 
@@ -69,7 +71,7 @@ struct packet_type_discReply_s {
 	uint8_t key_ephemeral[32];
 	uint8_t hmac[8];
 } __attribute__((packed, aligned(1))) const packet_type_discReply_s_default = {
-	.header.type = PACKET_TYPE__DISC,
+	.header.type = PACKET_TYPE__DISC_REPLY,
 };
 #pragma scalar_storage_order default
 
@@ -78,7 +80,9 @@ struct packet_type_discHandshake_s {
 	struct packet_header_s header;
 	peer_uid_t sender_peer_uid;
 	
-} __attribute__((packed, aligned(1)));
+} __attribute__((packed, aligned(1))) const packet_type_discHandshake_s_default = {
+	.header.type = PACKET_TYPE__DISC_HANDSHAKE,
+};
 #pragma scalar_storage_order default
 
 #pragma scalar_storage_order big-endian
