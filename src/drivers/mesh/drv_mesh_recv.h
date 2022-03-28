@@ -27,10 +27,10 @@ static void drv_mesh_parsePacket_disc(struct packet_s * raw_packet) {
 		peer->status = PEER_PASSERBY;
 		peer->uid = packet->broadcast_peer_uid;
 		//memcpy(packet->key_ephemeral, peer->key, sizeof(peer->key));
-		crypto_x25519(peer->key, state.privkey, packet->key_ephemeral);
-		crypto_blake2b_general(peer->key, sizeof(peer->key), state.psk, sizeof(state.psk), peer->key, sizeof(peer->key));
+		//crypto_x25519(peer->key, state.privkey, packet->key_ephemeral);
+		//crypto_blake2b_general(peer->key, sizeof(peer->key), state.psk, sizeof(state.psk), peer->key, sizeof(peer->key));
 		
-		uint8_t tmp_hmac[sizeof(packet->hmac)];
+		/*uint8_t tmp_hmac[sizeof(packet->hmac)];
 		crypto_blake2b_general(tmp_hmac, sizeof(tmp_hmac), state.psk, sizeof(state.psk), (uint8_t *)&(*packet), sizeof(*packet)-sizeof(tmp_hmac));
 		if (memcmp(tmp_hmac, packet->hmac, sizeof(tmp_hmac)) != 0) {
 			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: HMAC mismatch.\n");
@@ -38,7 +38,8 @@ static void drv_mesh_parsePacket_disc(struct packet_s * raw_packet) {
 			insertEmptyPeer(peer);
 		} else {
 			insertReadyPeer(peer);
-		}
+		}*/
+		insertReadyPeer(peer);
 	} else {
 		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: Discovery packet from known peer.\n");
 		//peer already known
@@ -79,10 +80,10 @@ static void drv_mesh_parsePacket_discReply(struct packet_s * raw_packet) {
 		}
 		peer->status = PEER_ACQUAINTANCE;
 		peer->uid = packet->reply_peer_uid;
-		crypto_x25519(peer->key, state.privkey, packet->key_ephemeral);
-		crypto_blake2b_general(peer->key, sizeof(peer->key), state.psk, sizeof(state.psk), peer->key, sizeof(peer->key));
+		//crypto_x25519(peer->key, state.privkey, packet->key_ephemeral);
+		//crypto_blake2b_general(peer->key, sizeof(peer->key), state.psk, sizeof(state.psk), peer->key, sizeof(peer->key));
 		
-		uint8_t tmp_hmac[sizeof(packet->hmac)];
+		/*uint8_t tmp_hmac[sizeof(packet->hmac)];
 		crypto_blake2b_general(tmp_hmac, sizeof(tmp_hmac), state.psk, sizeof(state.psk), (uint8_t *)&(*packet), sizeof(*packet)-sizeof(tmp_hmac));
 		if (memcmp(tmp_hmac, packet->hmac, sizeof(tmp_hmac)) != 0) {
 			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: HMAC mismatch.\n");
@@ -90,11 +91,27 @@ static void drv_mesh_parsePacket_discReply(struct packet_s * raw_packet) {
 			insertEmptyPeer(peer);
 		} else {
 			insertReadyPeer(peer);
-		}
+		}*/
+		insertReadyPeer(peer);
 	} else {
 		if (peer->status == PEER_PASSERBY) {
 			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: Discovery reply packet received from unknown peer.\n");
 			//TODO same as above?
+			peer->status = PEER_ACQUAINTANCE;
+			peer->uid = packet->reply_peer_uid;
+			//crypto_x25519(peer->key, state.privkey, packet->key_ephemeral);
+			//crypto_blake2b_general(peer->key, sizeof(peer->key), state.psk, sizeof(state.psk), peer->key, sizeof(peer->key));
+			
+			/*uint8_t tmp_hmac[sizeof(packet->hmac)];
+			crypto_blake2b_general(tmp_hmac, sizeof(tmp_hmac), state.psk, sizeof(state.psk), (uint8_t *)&(*packet), sizeof(*packet)-sizeof(tmp_hmac));
+			if (memcmp(tmp_hmac, packet->hmac, sizeof(tmp_hmac)) != 0) {
+				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: HMAC mismatch.\n");
+				state.stats.mac_failures++;
+				insertEmptyPeer(peer);
+			} else {
+				insertReadyPeer(peer);
+			}*/
+			insertReadyPeer(peer);
 		} else if (peer->status == PEER_ACQUAINTANCE) {
 			
 		} else if (peer->status == PEER_FRIEND) {

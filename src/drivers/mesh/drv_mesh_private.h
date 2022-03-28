@@ -22,7 +22,7 @@ struct peer_s {
 	struct peer_s * next;
 	enum peer_status_e status;
 	peer_uid_t uid;
-	uint8_t key[32];
+	//uint8_t key[32];
 };
 
 struct radio_cfg_s {

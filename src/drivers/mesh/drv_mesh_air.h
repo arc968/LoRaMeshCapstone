@@ -18,7 +18,7 @@ enum packet_type_e {
 	PACKET_TYPE__REKEY_REPLY = 8,
 };
 
-enum ciphermask_e {
+/*enum ciphermask_e {
 	CIPHER__NONE = (0x1 << 0),
 	CIPHER__AES = (0x1 << 1),
 	CIPHER__PSK_AES = (0x1 << 2),
@@ -38,7 +38,7 @@ struct ciphermask_s {
 		uint16_t mask;
 	};
 } __attribute__((packed, aligned(1)));
-#pragma scalar_storage_order default
+#pragma scalar_storage_order default*/
 
 #pragma scalar_storage_order big-endian
 struct packet_header_s {
@@ -54,9 +54,9 @@ hash sent/received public key with pre-shared key, then calculate key exchange
 static struct packet_type_disc_s {
 	struct packet_header_s header;
 	peer_uid_t broadcast_peer_uid;
-	struct ciphermask_s ciphermask; //all capable/allowed bits are set
-	uint8_t key_ephemeral[32];
-	uint8_t hmac[8];
+	//struct ciphermask_s ciphermask; //all capable/allowed bits are set
+	//uint8_t key_ephemeral[32];
+	//uint8_t hmac[8];
 } __attribute__((packed, aligned(1))) const packet_type_disc_s_default = {
 	.header.type = PACKET_TYPE__DISC,
 };
@@ -67,9 +67,9 @@ struct packet_type_discReply_s {
 	struct packet_header_s header;
 	peer_uid_t broadcast_peer_uid;
 	peer_uid_t reply_peer_uid;
-	struct ciphermask_s ciphermask; //only a single bit set for selected mode
-	uint8_t key_ephemeral[32];
-	uint8_t hmac[8];
+	//struct ciphermask_s ciphermask; //only a single bit set for selected mode
+	//uint8_t key_ephemeral[32];
+	//uint8_t hmac[8];
 } __attribute__((packed, aligned(1))) const packet_type_discReply_s_default = {
 	.header.type = PACKET_TYPE__DISC_REPLY,
 };

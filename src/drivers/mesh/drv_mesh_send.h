@@ -10,9 +10,9 @@ static void drv_mesh_buildPacket_disc(struct appointment_s * appt, struct packet
 	
 	*packet = packet_type_disc_s_default;
 	packet->broadcast_peer_uid = state.uid;
-	packet->ciphermask.mask = CIPHER__PSK_XCHACHA20;
-	memcpy(state.pubkey, packet->key_ephemeral, sizeof(state.pubkey));
-	crypto_blake2b_general(packet->hmac, sizeof(packet->hmac), state.psk, sizeof(state.psk), (uint8_t *)&(*packet), sizeof(*packet)-sizeof(packet->hmac));
+	//packet->ciphermask.mask = CIPHER__PSK_XCHACHA20;
+	//memcpy(state.pubkey, packet->key_ephemeral, sizeof(state.pubkey));
+	//crypto_blake2b_general(packet->hmac, sizeof(packet->hmac), state.psk, sizeof(state.psk), (uint8_t *)&(*packet), sizeof(*packet)-sizeof(packet->hmac));
 	
 	DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Sending discovery packet as [%llX]...\n", packet->broadcast_peer_uid);
 }
@@ -24,10 +24,10 @@ static void drv_mesh_buildPacket_discReply(struct appointment_s * appt, struct p
 	*packet = packet_type_discReply_s_default;
 	packet->reply_peer_uid = state.uid;
 	packet->broadcast_peer_uid = appt->peer->uid;
-	packet->ciphermask.mask = CIPHER__PSK_XCHACHA20;
+	//packet->ciphermask.mask = CIPHER__PSK_XCHACHA20;
 	
-	memcpy(state.pubkey, packet->key_ephemeral, sizeof(state.pubkey));
-	crypto_blake2b_general(packet->hmac, sizeof(packet->hmac), state.psk, sizeof(state.psk), (uint8_t *)&(*packet), sizeof(*packet)-sizeof(packet->hmac));
+	//memcpy(state.pubkey, packet->key_ephemeral, sizeof(state.pubkey));
+	//crypto_blake2b_general(packet->hmac, sizeof(packet->hmac), state.psk, sizeof(state.psk), (uint8_t *)&(*packet), sizeof(*packet)-sizeof(packet->hmac));
 	
 	DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Sending discovery reply packet as [%llX] to [%llX]...\n", packet->reply_peer_uid, packet->broadcast_peer_uid);
 }
