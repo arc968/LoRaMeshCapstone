@@ -12,23 +12,11 @@ extern "C" {
 #include "../../hal/hal_common.h"
 #include "../../hardware/hardware.h"
 
-/* enum drv_lora_region_e {
-	DRV_LORA_REGION_US915,
-	DRV_LORA_REGION_EU868,
-	DRV_LORA_REGION_433,
-}; */
-
 enum drv_lora_bandwidth_e {
 	DRV_LORA_BW__500kHz,
 	DRV_LORA_BW__250kHz,
 	DRV_LORA_BW__125kHz,
 	DRV_LORA_BW__62_5kHz,
-};
-static enum drv_lora_bandwidth_e drv_lora_bandwidth_e_arr[] = {
-	DRV_LORA_BW__500kHz,
-	DRV_LORA_BW__250kHz,
-	DRV_LORA_BW__125kHz,
-	//DRV_LORA_BW__62_5kHz,
 };
 
 enum drv_lora_spreadingFactor_e {
@@ -40,27 +28,12 @@ enum drv_lora_spreadingFactor_e {
 	//DRV_LORA_SF__11 = 11,
 	//DRV_LORA_SF__12 = 12,
 };
-static enum drv_lora_spreadingFactor_e drv_lora_spreadingFactor_e_arr[] = {
-	//DRV_LORA_SF__6,
-	DRV_LORA_SF__7,
-	DRV_LORA_SF__8,
-	DRV_LORA_SF__9,
-	//DRV_LORA_SF__10,
-	//DRV_LORA_SF__11,
-	//DRV_LORA_SF__12,
-};
 
 enum drv_lora_codingRate_e {
 	DRV_LORA_CR__4_5 = 1, // 4/5
 	DRV_LORA_CR__4_6 = 2, // 4/6
 	DRV_LORA_CR__4_7 = 3, // 4/7
 	DRV_LORA_CR__4_8 = 4, // 4/8
-};
-static enum drv_lora_codingRate_e drv_lora_codingRate_e_arr[] = {
-	DRV_LORA_CR__4_5,
-	DRV_LORA_CR__4_6,
-	DRV_LORA_CR__4_7,
-	DRV_LORA_CR__4_8,
 };
 
 enum drv_lora_mode_e {
@@ -71,14 +44,6 @@ enum drv_lora_mode_e {
 	DRV_LORA_MODE__RECV_ONCE,
 	DRV_LORA_MODE__SEND,
 };
-/* static enum drv_lora_mode_e drv_lora_mode_e_arr[] = {
-	DRV_LORA_MODE__IDLE,
-	DRV_LORA_MODE__IDLE_CLEAR,
-	DRV_LORA_MODE__SLEEP,
-	DRV_LORA_MODE__RECV,
-	DRV_LORA_MODE__RECV_ONCE,
-	DRV_LORA_MODE__SEND,
-}; */
 
 struct drv_lora_packet_s {
 	int32_t rssi;

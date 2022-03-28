@@ -4,14 +4,6 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
-#include <stdbool.h>
-#include "../../lib/ip/lib_ip.h"
-#include "drv_mesh.h"
-#include "../lora/drv_lora.h"
-
-#define DRV_MESH__PACKET_SIZE_MAX 255
-
 typedef uint16_t channel_t;
 
 typedef uint64_t peer_uid_t;
@@ -81,22 +73,30 @@ struct packet_s {
 	};
 } __attribute__((packed));
 
-/* struct packet_s {
-	uint16_t totalLen;
-	uint16_t dataLen;
-	bool crcEnabled;
-	struct packet_raw_s payload;
-}; */
+static struct state_s {
+	ip_t ip;
+	peer_uid_t uid;
+	uint8_t pubkey[32];
+	uint8_t privkey[32];
+	uint8_t psk[32];
 
-/* static struct packet_data_s {
-	uint16_t len;
-	uint8_t buf[DRV_MESH__PACKET_SIZE_MAX];
-}; */
+	struct peer_s * head_peer_empty;
+	struct peer_s * head_peer_ready;
+	struct peer_s peers[BUFFER_PEERS_SIZE];
 
-/* struct packet_internal_s {
-	enum packet_status_e status;
-	struct packet_type_raw_s packet;
-}; */
+	struct packet_s * head_packet_empty;
+	struct packet_s packets[BUFFER_PACKETS_SIZE];
+
+	struct appointment_s * head_appt_empty;
+	struct appointment_s appointments[BUFFER_APPOINTMENTS_SIZE];
+
+	volatile bool radio_mutex;
+	struct drv_lora_s radio;
+	
+	struct drv_mesh_stats_s stats;
+} state;
+
+#include "drv_mesh_private_util.h"
 
 #if defined (__cplusplus)
 }
