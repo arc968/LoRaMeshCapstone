@@ -130,9 +130,10 @@ static void drv_mesh_worker_scheduler(void * arg) {
 				
 				uint32_t tmp;
 				crypto_blake2b_general((uint8_t *)&tmp, sizeof(tmp), state.psk, sizeof(state.psk), (uint8_t *)&(peer->uid), sizeof(peer->uid)); //doesn't handle byteorder correctly
+				crypto_blake2b_general((uint8_t *)&tmp, sizeof(tmp), (uint8_t *)&tmp, sizeof(tmp), (uint8_t *)&(state.uid), sizeof(state.uid)); //doesn't handle byteorder correctly
 				tmp = LIB_BYTEORDER_HTON_U32(tmp);
 				
-				uint32_t offset = lib_misc_fastrange32(tmp, DISCOVERY_INTERVAL_MILLIS - 5000) + 5000;
+				uint32_t offset = lib_misc_fastrange32(tmp, DISCOVERY_INTERVAL_MILLIS - 5000) + 5000; //use later 10 seconds
 				appt->realtime = rt_disc + offset;
 				appt->type = APPT_SEND_DISC_REPLY;
 				appt->peer = peer;
@@ -144,7 +145,7 @@ static void drv_mesh_worker_scheduler(void * arg) {
 				}
 				setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), appt->realtime, tmp);
 				
-				drv_mesh_buildPacket(appt, appt->packet);
+				drv_mesh_buildPacket(appt);
 				
 				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: Scheduling discReply send at t+%lu\n", offset);
 				
@@ -162,7 +163,7 @@ static void drv_mesh_worker_scheduler(void * arg) {
 	
 	{ //schedule own receive periods
 		{ //discovery reply periods
-			struct appointment_s * appt = popEmptyAppt();
+			/*struct appointment_s * appt = popEmptyAppt();
 			if (appt == NULL) {
 				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule receive appointment, no empty appointments available\n");
 				return;
@@ -186,6 +187,39 @@ static void drv_mesh_worker_scheduler(void * arg) {
 				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule receive appointment\n");
 				insertEmptyAppt(appt);
 				return;
+			}*/
+			struct peer_s * peer = state.head_peer_ready;
+			for (; peer != NULL; peer = peer->next) {
+				if ((peer->status != PEER_ACQUAINTANCE) && (peer->status != PEER_FRIEND)) {
+					struct appointment_s * appt = popEmptyAppt();
+					if (appt == NULL) {
+						DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule peer receive appointment, no empty appointments available\n");
+						continue;
+					}
+					
+					uint32_t tmp;
+					crypto_blake2b_general((uint8_t *)&tmp, sizeof(tmp), state.psk, sizeof(state.psk), (uint8_t *)&(state.uid), sizeof(state.uid)); //doesn't handle byteorder correctly
+					crypto_blake2b_general((uint8_t *)&tmp, sizeof(tmp), (uint8_t *)&tmp, sizeof(tmp), (uint8_t *)&(peer->uid), sizeof(peer->uid)); //doesn't handle byteorder correctly
+					tmp = LIB_BYTEORDER_HTON_U32(tmp);
+					
+					uint32_t offset = lib_misc_fastrange32(tmp, DISCOVERY_INTERVAL_MILLIS - 5000) + 5000; //use later 10 seconds
+					appt->realtime = rt_disc + offset;
+					appt->type = APPT_RECV;
+					appt->peer = NULL;
+					appt->packet = NULL;
+					setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), appt->realtime, tmp);
+					
+					DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: Scheduling discReply listen t+%lu\n", offset);
+					
+					enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_recv, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
+					if (err != DRV_SCHED_ERR__NONE) {
+						DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule receive appointment\n");
+						insertEmptyAppt(appt);
+						continue;
+					}
+				} else {
+					DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: Skipping discReply listen for peer [%llX], handshake already complete.\n", peer->uid);
+				}
 			}
 		}
 		/*{ //per-peer receive periods
@@ -284,8 +318,8 @@ void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *)) {
 		drv_rand_seedFromLoRa(&state.radio);
 		DEBUG_PRINT_TIMESTAMP(); DEBUG_PRINT("DONE SEEDING RNG.\n");
 		state.uid = drv_rand_getU64();
-		drv_rand_fillBuf(state.privkey, sizeof(state.privkey));
-		crypto_x25519_public_key(state.pubkey, state.privkey);
+		//drv_rand_fillBuf(state.privkey, sizeof(state.privkey));
+		//crypto_x25519_public_key(state.pubkey, state.privkey);
 		//DEBUG_PRINT("UID: [%llu]\n", state.uid);
 		DEBUG_PRINT("UID: [%llX]\n", state.uid);
 }

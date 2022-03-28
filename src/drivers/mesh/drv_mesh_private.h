@@ -76,8 +76,8 @@ struct packet_s {
 static struct state_s {
 	ip_t ip;
 	peer_uid_t uid;
-	uint8_t pubkey[32];
-	uint8_t privkey[32];
+	//uint8_t pubkey[32];
+	//uint8_t privkey[32];
 	uint8_t psk[32];
 
 	struct peer_s * head_peer_empty;
