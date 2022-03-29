@@ -11,6 +11,10 @@ static void drv_mesh_buildPacket_disc(struct appointment_s * appt) {
 	
 	//*packet = packet_type_disc_s_default;
 	packet->header.type = PACKET_TYPE__DISC;
+	//*(packet->header.reserved) = (uint8_t[3]){0xFF,0xFF,0xFF}; //DEBUG
+	packet->header.reserved[0] = 0XFF;
+	packet->header.reserved[1] = 0XFF;
+	packet->header.reserved[2] = 0XFF;
 	packet->broadcast_peer_uid = state.uid;
 	//packet->ciphermask.mask = CIPHER__PSK_XCHACHA20;
 	//memcpy(state.pubkey, packet->key_ephemeral, sizeof(state.pubkey));
@@ -26,6 +30,10 @@ static void drv_mesh_buildPacket_discReply(struct appointment_s * appt) {
 	
 	//*packet = packet_type_discReply_s_default;
 	packet->header.type = PACKET_TYPE__DISC_REPLY;
+	//*(packet->header.reserved) = (uint8_t[3]){0xFF,0xFF,0xFF}; //DEBUG
+	packet->header.reserved[0] = 0XFF;
+	packet->header.reserved[1] = 0XFF;
+	packet->header.reserved[2] = 0XFF;
 	packet->reply_peer_uid = state.uid;
 	packet->broadcast_peer_uid = appt->peer->uid;
 	//packet->ciphermask.mask = CIPHER__PSK_XCHACHA20;
@@ -49,7 +57,7 @@ static void drv_mesh_buildPacket(struct appointment_s * appt) {
 	} else if (appt->type == APPT_SEND_DATA) {
 		drv_mesh_buildPacket_data(appt);
 	} else {
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Unexpected appointment type in drv_mesh_worker_send(), unable to send.\n");
+		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("ERROR: Unexpected appointment type in drv_mesh_buildPacket().\n");
 	}
 }
 
@@ -82,6 +90,10 @@ static void drv_mesh_worker_send(void * arg) {
 		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Radio locked, unable to send discovery packet.\n");
 		goto EXIT;
 	}
+	
+	DEBUG_PRINT("send PACKET_RAW [%hhu]:\n", appt->packet->size);
+	for (uint32_t i=0; i<appt->packet->size; i++) DEBUG_PRINT(((i+1==appt->packet->size) ? "%hhu" : "%hhu,"), (appt->packet->raw)[i]);
+	DEBUG_PRINT("\n");
 	
 	state.radio_mutex = 1;
 	drv_lora_setMode(&state.radio, DRV_LORA_MODE__IDLE);

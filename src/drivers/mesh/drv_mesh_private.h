@@ -71,7 +71,7 @@ struct packet_s {
 		struct packet_type_nack_s asNack;
 		uint8_t raw[DRV_MESH__PACKET_SIZE_MAX];
 	};
-} __attribute__((packed));
+} __attribute__((packed, aligned(1)));
 
 static struct state_s {
 	ip_t ip;

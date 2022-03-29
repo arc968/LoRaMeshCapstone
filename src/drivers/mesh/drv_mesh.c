@@ -77,8 +77,17 @@ static struct appointment_s * getNextGlobalDiscoveryChannelAppointment(lib_datet
 		appt->type = APPT_RECV;
 	} else {
 		appt->type = APPT_SEND_DISC;
+		appt->packet = popEmptyPacket();
+		if (appt->packet == NULL) {
+			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule global disc appointment, no empty packets available\n");
+			insertEmptyAppt(appt);
+			return NULL;
+		}
+		drv_mesh_buildPacket(appt);
 	}
-
+	
+	appt->peer = NULL;
+	
 	//setApptValsFromSeed(appt, short_rt);
 	//appt->radio_cfg.bandwidth = drv_lora_bandwidth_e_arr[lib_misc_fastrange32(short_rt, sizeof(drv_lora_bandwidth_e_arr)/sizeof(drv_lora_bandwidth_e_arr[0]))];
 	setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), rt, 0); //0 for global
@@ -105,6 +114,7 @@ static void drv_mesh_worker_scheduler(void * arg) {
 			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to get next global discovery appointment\n");
 			return;
 		}
+		
 		enum drv_sched_err_e err;
 		if (appt->type == APPT_RECV) {
 			err = drv_sched_once_at(drv_mesh_worker_recv, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);

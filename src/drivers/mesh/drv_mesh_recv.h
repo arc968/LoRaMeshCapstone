@@ -107,11 +107,10 @@ static void drv_mesh_parsePacket_discReply(struct packet_s * raw_packet) {
 			if (memcmp(tmp_hmac, packet->hmac, sizeof(tmp_hmac)) != 0) {
 				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: HMAC mismatch.\n");
 				state.stats.mac_failures++;
-				insertEmptyPeer(peer);
+				insertEmptyPeer(peer); //CANT DO THIS HERE, INFINITE LOOP
 			} else {
-				insertReadyPeer(peer);
+				insertReadyPeer(peer); //CANT DO THIS HERE, INFINITE LOOP
 			}*/
-			insertReadyPeer(peer);
 		} else if (peer->status == PEER_ACQUAINTANCE) {
 			
 		} else if (peer->status == PEER_FRIEND) {
@@ -128,7 +127,7 @@ static void drv_mesh_parsePacket(struct packet_s * raw_packet) {
 	} else if (raw_packet->header.type == PACKET_TYPE__DISC_REPLY) {
 		drv_mesh_parsePacket_discReply(raw_packet);
 	} else {
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Unknown packet received.\n");
+		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Unknown packet [%X] received.\n", raw_packet->header.type);
 	}
 }
 
@@ -144,6 +143,10 @@ static void drv_mesh_worker_recv_finish(void * arg) {
 	
 	drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
 	state.radio_mutex = 0;
+	
+	DEBUG_PRINT("recv PACKET_RAW [%hhu]:\n", raw_packet.size);
+	for (uint32_t i=0; i<raw_packet.size; i++) DEBUG_PRINT(((i+1==raw_packet.size) ? "%hhu" : "%hhu,"), (raw_packet.raw)[i]);
+	DEBUG_PRINT("\n");
 	
 	if (raw_packet.size == 0) {
 		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: No packet received.\n");

@@ -87,6 +87,7 @@ static void insertEmptyAppt(struct appointment_s * appt) {
 		insertEmptyPacket(appt->packet);
 		appt->packet = NULL;
 	}
+	appt->peer = NULL;
 	appt->next = state.head_appt_empty;
 	state.head_appt_empty = appt;
 }
