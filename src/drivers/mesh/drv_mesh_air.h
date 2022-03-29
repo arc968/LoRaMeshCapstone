@@ -103,8 +103,8 @@ struct packet_type_nack_s {
 struct packet_type_data_s {
 	struct packet_header_s header;
 	//dynamic, "public"
-	uint8_t ttl; //decrements on each hop
-	uint32_t puid; //random on each hop for ACK purposes
+	uint8_t ttl; //increments on each hop
+	//uint32_t puid; //random on each hop for ACK purposes
 	//static, "public"
 	ip_t src;
 	ip_t dst;

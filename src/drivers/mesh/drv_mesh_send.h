@@ -12,9 +12,9 @@ static void drv_mesh_buildPacket_disc(struct appointment_s * appt) {
 	//*packet = packet_type_disc_s_default;
 	packet->header.type = PACKET_TYPE__DISC;
 	//*(packet->header.reserved) = (uint8_t[3]){0xFF,0xFF,0xFF}; //DEBUG
-	packet->header.reserved[0] = 0XFF;
+/* 	packet->header.reserved[0] = 0XFF;
 	packet->header.reserved[1] = 0XFF;
-	packet->header.reserved[2] = 0XFF;
+	packet->header.reserved[2] = 0XFF; */
 	packet->broadcast_peer_uid = state.uid;
 	//packet->ciphermask.mask = CIPHER__PSK_XCHACHA20;
 	//memcpy(state.pubkey, packet->key_ephemeral, sizeof(state.pubkey));
@@ -31,9 +31,9 @@ static void drv_mesh_buildPacket_discReply(struct appointment_s * appt) {
 	//*packet = packet_type_discReply_s_default;
 	packet->header.type = PACKET_TYPE__DISC_REPLY;
 	//*(packet->header.reserved) = (uint8_t[3]){0xFF,0xFF,0xFF}; //DEBUG
-	packet->header.reserved[0] = 0XFF;
+/* 	packet->header.reserved[0] = 0XFF;
 	packet->header.reserved[1] = 0XFF;
-	packet->header.reserved[2] = 0XFF;
+	packet->header.reserved[2] = 0XFF; */
 	packet->reply_peer_uid = state.uid;
 	packet->broadcast_peer_uid = appt->peer->uid;
 	//packet->ciphermask.mask = CIPHER__PSK_XCHACHA20;

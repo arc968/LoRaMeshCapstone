@@ -33,18 +33,18 @@
 
 #include "../../lib/monocypher/monocypher.h"
 
-#define XXH_NO_STREAM
+/*#define XXH_NO_STREAM
 #define XXH_NO_LONG_LONG
 #define XXH_CPU_LITTLE_ENDIAN
 #define XXH_NO_STDLIB
 #define XXH_NO_INLINE_HINTS
 #define XXH_FORCE_ALIGN_CHECK
-#include "../../lib/xxhash/xxhash.h"
+#include "../../lib/xxhash/xxhash.h"*/
 
 #include "drv_mesh_config.h"
 #include "drv_mesh.h"
 #include "drv_mesh_private.h"
-
+#include "drv_mesh_route.h"
 #include "drv_mesh_send.h"
 #include "drv_mesh_recv.h"
 
@@ -65,7 +65,6 @@ static struct appointment_s * getNextGlobalDiscoveryChannelAppointment(lib_datet
 	lib_datetime_convertDatetimeToRealtime(&dt, &rt);
 	rt += 1000*15;
 	*/
-
 	
 	//uint32_t short_rt = lib_misc_XORshiftLFSR32((uint32_t)lib_misc_mix64(rt));
 	uint32_t tmp = 0;//lib_misc_fastrange32(short_rt, 5*1000); //Will be in first 5 seconds of block
