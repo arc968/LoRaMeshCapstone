@@ -291,6 +291,15 @@ static void drv_mesh_start(void * arg __attribute__((unused))) {
 void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *)) {
 	DEBUG_PRINT_TIMESTAMP(); DEBUG_PRINT_FUNCTION();
 	//initialize datastructures
+		state.head_route_empty = &(state.routes[0]);
+		for (int i=0; i<BUFFER_ROUTES_SIZE; i++) {
+			if (i == BUFFER_ROUTES_SIZE-1) {
+				state.routes[i].next = NULL;
+			} else {
+				state.routes[i].next = &(state.routes[i+1]);
+			}
+		}
+	
 		state.head_appt_empty = &(state.appointments[0]);
 		for (int i=0; i<BUFFER_APPOINTMENTS_SIZE; i++) {
 			if (i == BUFFER_APPOINTMENTS_SIZE-1) {

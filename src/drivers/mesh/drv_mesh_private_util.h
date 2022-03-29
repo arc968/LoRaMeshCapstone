@@ -23,6 +23,32 @@ extern "C" {
         &(rb.buf[(rb.head == 0) ? RB_CAPACITY(rb)-1 : rb.head-1]))\
 ))
 
+static struct route_s * popEmptyRoute(void) {
+	struct route_s * route = state.head_route_empty;
+	if (route != NULL) {
+		state.head_route_empty = route->next;
+	}
+	route->next = NULL;
+	return route;
+}
+
+static void insertEmptyRoute(struct route_s * route) {
+	route->next = state.head_route_empty;
+	state.head_route_empty = route;
+}
+
+static void deleteOldestRoute(void) {
+	
+}
+
+static void insertRoute(ip_t ip_src, uint8_t ttl, uint16_t index_peer, lib_datetime_realtime_t realtime) {
+	
+}
+
+static struct route_s * findRoute(ip_t ip_src) {
+	
+}
+
 static struct peer_s * popEmptyPeer(void) {
 	struct peer_s * peer = state.head_peer_empty;
 	if (peer != NULL) {

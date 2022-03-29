@@ -69,9 +69,20 @@ struct packet_s {
 		struct packet_type_discHandshake_s asDiscHandshake;
 		struct packet_type_ack_s asAck;
 		struct packet_type_nack_s asNack;
+		struct packet_type_route_s asRoute;
 		uint8_t raw[DRV_MESH__PACKET_SIZE_MAX];
 	};
 } __attribute__((packed, aligned(1)));
+
+struct route_s {
+	struct route_s * next;
+	ip_t ip_src;
+	struct {
+		uint8_t ttl;
+		uint16_t index_peer;
+		lib_datetime_realtime_t realtime;
+	} peers[3];
+};
 
 static struct state_s {
 	ip_t ip;
@@ -79,6 +90,20 @@ static struct state_s {
 	//uint8_t pubkey[32];
 	//uint8_t privkey[32];
 	uint8_t psk[32];
+	
+	struct {
+		uint16_t head;
+		uint16_t tail;
+		uint16_t count;
+		struct {
+			uint8_t hash[4];
+			uint8_t ttl;
+		} buf[BUFFER_RECENT_PACKETS_SIZE];
+	} rb_recentPackets;
+	
+	struct route_s * head_route_empty;
+	struct route_s routes[BUFFER_ROUTES_SIZE];
+	struct route_s * hm_route_buckets[HASHMAP_ROUTES_BUCKET_COUNT];
 
 	struct peer_s * head_peer_empty;
 	struct peer_s * head_peer_ready;

@@ -14,8 +14,7 @@ enum packet_type_e {
 	PACKET_TYPE__DISC_HANDSHAKE = 4,
 	PACKET_TYPE__ACK = 5,
 	PACKET_TYPE__NACK = 6,
-	PACKET_TYPE__REKEY = 7,
-	PACKET_TYPE__REKEY_REPLY = 8,
+	PACKET_TYPE__ROUTE = 7,
 };
 
 /*enum ciphermask_e {
@@ -105,13 +104,30 @@ struct packet_type_data_s {
 	//dynamic, "public"
 	uint8_t ttl; //increments on each hop
 	//uint32_t puid; //random on each hop for ACK purposes
+	uint16_t index_send;
+	uint16_t index_recv;
 	//static, "public"
-	ip_t src;
-	ip_t dst;
+	ip_t ip_src;
+	ip_t ip_dst;
 	//"private"
-	uint16_t seq_num;
-	uint16_t ack_num;
+	//uint16_t seq_num;
+	//uint16_t ack_num;
+	uint32_t counter;
 	uint8_t data[];
+} __attribute__((packed, aligned(1)));
+#pragma scalar_storage_order default
+
+#pragma scalar_storage_order big-endian
+struct packet_type_route_s {
+	struct packet_header_s header;
+	//dynamic, "public"
+	uint8_t ttl; //increments on each hop
+	//uint32_t puid; //random on each hop for ACK purposes
+	uint16_t index_send;
+	uint16_t index_recv;
+	//static, "public"
+	ip_t ip_src;
+	ip_t ip_dst;
 } __attribute__((packed, aligned(1)));
 #pragma scalar_storage_order default
 
