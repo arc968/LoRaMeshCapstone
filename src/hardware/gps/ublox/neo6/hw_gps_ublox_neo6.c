@@ -35,7 +35,7 @@ static volatile lib_datetime_interval_t timestamp = 0;
 static volatile bool runonce = false;
 
 static void job_getGpsMessage(void * arg) {
-	DEBUG_PRINT_FUNCTION();
+	DEBUG_PRINT_TIMESTAMP(); DEBUG_PRINT_FUNCTION();
 	
 	//uint8_t tmp1 = sizeof(struct ubx_msg__NAV_TIMEUTC__TimeSolution_s);
 	//hal_serial_write(hal_serial0, &tmp1, 1);
@@ -102,7 +102,7 @@ static void job_getGpsMessage(void * arg) {
 		//hal_serial_write(hal_serial0, ((uint8_t*)(&(timeutc))), sizeof(timeutc));
 		
 		if (!(timeutc.checksum.ck_a == tmp_ck_a && timeutc.checksum.ck_b == tmp_ck_b)) {
-			DEBUG_PRINT("\tchecksum failure\n");
+			DEBUG_PRINT("\tChecksum failure\n");
 			continue;
 		}
 		
@@ -127,7 +127,7 @@ static void job_getGpsMessage(void * arg) {
 		
 		DEBUG_PRINT("\tyear:%u,month:%u,day:%u,hour:%u,min:%u,sec:%u,ms:%u\n",dt.year,dt.month,dt.day,dt.hour,dt.min,dt.sec,dt.ms);
 	} else {
-		DEBUG_PRINT("No GPS message found\n");
+		DEBUG_PRINT("\tNo GPS message found\n");
 	}
 	
 	// uint8_t tmp[1] = {dt.ms};

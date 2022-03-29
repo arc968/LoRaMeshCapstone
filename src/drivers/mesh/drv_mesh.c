@@ -51,7 +51,7 @@
 //small issue, starts backing off on boot not after initialization
 //also needs to change bandwidth based on time, not seed
 static struct appointment_s * getNextGlobalDiscoveryChannelAppointment(lib_datetime_realtime_t rt) {
-	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
+	DEBUG_PRINT("\t"); DEBUG_PRINT_FUNCTION();
 	struct appointment_s * appt = popEmptyAppt();
 	if (appt == NULL) return NULL;
 	
@@ -74,12 +74,14 @@ static struct appointment_s * getNextGlobalDiscoveryChannelAppointment(lib_datet
 	uint32_t tmp2 = (uint32_t)constrainU64(map(curTime, 0, LIB_DATETIME__MS_IN_DAY/24, 2, 20), 2, 20); // Ends at sending 1/n times
 	uint32_t tmp3 = lib_misc_fastrange32(drv_rand_getU32(), tmp2);
 	if (tmp3) { //TESTING
+		DEBUG_PRINT("\tNext disc: RECV with odds: %lu/%lu\n", tmp2-1, tmp2);
 		appt->type = APPT_RECV;
 	} else {
+		DEBUG_PRINT("\tNext disc: SEND with odds: 1/%lu\n", tmp2);
 		appt->type = APPT_SEND_DISC;
 		appt->packet = popEmptyPacket();
 		if (appt->packet == NULL) {
-			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule global disc appointment, no empty packets available\n");
+			DEBUG_PRINT("\tWARNING: Failed to schedule global disc appointment, no empty packets available\n");
 			insertEmptyAppt(appt);
 			return NULL;
 		}
@@ -92,9 +94,9 @@ static struct appointment_s * getNextGlobalDiscoveryChannelAppointment(lib_datet
 	//appt->radio_cfg.bandwidth = drv_lora_bandwidth_e_arr[lib_misc_fastrange32(short_rt, sizeof(drv_lora_bandwidth_e_arr)/sizeof(drv_lora_bandwidth_e_arr[0]))];
 	setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), rt, 0); //0 for global
 	
-	DEBUG_PRINT("\tbandwidth:%lu, frequency:%llu, spreadingFactor:%lu, codingRate:%lu\n", appt->radio_cfg.bandwidth, appt->radio_cfg.frequency, appt->radio_cfg.spreadingFactor, appt->radio_cfg.codingRate); 
+	//DEBUG_PRINT("\tbandwidth:%lu, frequency:%llu, spreadingFactor:%lu, codingRate:%lu\n", appt->radio_cfg.bandwidth, appt->radio_cfg.frequency, appt->radio_cfg.spreadingFactor, appt->radio_cfg.codingRate); 
 	
-	DEBUG_PRINT("\ttmp:%lu, tmp2:%lu, tmp3:%lu\n", tmp, tmp2, tmp3); 
+	//DEBUG_PRINT("\ttmp:%lu, tmp2:%lu, tmp3:%lu\n", tmp, tmp2, tmp3); 
 	//DEBUG_PRINT("post:\nmin:%u\nsec:%u\nms:%u\n",dt.min,dt.sec,dt.ms);
 	//DEBUG_PRINT("year:%u\nmonth:%u\nday:%u\nhour:%u\nmin:%u\nsec:%u\nms:%u\n",dt.year,dt.month,dt.day,dt.hour,dt.min,dt.sec,dt.ms);
 	return appt;
@@ -111,18 +113,20 @@ static void drv_mesh_worker_scheduler(void * arg) {
 	{ //schedule global discovery broadcast/receive
 		struct appointment_s * appt = getNextGlobalDiscoveryChannelAppointment(rt_disc);
 		if (appt == NULL) {
-			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to get next global discovery appointment\n");
+			DEBUG_PRINT("\tWARNING: Failed to get next global discovery appointment\n");
 			return;
 		}
 		
 		enum drv_sched_err_e err;
 		if (appt->type == APPT_RECV) {
+			DEBUG_PRINT("\tINFO: Scheduling disc recv at t+%lu\n", appt->realtime - rt_disc);
 			err = drv_sched_once_at(drv_mesh_worker_recv, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
 		} else {
+			DEBUG_PRINT("\tINFO: Scheduling disc send at t+%lu\n", appt->realtime - rt_disc);
 			err = drv_sched_once_at(drv_mesh_worker_send, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
 		}
 		if (err != DRV_SCHED_ERR__NONE) {
-			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule next global discovery appointment\n");
+			DEBUG_PRINT("\tWARNING: Failed to schedule next global discovery appointment\n");
 			insertEmptyAppt(appt);
 			return;
 		}
@@ -134,22 +138,23 @@ static void drv_mesh_worker_scheduler(void * arg) {
 			if ((peer->status != PEER_ACQUAINTANCE) && (peer->status != PEER_FRIEND)) {
 				struct appointment_s * appt = popEmptyAppt();
 				if (appt == NULL) {
-					DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule peer send discReply appointment, no empty appointments available\n");
+					DEBUG_PRINT("\tWARNING: Failed to schedule peer send discReply appointment, no empty appointments available\n");
 					continue;
 				}
 				
 				uint32_t tmp;
 				crypto_blake2b_general((uint8_t *)&tmp, sizeof(tmp), state.psk, sizeof(state.psk), (uint8_t *)&(peer->uid), sizeof(peer->uid)); //doesn't handle byteorder correctly
 				crypto_blake2b_general((uint8_t *)&tmp, sizeof(tmp), (uint8_t *)&tmp, sizeof(tmp), (uint8_t *)&(state.uid), sizeof(state.uid)); //doesn't handle byteorder correctly
+				crypto_blake2b_general((uint8_t *)&tmp, sizeof(tmp), (uint8_t *)&tmp, sizeof(tmp), (uint8_t *)&(rt_disc), sizeof(rt_disc)); //doesn't handle byteorder correctly
 				tmp = LIB_BYTEORDER_HTON_U32(tmp);
 				
-				uint32_t offset = lib_misc_fastrange32(tmp, DISCOVERY_INTERVAL_MILLIS - 5000) + 5000; //use later 10 seconds
+				uint32_t offset = lib_misc_fastrange32(tmp, DISCOVERY_INTERVAL_MILLIS - 10000) + 5000; //use middle 5 seconds
 				appt->realtime = rt_disc + offset;
 				appt->type = APPT_SEND_DISC_REPLY;
 				appt->peer = peer;
 				appt->packet = popEmptyPacket();
 				if (appt->packet == NULL) {
-					DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule peer send discReply appointment, no empty packets available\n");
+					DEBUG_PRINT("\tWARNING: Failed to schedule peer send discReply appointment, no empty packets available\n");
 					insertEmptyAppt(appt);
 					continue;
 				}
@@ -157,16 +162,16 @@ static void drv_mesh_worker_scheduler(void * arg) {
 				
 				drv_mesh_buildPacket(appt);
 				
-				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: Scheduling discReply send at t+%lu\n", offset);
+				DEBUG_PRINT("\tINFO: Scheduling discReply send at t+%lu\n", offset);
 				
 				enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_send, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
 				if (err != DRV_SCHED_ERR__NONE) {
-					DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule peer send discReply appointment\n");
+					DEBUG_PRINT("\tWARNING: Failed to schedule peer send discReply appointment\n");
 					insertEmptyAppt(appt);
 					continue;
 				}
 			} else {
-				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: Skipping discReply for peer [%llX], handshake already complete.\n", peer->uid);
+				DEBUG_PRINT("\tINFO: Skipping discReply send for peer [%llX], handshake already complete.\n", peer->uid);
 			}
 		}
 	}
@@ -203,32 +208,33 @@ static void drv_mesh_worker_scheduler(void * arg) {
 				if ((peer->status != PEER_ACQUAINTANCE) && (peer->status != PEER_FRIEND)) {
 					struct appointment_s * appt = popEmptyAppt();
 					if (appt == NULL) {
-						DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule peer receive appointment, no empty appointments available\n");
+						DEBUG_PRINT("\tWARNING: Failed to schedule peer receive appointment, no empty appointments available\n");
 						continue;
 					}
 					
 					uint32_t tmp;
 					crypto_blake2b_general((uint8_t *)&tmp, sizeof(tmp), state.psk, sizeof(state.psk), (uint8_t *)&(state.uid), sizeof(state.uid)); //doesn't handle byteorder correctly
 					crypto_blake2b_general((uint8_t *)&tmp, sizeof(tmp), (uint8_t *)&tmp, sizeof(tmp), (uint8_t *)&(peer->uid), sizeof(peer->uid)); //doesn't handle byteorder correctly
+					crypto_blake2b_general((uint8_t *)&tmp, sizeof(tmp), (uint8_t *)&tmp, sizeof(tmp), (uint8_t *)&(rt_disc), sizeof(rt_disc)); //doesn't handle byteorder correctly
 					tmp = LIB_BYTEORDER_HTON_U32(tmp);
 					
-					uint32_t offset = lib_misc_fastrange32(tmp, DISCOVERY_INTERVAL_MILLIS - 5000) + 5000; //use later 10 seconds
+					uint32_t offset = lib_misc_fastrange32(tmp, DISCOVERY_INTERVAL_MILLIS - 10000) + 5000; //use middle 5 seconds
 					appt->realtime = rt_disc + offset;
 					appt->type = APPT_RECV;
 					appt->peer = NULL;
 					appt->packet = NULL;
 					setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), appt->realtime, tmp);
 					
-					DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: Scheduling discReply listen t+%lu\n", offset);
+					DEBUG_PRINT("\tINFO: Scheduling discReply recv at t+%lu\n", offset);
 					
 					enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_recv, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
 					if (err != DRV_SCHED_ERR__NONE) {
-						DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule receive appointment\n");
+						DEBUG_PRINT("\tWARNING: Failed to schedule receive appointment\n");
 						insertEmptyAppt(appt);
 						continue;
 					}
 				} else {
-					DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: Skipping discReply listen for peer [%llX], handshake already complete.\n", peer->uid);
+					DEBUG_PRINT("\tINFO: Skipping discReply recv for peer [%llX], handshake already complete.\n", peer->uid);
 				}
 			}
 		}
@@ -277,7 +283,7 @@ static void drv_mesh_start(void * arg __attribute__((unused))) {
 	//enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_disc_listener, NULL, DRV_SCHED_PRI__REALTIME, rt+1000);
 	enum drv_sched_err_e err = drv_sched_repeating_at(drv_mesh_worker_scheduler, NULL, DRV_SCHED_PRI__REALTIME, rt-1000, DISCOVERY_INTERVAL_MILLIS);
 	if (err != DRV_SCHED_ERR__NONE) { //error checking
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule drv_mesh_worker_scheduler()\n");
+		DEBUG_PRINT("\tWARNING: Failed to schedule drv_mesh_worker_scheduler()\n");
 		return;
 	}
 }

@@ -20,7 +20,7 @@ static void drv_mesh_buildPacket_disc(struct appointment_s * appt) {
 	//memcpy(state.pubkey, packet->key_ephemeral, sizeof(state.pubkey));
 	//crypto_blake2b_general(packet->hmac, sizeof(packet->hmac), state.psk, sizeof(state.psk), (uint8_t *)&(*packet), sizeof(*packet)-sizeof(packet->hmac));
 	
-	DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Sending discovery packet as [%llX]...\n", packet->broadcast_peer_uid);
+	DEBUG_PRINT("\tBuilding discovery packet as [%llX]...\n", packet->broadcast_peer_uid);
 }
 
 static void drv_mesh_buildPacket_discReply(struct appointment_s * appt) {
@@ -41,7 +41,7 @@ static void drv_mesh_buildPacket_discReply(struct appointment_s * appt) {
 	//memcpy(state.pubkey, packet->key_ephemeral, sizeof(state.pubkey));
 	//crypto_blake2b_general(packet->hmac, sizeof(packet->hmac), state.psk, sizeof(state.psk), (uint8_t *)&(*packet), sizeof(*packet)-sizeof(packet->hmac));
 	
-	DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Sending discovery reply packet as [%llX] to [%llX]...\n", packet->reply_peer_uid, packet->broadcast_peer_uid);
+	DEBUG_PRINT("\tBuilding discovery reply packet as [%llX] to [%llX]...\n", packet->reply_peer_uid, packet->broadcast_peer_uid);
 }
 
 static void drv_mesh_buildPacket_data(struct appointment_s * appt) {
@@ -57,13 +57,13 @@ static void drv_mesh_buildPacket(struct appointment_s * appt) {
 	} else if (appt->type == APPT_SEND_DATA) {
 		drv_mesh_buildPacket_data(appt);
 	} else {
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("ERROR: Unexpected appointment type in drv_mesh_buildPacket().\n");
+		DEBUG_PRINT("\tERROR: Unexpected appointment type in drv_mesh_buildPacket().\n");
 	}
 }
 
 static void drv_mesh_worker_send_finish(void * arg) {
 	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
-	DEBUG_PRINT_REALTIME(); DEBUG_PRINT("Packet sent.\n");
+	DEBUG_PRINT("\tPacket sent.\n");
 	
 	drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
 	state.radio_mutex = 0;
@@ -75,25 +75,25 @@ static void drv_mesh_worker_send(void * arg) {
 	struct appointment_s * appt = (struct appointment_s *) arg;
 	
 	if (appt->type == APPT_RECV) { //error checking
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("ERROR: Unexpected appointment type in drv_mesh_worker_send()\n");
+		DEBUG_PRINT("\tERROR: Unexpected appointment type in drv_mesh_worker_send()\n");
 		goto EXIT;
 	}
 	
 	{lib_datetime_realtime_t rt;
 	drv_timer_getRealtime(&rt);
 	if (rt > appt->realtime+1) { //error checking
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: drv_mesh_worker_send() late, skipping.\n");
+		DEBUG_PRINT("\tWARNING: drv_mesh_worker_send() late, skipping.\n");
 		goto EXIT;
 	}}
 	
 	if (state.radio_mutex) { //error checking
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Radio locked, unable to send discovery packet.\n");
+		DEBUG_PRINT("\tINFO: Radio busy, unable to send discovery packet.\n");
 		goto EXIT;
 	}
 	
-	DEBUG_PRINT("send PACKET_RAW [%hhu]:\n", appt->packet->size);
+	DEBUG_PRINT("\tsend PACKET_RAW [%hhu]: [", appt->packet->size);
 	for (uint32_t i=0; i<appt->packet->size; i++) DEBUG_PRINT(((i+1==appt->packet->size) ? "%hhu" : "%hhu,"), (appt->packet->raw)[i]);
-	DEBUG_PRINT("\n");
+	DEBUG_PRINT("]\n");
 	
 	state.radio_mutex = 1;
 	drv_lora_setMode(&state.radio, DRV_LORA_MODE__IDLE);

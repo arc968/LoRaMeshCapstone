@@ -5,10 +5,10 @@ extern "C" {
 #endif
 
 static void drv_mesh_parsePacket_disc(struct packet_s * raw_packet) {
-	DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: Discovery packet received from [%llX] (%lu bytes).\n", raw_packet->asDisc.broadcast_peer_uid, raw_packet->size);
+	DEBUG_PRINT("\tINFO: Discovery packet received from [%llX] (%lu bytes).\n", raw_packet->asDisc.broadcast_peer_uid, raw_packet->size);
 	
 	if (raw_packet->size != sizeof(struct packet_type_disc_s)) {
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Packet size does not match type.\n");
+		DEBUG_PRINT("\tWARNING: Packet size does not match type.\n");
 		return;
 	};
 	
@@ -18,10 +18,10 @@ static void drv_mesh_parsePacket_disc(struct packet_s * raw_packet) {
 	
 	struct peer_s * peer = getPeerByUID(packet->broadcast_peer_uid);
 	if (peer == NULL) {
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: Discovery packet from unknown peer (new peer found).\n");
+		DEBUG_PRINT("\tINFO: Discovery packet from unknown peer (new peer found).\n");
 		peer = popEmptyPeer();
 		if (peer == NULL) {
-			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Unable to save new peer, no peer slots remaining.\n");
+			DEBUG_PRINT("\tWARNING: Unable to save new peer, no peer slots remaining.\n");
 			return;
 		}
 		peer->status = PEER_PASSERBY;
@@ -41,7 +41,7 @@ static void drv_mesh_parsePacket_disc(struct packet_s * raw_packet) {
 		}*/
 		insertReadyPeer(peer);
 	} else {
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: Discovery packet from known peer.\n");
+		DEBUG_PRINT("\tINFO: Discovery packet from known peer.\n");
 		//peer already known
 		if (peer->status == PEER_PASSERBY) {
 			//heard their broadcast again, check if key is the same
@@ -56,26 +56,26 @@ static void drv_mesh_parsePacket_disc(struct packet_s * raw_packet) {
 }
 
 static void drv_mesh_parsePacket_discReply(struct packet_s * raw_packet) {
-	DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: Discovery reply packet received from [%llX] (%lu bytes).\n", raw_packet->asDiscReply.reply_peer_uid, raw_packet->size);
+	DEBUG_PRINT("\tINFO: Discovery reply packet received from [%llX] (%lu bytes).\n", raw_packet->asDiscReply.reply_peer_uid, raw_packet->size);
 	
 	if (raw_packet->size != sizeof(struct packet_type_discReply_s)) {
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Packet size does not match type.\n");
+		DEBUG_PRINT("\tWARNING: Packet size does not match type.\n");
 		return;
 	};
 	
 	struct packet_type_discReply_s * packet = (struct packet_type_discReply_s *)&(raw_packet->asDiscReply);
 	
 	if (packet->broadcast_peer_uid != state.uid) {
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: Discovery reply packet intended for different broadcaster.\n");
+		DEBUG_PRINT("\tINFO: Discovery reply packet intended for different broadcaster.\n");
 		return;
 	}
 	
 	struct peer_s * peer = getPeerByUID(packet->reply_peer_uid);
 	if (peer == NULL) { //PEER_STRANGER
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: Discovery reply packet received from unknown peer.\n");
+		DEBUG_PRINT("\tINFO: Discovery reply packet received from unknown peer.\n");
 		peer = popEmptyPeer();
 		if (peer == NULL) {
-			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Unable to save new peer, no peer slots remaining.\n");
+			DEBUG_PRINT("\tWARNING: Unable to save new peer, no peer slots remaining.\n");
 			return;
 		}
 		peer->status = PEER_ACQUAINTANCE;
@@ -95,7 +95,7 @@ static void drv_mesh_parsePacket_discReply(struct packet_s * raw_packet) {
 		insertReadyPeer(peer);
 	} else {
 		if (peer->status == PEER_PASSERBY) {
-			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: Discovery reply packet received from unknown peer.\n");
+			DEBUG_PRINT("\tINFO: Discovery reply packet received from unknown peer.\n");
 			//TODO same as above?
 			peer->status = PEER_ACQUAINTANCE;
 			peer->uid = packet->reply_peer_uid;
@@ -127,7 +127,7 @@ static void drv_mesh_parsePacket(struct packet_s * raw_packet) {
 	} else if (raw_packet->header.type == PACKET_TYPE__DISC_REPLY) {
 		drv_mesh_parsePacket_discReply(raw_packet);
 	} else {
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Unknown packet [%X] received.\n", raw_packet->header.type);
+		DEBUG_PRINT("\tWARNING: Unknown packet [%X] received.\n", raw_packet->header.type);
 	}
 }
 
@@ -135,7 +135,7 @@ static void drv_mesh_worker_recv_finish(void * arg) {
 	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
 	
 	if (arg != NULL) {
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Unexpected non-NULL argument to drv_mesh_worker_recv_finish().\n");
+		DEBUG_PRINT("\tWARNING: Unexpected non-NULL argument to drv_mesh_worker_recv_finish().\n");
 	}
 	
 	struct packet_s raw_packet = {0};
@@ -144,12 +144,12 @@ static void drv_mesh_worker_recv_finish(void * arg) {
 	drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
 	state.radio_mutex = 0;
 	
-	DEBUG_PRINT("recv PACKET_RAW [%hhu]:\n", raw_packet.size);
+	DEBUG_PRINT("\trecv PACKET_RAW [%hhu]: [", raw_packet.size);
 	for (uint32_t i=0; i<raw_packet.size; i++) DEBUG_PRINT(((i+1==raw_packet.size) ? "%hhu" : "%hhu,"), (raw_packet.raw)[i]);
-	DEBUG_PRINT("\n");
+	DEBUG_PRINT("]\n");
 	
 	if (raw_packet.size == 0) {
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: No packet received.\n");
+		DEBUG_PRINT("\tINFO: No packet received.\n");
 		return;
 	}
 	
@@ -162,23 +162,23 @@ static void drv_mesh_worker_recv(void * arg) {
 	struct appointment_s * appt = (struct appointment_s *) arg;
 	
 	if (appt->type != APPT_RECV) { //error checking
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("ERROR: Unexpected appointment type in drv_mesh_worker_recv()\n");
+		DEBUG_PRINT("\tERROR: Unexpected appointment type in drv_mesh_worker_recv()\n");
 		goto EXIT;
 	}
 	
 	{lib_datetime_realtime_t rt;
 	drv_timer_getRealtime(&rt);
 	if (rt > appt->realtime+1) { //error checking
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: drv_mesh_worker_recv() late, skipping.\n");
+		DEBUG_PRINT("\tWARNING: drv_mesh_worker_recv() late, skipping.\n");
 		goto EXIT;
 	}}
 	
 	if (state.radio_mutex) { //error checking
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Radio locked, unable to listen for packet.\n");
+		DEBUG_PRINT("\tINFO: Radio busy, unable to listen for packet.\n");
 		goto EXIT;
 	}
 	
-	DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: Listening for packet...\n");
+	DEBUG_PRINT("\tINFO: Listening for packet...\n");
 	state.radio_mutex = 1;
 	
 	drv_lora_setMode(&state.radio, DRV_LORA_MODE__IDLE);
@@ -189,7 +189,7 @@ static void drv_mesh_worker_recv(void * arg) {
 	hal_timer_delay(250); //idk if this value makes sense
 	
 	if (!drv_lora_isSignalDetected(&state.radio)) {
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: No preamble detected in drv_mesh_worker_recv(), aborting receive.\n");
+		DEBUG_PRINT("\tINFO: No preamble detected in drv_mesh_worker_recv(), aborting receive.\n");
 		drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
 		state.radio_mutex = 0;
 		goto EXIT;
@@ -197,7 +197,7 @@ static void drv_mesh_worker_recv(void * arg) {
 	
 	enum drv_sched_err_e err = drv_sched_once(drv_mesh_worker_recv_finish, NULL, DRV_SCHED_PRI__REALTIME, 5000); //the interval should be calculated
 	if (err != DRV_SCHED_ERR__NONE) { //error checking
-		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule drv_mesh_worker_recv_finish()\n");
+		DEBUG_PRINT("\tWARNING: Failed to schedule drv_mesh_worker_recv_finish()\n");
 		drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
 		state.radio_mutex = 0;
 		goto EXIT;

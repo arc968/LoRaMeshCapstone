@@ -124,6 +124,9 @@ static uint64_t getCenterFrequency(channel_t channel, enum drv_lora_bandwidth_e 
 }
 
 static void setupRadioFromConfig(struct drv_lora_s * radio, struct radio_cfg_s * cfg) {
+	DEBUG_PRINT("\t"); DEBUG_PRINT_FUNCTION();
+	DEBUG_PRINT("\t\tpreamble:%hu, bandwidth:%lu, frequency:%llu, spreadingFactor:%lu, codingRate:%lu\n", cfg->preambleSymbols, cfg->bandwidth, cfg->frequency, cfg->spreadingFactor, cfg->codingRate);
+	
 	drv_lora_setPreamble(radio, cfg->preambleSymbols);
 	drv_lora_setBandwidth(radio, cfg->bandwidth);
 	drv_lora_setFrequency(radio, cfg->frequency);
