@@ -107,8 +107,10 @@ struct packet_type_data_s {
 	uint16_t index_send;
 	uint16_t index_recv;
 	//static, "public"
-	ip_t ip_src;
-	ip_t ip_dst;
+	ipv4_t ip_src;
+	port_t port_src;
+	ipv4_t ip_dst;
+	port_t port_dst;
 	//"private"
 	//uint16_t seq_num;
 	//uint16_t ack_num;
@@ -126,8 +128,10 @@ struct packet_type_route_s {
 	uint16_t index_send;
 	uint16_t index_recv;
 	//static, "public"
-	ip_t ip_src;
-	ip_t ip_dst;
+	ipv4_t ip_src;
+	ipv4_t ip_dst;
+	uint32_t counter;
+	uint8_t data[];
 } __attribute__((packed, aligned(1)));
 #pragma scalar_storage_order default
 

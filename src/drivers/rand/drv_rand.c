@@ -6,7 +6,7 @@
 #include "../lora/drv_lora.h"
 
 #include "../../lib/misc/lib_misc.h"
-#include "../../lib/monocypher/monocypher.h"
+#include "../../deps/monocypher/monocypher.h"
 
 #include "drv_rand.h"
 

@@ -20,7 +20,7 @@ enum drv_mesh_error_e {
 };
 
 struct drv_mesh_packet_s {
-	ip_t ip;
+	ipv4_t ip;
 	uint8_t len;
 	uint8_t buf[DRV_MESH__PAYLOAD_SIZE_MAX];
 };

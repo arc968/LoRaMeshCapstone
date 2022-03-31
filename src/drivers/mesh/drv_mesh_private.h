@@ -38,6 +38,7 @@ enum appointment_type_e {
 	APPT_SEND_DISC,
 	APPT_SEND_DISC_REPLY,
 	APPT_SEND_DATA,
+	APPT_SEND_ROUTE,
 /* 	APPT_DISC_RECV,
 	APPT_DISC_REPLY_SEND,
 	APPT_DISC_REPLY_RECV,
@@ -76,20 +77,21 @@ struct packet_s {
 
 struct route_s {
 	struct route_s * next;
-	ip_t ip_src;
+	ipv4_t ip_src;
+	lib_datetime_realtime_t last_usage;
 	struct {
 		uint8_t ttl;
 		uint16_t index_peer;
-		lib_datetime_realtime_t realtime;
-	} peers[3];
+	} peers[ROUTE_PEER_COUNT];
 };
 
 static struct state_s {
-	ip_t ip;
+	ipv4_t ip;
 	peer_uid_t uid;
 	//uint8_t pubkey[32];
 	//uint8_t privkey[32];
 	uint8_t psk[32];
+	uint8_t key_hashtable[8];
 	
 	struct {
 		uint16_t head;
@@ -101,6 +103,7 @@ static struct state_s {
 		} buf[BUFFER_RECENT_PACKETS_SIZE];
 	} rb_recentPackets;
 	
+	struct route_s route_gateway;
 	struct route_s * head_route_empty;
 	struct route_s routes[BUFFER_ROUTES_SIZE];
 	struct route_s * hm_route_buckets[HASHMAP_ROUTES_BUCKET_COUNT];

@@ -49,6 +49,11 @@ static void drv_mesh_buildPacket_data(struct appointment_s * appt) {
 	
 }
 
+static void drv_mesh_buildPacket_route(struct appointment_s * appt) {
+	struct packet_s * raw_packet = appt->packet;
+	
+}
+
 static void drv_mesh_buildPacket(struct appointment_s * appt) {
 	if (appt->type == APPT_SEND_DISC) {
 		drv_mesh_buildPacket_disc(appt);
@@ -56,6 +61,8 @@ static void drv_mesh_buildPacket(struct appointment_s * appt) {
 		drv_mesh_buildPacket_discReply(appt);
 	} else if (appt->type == APPT_SEND_DATA) {
 		drv_mesh_buildPacket_data(appt);
+	} else if (appt->type == APPT_SEND_ROUTE) {
+		drv_mesh_buildPacket_route(appt);
 	} else {
 		DEBUG_PRINT("\tERROR: Unexpected appointment type in drv_mesh_buildPacket().\n");
 	}

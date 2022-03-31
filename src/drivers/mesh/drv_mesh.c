@@ -31,7 +31,9 @@
 #include "../../lib/datetime/lib_datetime.h"
 #include "../../lib/byteorder/lib_byteorder.h"
 
-#include "../../lib/monocypher/monocypher.h"
+#include "../../deps/monocypher/monocypher.h"
+#include "../../deps/siphash/siphash.h"
+#include "../../deps/siphash/halfsiphash.h"
 
 /*#define XXH_NO_STREAM
 #define XXH_NO_LONG_LONG
@@ -39,7 +41,7 @@
 #define XXH_NO_STDLIB
 #define XXH_NO_INLINE_HINTS
 #define XXH_FORCE_ALIGN_CHECK
-#include "../../lib/xxhash/xxhash.h"*/
+#include "../../deps/xxhash/xxhash.h"*/
 
 #include "drv_mesh_config.h"
 #include "drv_mesh.h"
@@ -356,7 +358,7 @@ void drv_mesh_getStats(struct drv_mesh_stats_s * stats) {
 	memcpy(&(state.stats), stats, sizeof(struct drv_mesh_stats_s));
 	stats->peer_count = 0;
 	struct peer_s * peer = state.head_peer_ready;
-	while(peer != NULL) {
+	while (peer != NULL) {
 		stats->peer_count++;
 		peer = peer->next;
 	}

@@ -37,16 +37,64 @@ static void insertEmptyRoute(struct route_s * route) {
 	state.head_route_empty = route;
 }
 
-static void deleteOldestRoute(void) {
-	
+static uint32_t getBucketIndex(ipv4_t ip_src) {
+	uint32_t tmp;
+	halfsiphash(&ip_src, sizeof(ipv4_t), state.key_hashtable, (uint8_t *)&tmp, sizeof(uint32_t));
+	return lib_misc_fastrange32(LIB_BYTEORDER_NTOH_U32(tmp), HASHMAP_ROUTES_BUCKET_COUNT);
 }
 
-static void insertRoute(ip_t ip_src, uint8_t ttl, uint16_t index_peer, lib_datetime_realtime_t realtime) {
-	
+static struct route_s * deleteOldestRoute(void) { //should only be called if all routes are in use
+	struct route_s * route = &(state.routes[0]);
+	for (uint32_t i=0; i<BUFFER_ROUTES_SIZE; i++) {
+		struct route_s * tmp_route = &(state.routes[i]);
+		if (tmp_route->last_usage < route->last_usage) {
+			route = tmp_route;
+		}
+	}
+	uint32_t hm_index = getBucketIndex(route->ip_src);
+	struct route_s * tmp_route = state.hm_route_buckets[hm_index];
+	if (tmp_route == route) {
+		state.hm_route_buckets[hm_index] = route->next;
+		route->next = NULL;
+		return route;
+	}
+	while (tmp_route->next != route) tmp_route = tmp_route->next;
+	tmp_route->next = route->next;
+	route->next = NULL;
+	return route;
 }
 
-static struct route_s * findRoute(ip_t ip_src) {
-	
+static struct route_s * findRoute(ipv4_t ip_src, lib_datetime_realtime_t realtime) {
+	if (ip_src[0] != 10) {
+		state.route_gateway.last_usage = realtime;
+		return &(state.route_gateway);
+	}
+	struct route_s * route = state.hm_route_buckets[getBucketIndex(ip_src)];
+	while (route != NULL && route->ip_src != ip_src) route = route->next;
+	if (route != NULL) route->last_usage = realtime;
+	return route;
+}
+
+static void insertRoute(ipv4_t ip_src, uint8_t ttl, uint16_t index_peer, lib_datetime_realtime_t realtime) {
+	struct route_s * route = findRoute(ip_src, realtime);
+	if (route == NULL) {
+		route = popEmptyRoute();
+		if (route == NULL) {
+			route = deleteOldestRoute();
+		}
+	}
+	route->last_usage = realtime;
+	for (int i=0; i<ROUTE_PEER_COUNT; i++) {
+		if (ttl <= route->peers[i].ttl) {
+			for (int ii=ROUTE_PEER_COUNT-1; ii>i; ii--) {
+				route->peers[ii].ttl = route->peers[ii-1].ttl;
+				route->peers[ii].index_peer = route->peers[ii-1].index_peer;
+			}
+			route->peers[i].ttl = ttl;
+			route->peers[i].index_peer = index_peer;
+			break;
+		}
+	}
 }
 
 static struct peer_s * popEmptyPeer(void) {
