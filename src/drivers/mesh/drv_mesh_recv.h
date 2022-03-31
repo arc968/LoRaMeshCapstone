@@ -121,6 +121,18 @@ static void drv_mesh_parsePacket_discReply(struct packet_s * raw_packet) {
 	}
 }
 
+static void drv_mesh_parsePacket_discHandshake(struct packet_s * raw_packet) {
+	DEBUG_PRINT("\tINFO: Discovery handshake packet received from [%llX] (%lu bytes).\n", raw_packet->asDiscReply.reply_peer_uid, raw_packet->size);
+	
+	if (raw_packet->size != sizeof(struct packet_type_discHandshake_s)) {
+		DEBUG_PRINT("\tWARNING: Packet size does not match type.\n");
+		return;
+	};
+	
+	struct packet_type_discHandshake_s * packet = (struct packet_type_discHandshake_s *)&(raw_packet->asDiscHandshake);
+	
+}
+
 static void drv_mesh_parsePacket_data(struct packet_s * raw_packet) {
 	DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: Data packet received (%lu bytes).\n", raw_packet->size);
 	
@@ -156,10 +168,10 @@ static void drv_mesh_parsePacket(struct packet_s * raw_packet) {
 		drv_mesh_parsePacket_disc(raw_packet);
 	} else if (raw_packet->header.type == PACKET_TYPE__DISC_REPLY) {
 		drv_mesh_parsePacket_discReply(raw_packet);
+	} else if (raw_packet->header.type == PACKET_TYPE__DISC_HANDSHAKE) {
+		drv_mesh_parsePacket_discHandshake(raw_packet);
 	} else if (raw_packet->header.type == PACKET_TYPE__DATA) {
 		drv_mesh_parsePacket_data(raw_packet);
-	} else if (raw_packet->header.type == PACKET_TYPE__ROUTE) {
-		drv_mesh_parsePacket_route(raw_packet);
 	} else {
 		DEBUG_PRINT("\tWARNING: Unknown packet [%X] received.\n", raw_packet->header.type);
 	}

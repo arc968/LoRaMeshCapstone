@@ -44,6 +44,13 @@ static void drv_mesh_buildPacket_discReply(struct appointment_s * appt) {
 	DEBUG_PRINT("\tBuilding discovery reply packet as [%llX] to [%llX]...\n", packet->reply_peer_uid, packet->broadcast_peer_uid);
 }
 
+static void drv_mesh_buildPacket_discHandshake(struct appointment_s * appt) {
+	struct packet_s * raw_packet = appt->packet;
+	raw_packet->size = sizeof(struct packet_type_discHandshake_s);
+	struct packet_type_discHandshake_s * packet = (struct packet_type_discHandshake_s *)&(raw_packet->asDiscHandshake);
+	
+}
+
 static void drv_mesh_buildPacket_data(struct appointment_s * appt) {
 	struct packet_s * raw_packet = appt->packet;
 	
@@ -59,10 +66,10 @@ static void drv_mesh_buildPacket(struct appointment_s * appt) {
 		drv_mesh_buildPacket_disc(appt);
 	} else if (appt->type == APPT_SEND_DISC_REPLY) {
 		drv_mesh_buildPacket_discReply(appt);
+	} else if (appt->type == APPT_SEND_DISC_HANDSHAKE) {
+		drv_mesh_buildPacket_discHandshake(appt);
 	} else if (appt->type == APPT_SEND_DATA) {
 		drv_mesh_buildPacket_data(appt);
-	} else if (appt->type == APPT_SEND_ROUTE) {
-		drv_mesh_buildPacket_route(appt);
 	} else {
 		DEBUG_PRINT("\tERROR: Unexpected appointment type in drv_mesh_buildPacket().\n");
 	}

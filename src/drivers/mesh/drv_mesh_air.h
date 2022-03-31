@@ -17,6 +17,12 @@ enum packet_type_e {
 	PACKET_TYPE__ROUTE = 7,
 };
 
+enum nack_reason_e {
+	NACK_REASON__NONE = 0,
+	NACK_REASON__NO_ROUTE,
+	NACK_REASON__BUFFER_FULL,
+};
+
 /*enum ciphermask_e {
 	CIPHER__NONE = (0x1 << 0),
 	CIPHER__AES = (0x1 << 1),
@@ -42,7 +48,7 @@ struct ciphermask_s {
 #pragma scalar_storage_order big-endian
 struct packet_header_s {
 	uint8_t type;
-	uint8_t reserved[3];
+	uint8_t reserved;
 } __attribute__((packed, aligned(1)));
 #pragma scalar_storage_order default
 
@@ -85,22 +91,35 @@ struct packet_type_discHandshake_s {
 #pragma scalar_storage_order default
 
 #pragma scalar_storage_order big-endian
-struct packet_type_ack_s {
+struct packet_linkHeader_s {
 	struct packet_header_s header;
-	uint32_t puid;
+	uint16_t index_recv;
+	uint32_t counter;
+	uint8_t mac[16]; //poly1305
+	uint8_t type; //actual type is encrypted
+	uint8_t reserved;
+} __attribute__((packed, aligned(1)));
+#pragma scalar_storage_order default
+
+#pragma scalar_storage_order big-endian
+struct packet_type_ack_s {
+	struct packet_linkHeader_s header;
+	uint32_t counter_range_min;
+	uint32_t counter_range_max;
 } __attribute__((packed, aligned(1)));
 #pragma scalar_storage_order default
 
 #pragma scalar_storage_order big-endian
 struct packet_type_nack_s {
-	struct packet_header_s header;
-	uint32_t puid;
+	struct packet_linkHeader_s header;
+	uint32_t counter_range_min;
+	uint32_t counter_range_max;
 } __attribute__((packed, aligned(1)));
 #pragma scalar_storage_order default
 
 #pragma scalar_storage_order big-endian
 struct packet_type_data_s {
-	struct packet_header_s header;
+	struct packet_linkHeader_s header;
 	//dynamic, "public"
 	uint8_t ttl; //increments on each hop
 	//uint32_t puid; //random on each hop for ACK purposes
@@ -121,7 +140,7 @@ struct packet_type_data_s {
 
 #pragma scalar_storage_order big-endian
 struct packet_type_route_s {
-	struct packet_header_s header;
+	struct packet_linkHeader_s header;
 	//dynamic, "public"
 	uint8_t ttl; //increments on each hop
 	//uint32_t puid; //random on each hop for ACK purposes
