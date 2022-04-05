@@ -1,4 +1,4 @@
-#include "RTClib_MULTI.h"
+#include "RTClib.h"
 #include <RTCZero.h>
 
 bool alarmtrig = false;
@@ -25,9 +25,7 @@ void setup() {
   //}
 
   // initializing the rtc
-  while (!rtcMasterClock.begin(true)) {
-      
-  }
+  rtcMasterClock.begin(true);
 
   rtcMasterClock.setAlarmTime(0, 0, 2);
   rtcMasterClock.setAlarmDate(2000, 1, 1);
@@ -51,7 +49,7 @@ void loop() {
       rtcSlaveClock.setAlarm1(current + TimeSpan(15), DS3231_A1_Day);
       digitalWrite(LED_PIN, HIGH);
     }
-    rtcMasterClock.setAlarmTime(current.hours(), current.minute(), current.second() + 2);
+    rtcMasterClock.setAlarmTime(current.hour(), current.minute(), current.second() + 2);
     rtcMasterClock.setAlarmDate(current.day(), 0, 0);
     rtcMasterClock.enableAlarm(rtcMasterClock.MATCH_DHHMMSS);
     alarmtrig = false;
