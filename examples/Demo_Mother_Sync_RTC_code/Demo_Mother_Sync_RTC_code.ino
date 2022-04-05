@@ -1,6 +1,9 @@
 #include "RTClib_MULTI.h"
+#include <RTCZero.h>
 
-RTC_DS3231 rtcMasterClock;
+bool alarmtrig = false;
+
+RTCZero rtcMasterClock;
 RTC_DS3231 rtcSlaveClock;
 
 #define INTERRUPT_PIN 5
@@ -23,17 +26,15 @@ void setup() {
   //}
 
   // initializing the rtc
-  while (!rtcMasterClock.begin(0b10100100)) {
+  while (!rtcMasterClock.begin(true)) {
       
   }
 
-  rtcMasterClock.disableAlarm(2);
-  rtcMasterClock.disable32K();
-  rtcMasterClock.clearAlarm(1);
-  rtcMasterClock.clearAlarm(2);
-  rtcMasterClock.writeSqwPinMode(DS3231_OFF);
-  rtcMasterClock.adjust(DateTime(0, 0, 0, 0, 0, 0));
-  rtcMasterClock.setAlarm1(rtcMasterClock.now() + TimeSpan(15), DS3231_A1_Day);
+  rtcMasterClock.setAlarmTime(0, 0, 2);
+  rtcMasterClock.setAlarmDate(2000, 1, 1);
+  rtcMasterClock.enableAlarm(rtcMasterClock.MATCH_DHHMMSS);
+  
+  rtcMasterClock.attachInterrupt(onAlarm);
     
   Serial.println("RTC READY");
 
@@ -42,16 +43,19 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
-  if (rtcMasterClock.alarmFired(1)) {
-    DateTime current = rtcMasterClock.now();
-    if (rtcSlaveClock.begin(0b10100000)) {
+  if (alarmtrig) {
+    DateTime current = {rtcMasterClock.getYear(), rtcMasterClock.getMonth(), rtcMasterClock.getDay(), 
+                        rtcMasterClock.getHours(), rtcMasterClock.getMinutes(), rtcMasterClock.getSeconds()};
+    if (rtcSlaveClock.begin()) {
       rtcSlaveClock.adjust(current);
       rtcSlaveClock.clearAlarm(1);
       rtcSlaveClock.setAlarm1(current + TimeSpan(15), DS3231_A1_Day);
       digitalWrite(LED_PIN, HIGH);
     }
-    rtcMasterClock.clearAlarm(1);
-    rtcMasterClock.setAlarm1(current + TimeSpan(15), DS3231_A1_Day);
+    rtcMasterClock.setAlarmTime(current.hours(), current.minute(), current.second() + 2);
+    rtcMasterClock.setAlarmDate(current.day(), 0, 0);
+    rtcMasterClock.enableAlarm(rtcMasterClock.MATCH_DHHMMSS);
+    alarmtrig = false;
   }
 
   delay(10);
@@ -61,5 +65,5 @@ void loop() {
 }
 
 void onAlarm() {
-  
+  alarmtrig = true;
 }

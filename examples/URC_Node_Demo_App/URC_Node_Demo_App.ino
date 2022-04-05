@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 static volatile lib_datetime_interval_t timestamp = 0;
+uint8_t sensordata = 0;
 
 RTC_DS3231 GPSRTC;
 
@@ -66,6 +67,8 @@ void setup() {
 
   Serial.print("Serial Ready\n");
 
+  readSensorVal(NULL);
+
   // initializing the rtc
   while (!GPSRTC.begin());
 
@@ -88,7 +91,7 @@ void setup() {
 
 void loop() {}
 
-void tempname(void *) {
+void resetForNextAlarm(void *) {
 
   DateTime curr = GPSRTC.now();
 
@@ -117,13 +120,13 @@ void onAlarm(void) {
     //clear alarm and set it to 15 seconds in the future without resetting RTC time
     
     timestamp = drv_timer_getMonotonicTime();
-    drv_sched_once(tempname, NULL, DRV_SCHED_PRI__NORMAL, 0);
+    drv_sched_once(resetForNextAlarm, NULL, DRV_SCHED_PRI__NORMAL, 0);
     
 }
 
 void readSensorVal(void*) {
 
-  uint8_t sensordata = analogRead(SENSOR_PIN);
+  sensordata = analogRead(SENSOR_PIN);
   
 }
 
