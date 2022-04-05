@@ -20,12 +20,15 @@ void setup() {
   pinMode(CLOCK_INTERRUPT_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(CLOCK_INTERRUPT_PIN), onAlarm, FALLING);
 
-  //while (!Serial) {
+  while (!Serial) {
   Serial.begin(115200);
-  //}
+  }
 
   // initializing the rtc
   rtcMasterClock.begin(true);
+
+  rtcMasterClock.setTime(0, 0, 0);
+  rtcMasterClock.setDate(2000, 1, 1);
 
   rtcMasterClock.setAlarmTime(0, 0, 2);
   rtcMasterClock.setAlarmDate(2000, 1, 1);
@@ -46,13 +49,20 @@ void loop() {
     if (rtcSlaveClock.begin()) {
       rtcSlaveClock.adjust(current);
       rtcSlaveClock.clearAlarm(1);
-      rtcSlaveClock.setAlarm1(current + TimeSpan(15), DS3231_A1_Day);
+      rtcSlaveClock.writeSqwPinMode(DS3231_OFF);
+      DateTime alarm = (0,0,0,0,0,0);
+      rtcSlaveClock.setAlarm1(alarm, DS3231_A1_Second);
+      rtcSlaveClock.disable32K();
+      rtcSlaveClock.clearAlarm(2);
+      rtcSlaveClock.disableAlarm(2);
       digitalWrite(LED_PIN, HIGH);
+      Serial.println("SLAVE SET");
     }
     rtcMasterClock.setAlarmTime(current.hour(), current.minute(), current.second() + 2);
     rtcMasterClock.setAlarmDate(current.day(), 0, 0);
     rtcMasterClock.enableAlarm(rtcMasterClock.MATCH_DHHMMSS);
     alarmtrig = false;
+    Serial.println("RTC ALARM");
   }
 
   delay(10);

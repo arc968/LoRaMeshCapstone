@@ -39,7 +39,8 @@ extern "C" {
 
 ///////////////////GPS DEFINES/////////////////////////////
 //#define GPS_NONE
-#define GPS_UBLOX_NEO6
+//#define GPS_UBLOX_NEO6
+#define GPS_RTC_DS3231
 
 
 ///////////////////LORA RADIO DEFINES//////////////////////

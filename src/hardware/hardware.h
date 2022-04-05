@@ -37,6 +37,8 @@ extern "C" {
 
 #if defined(GPS_UBLOX_NEO6)
 	#include "gps/ublox/neo6/hw_gps_ublox_neo6.h"
+#elif defined(GPS_RTC_DS3231)
+	#include "gps/rtc/ds3231/hw_gps_rtc_ds3231.h"
 #elif defined(GPS_NONE)
 	#include "gps/hw_gps.h"
 #else
