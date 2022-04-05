@@ -23,7 +23,7 @@ void setup() {
   }
 
   // initializing the rtc
-  while (!rtcMasterClock.begin()) {
+  while (!rtcMasterClock.begin(0b10100100)) {
       
   }
 
@@ -44,7 +44,7 @@ void loop() {
 
   if (rtcMasterClock.alarmFired(1)) {
     DateTime current = rtcMasterClock.now();
-    if (rtcSlaveClock.begin()) {
+    if (rtcSlaveClock.begin(0b10100000)) {
       rtcSlaveClock.adjust(current);
       rtcSlaveClock.clearAlarm(1);
       rtcSlaveClock.setAlarm1(current + TimeSpan(15), DS3231_A1_Day);
