@@ -6,7 +6,6 @@ bool alarmtrig = false;
 RTCZero rtcMasterClock;
 RTC_DS3231 rtcSlaveClock;
 
-#define INTERRUPT_PIN 5
 // the pin that is connected to SQW
 #define CLOCK_INTERRUPT_PIN 2
 #define LED_PIN 6
