@@ -1,6 +1,6 @@
 /**************************************************************************/
 /*!
-  @file     RTClib.h
+  @file     RTClib_MULTI.h
 
   Original library by JeeLabs http://news.jeelabs.org/code/, released to the
   public domain
@@ -33,15 +33,6 @@ class TimeSpan;
 #define SECONDS_FROM_1970_TO_2000                                              \
   946684800 ///< Unixtime for 2000-01-01 00:00:00, useful for initialization
 
-/** DS1307 SQW pin mode settings */
-enum Ds1307SqwPinMode {
-  DS1307_OFF = 0x00,            // Low
-  DS1307_ON = 0x80,             // High
-  DS1307_SquareWave1HZ = 0x10,  // 1Hz square wave
-  DS1307_SquareWave4kHz = 0x11, // 4kHz square wave
-  DS1307_SquareWave8kHz = 0x12, // 8kHz square wave
-  DS1307_SquareWave32kHz = 0x13 // 32kHz square wave
-};
 
 /** DS3231 SQW pin mode settings */
 enum Ds3231SqwPinMode {
@@ -75,55 +66,7 @@ enum Ds3231Alarm2Mode {
   DS3231_A2_Day = 0x8        /**< Alarm when day (day of week), hours
                                   and minutes match */
 };
-/** PCF8523 INT/SQW pin mode settings */
-enum Pcf8523SqwPinMode {
-  PCF8523_OFF = 7,             /**< Off */
-  PCF8523_SquareWave1HZ = 6,   /**< 1Hz square wave */
-  PCF8523_SquareWave32HZ = 5,  /**< 32Hz square wave */
-  PCF8523_SquareWave1kHz = 4,  /**< 1kHz square wave */
-  PCF8523_SquareWave4kHz = 3,  /**< 4kHz square wave */
-  PCF8523_SquareWave8kHz = 2,  /**< 8kHz square wave */
-  PCF8523_SquareWave16kHz = 1, /**< 16kHz square wave */
-  PCF8523_SquareWave32kHz = 0  /**< 32kHz square wave */
-};
 
-/** PCF8523 Timer Source Clock Frequencies for Timers A and B */
-enum PCF8523TimerClockFreq {
-  PCF8523_Frequency4kHz = 0,   /**< 1/4096th second = 244 microseconds,
-                                    max 62.256 milliseconds */
-  PCF8523_Frequency64Hz = 1,   /**< 1/64th second = 15.625 milliseconds,
-                                    max 3.984375 seconds */
-  PCF8523_FrequencySecond = 2, /**< 1 second, max 255 seconds = 4.25 minutes */
-  PCF8523_FrequencyMinute = 3, /**< 1 minute, max 255 minutes = 4.25 hours */
-  PCF8523_FrequencyHour = 4,   /**< 1 hour, max 255 hours = 10.625 days */
-};
-
-/** PCF8523 Timer Interrupt Low Pulse Width options for Timer B only */
-enum PCF8523TimerIntPulse {
-  PCF8523_LowPulse3x64Hz = 0,  /**<  46.875 ms   3/64ths second */
-  PCF8523_LowPulse4x64Hz = 1,  /**<  62.500 ms   4/64ths second */
-  PCF8523_LowPulse5x64Hz = 2,  /**<  78.125 ms   5/64ths second */
-  PCF8523_LowPulse6x64Hz = 3,  /**<  93.750 ms   6/64ths second */
-  PCF8523_LowPulse8x64Hz = 4,  /**< 125.000 ms   8/64ths second */
-  PCF8523_LowPulse10x64Hz = 5, /**< 156.250 ms  10/64ths second */
-  PCF8523_LowPulse12x64Hz = 6, /**< 187.500 ms  12/64ths second */
-  PCF8523_LowPulse14x64Hz = 7  /**< 218.750 ms  14/64ths second */
-};
-
-/** PCF8523 Offset modes for making temperature/aging/accuracy adjustments */
-enum Pcf8523OffsetMode {
-  PCF8523_TwoHours = 0x00, /**< Offset made every two hours */
-  PCF8523_OneMinute = 0x80 /**< Offset made every minute */
-};
-
-/** PCF8563 CLKOUT pin mode settings */
-enum Pcf8563SqwPinMode {
-  PCF8563_SquareWaveOFF = 0x00,  /**< Off */
-  PCF8563_SquareWave1Hz = 0x83,  /**< 1Hz square wave */
-  PCF8563_SquareWave32Hz = 0x82, /**< 32Hz square wave */
-  PCF8563_SquareWave1kHz = 0x81, /**< 1kHz square wave */
-  PCF8563_SquareWave32kHz = 0x80 /**< 32kHz square wave */
-};
 
 /**************************************************************************/
 /*!
@@ -342,25 +285,6 @@ protected:
   Adafruit_I2CDevice *i2c_dev = NULL; ///< Pointer to I2C bus interface
   uint8_t read_register(uint8_t reg);
   void write_register(uint8_t reg, uint8_t val);
-};
-
-/**************************************************************************/
-/*!
-    @brief  RTC based on the DS1307 chip connected via I2C and the Wire library
-*/
-/**************************************************************************/
-class RTC_DS1307 : RTC_I2C {
-public:
-  boolean begin(TwoWire *wireInstance = &Wire);
-  void adjust(const DateTime &dt);
-  uint8_t isrunning(void);
-  DateTime now();
-  Ds1307SqwPinMode readSqwPinMode();
-  void writeSqwPinMode(Ds1307SqwPinMode mode);
-  uint8_t readnvram(uint8_t address);
-  void readnvram(uint8_t *buf, uint8_t size, uint8_t address);
-  void writenvram(uint8_t address, uint8_t data);
-  void writenvram(uint8_t address, const uint8_t *buf, uint8_t size);
 };
 
 /**************************************************************************/
