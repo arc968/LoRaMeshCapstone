@@ -21,7 +21,7 @@ typedef uint64_t lib_datetime_interval_t; //time interval in ms
 #define LIB_DATETIME__MS_IN_DAY 86400000 //(24*60*60*1000)
 
 #define PACK_STRUCTS
-#define USE_BITFIELDS
+//#define USE_BITFIELDS
 #if defined(USE_BITFIELDS)
 //bitfields are used to reduce the struct down to 6 bytes
 //this will increase binary size by quite a bit, but saves a lot of memory

@@ -196,6 +196,7 @@ enum drv_sched_err_e drv_sched_repeating(void (*func_ptr)(void*), void * func_ar
 
 //schedule at particular time of day
 enum drv_sched_err_e drv_sched_once_at(void (*func_ptr)(void*), void * func_arg, enum drv_sched_pri_e priority, lib_datetime_realtime_t time) {
+	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
 	if (!drv_timer_absoluteTimeIsAvailable()) return DRV_SCHED_ERR__ABSOLUTE_SCHED_TMP_UNAVAILABLE;
 	//if (lib_datetime_validateTime(time) != LIB_DATETIME_ERR__NONE) return DRV_SCHED_ERR__INVALID_TIME;
 	return schedule(func_ptr, func_arg, JOB_TYPE__ONCE_AT, priority, (lib_datetime_interval_t) time, 0);
@@ -203,6 +204,7 @@ enum drv_sched_err_e drv_sched_once_at(void (*func_ptr)(void*), void * func_arg,
 
 //schedule at particular time of day, repeating at regular intervals afterward
 enum drv_sched_err_e drv_sched_repeating_at(void (*func_ptr)(void*), void * func_arg, enum drv_sched_pri_e priority, lib_datetime_realtime_t time, lib_datetime_interval_t interval_ms) {
+	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
 	if (!drv_timer_absoluteTimeIsAvailable()) return DRV_SCHED_ERR__ABSOLUTE_SCHED_TMP_UNAVAILABLE;
 	//if (lib_datetime_validateTime(time) != LIB_DATETIME_ERR__NONE) return DRV_SCHED_ERR__INVALID_TIME;
 	return schedule(func_ptr, func_arg, JOB_TYPE__REPEAT_AT, priority, (lib_datetime_interval_t) time, interval_ms);

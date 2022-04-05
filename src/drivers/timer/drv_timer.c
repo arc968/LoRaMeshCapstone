@@ -10,7 +10,7 @@ static volatile bool absoluteDateInitialized = false;
 static volatile bool absoluteTimeInitialized = false;
 static volatile bool initialized = false;
 
-static struct lib_datetime_s absoluteTime = {0}; //does not handle volatile properly
+static struct lib_datetime_s absoluteTime; //does not handle volatile properly
 
 static void (* volatile cb_onAbsoluteDateTimeAvailable)(void) = NULL;
 static void (* volatile cb_onAbsoluteTimeAvailable)(void) = NULL;
@@ -133,7 +133,8 @@ enum drv_timer_err_e drv_timer_getAbsoluteDateTime(struct lib_datetime_s * dt) {
 	lib_datetime_interval_t offset = drv_timer_getMonotonicTime() - timestamp;
 	if (!absoluteTimeInitialized) return DRV_TIMER_ERR__ABSOLUTE_TIME_TMP_UNAVAILABLE;
 	if (!absoluteDateInitialized) return DRV_TIMER_ERR__ABSOLUTE_DATE_TMP_UNAVAILABLE;
-	*dt = absoluteTime;
+	//*dt = absoluteTime;
+	lib_datetime_copy(&absoluteTime, dt);
 	lib_datetime_addIntervalToDatetime(dt, offset);
 	return DRV_TIMER_ERR__NONE;
 }
@@ -142,7 +143,8 @@ enum drv_timer_err_e drv_timer_getAbsoluteDate(struct lib_datetime_s * dt) {
 	//lib_datetime_interval_t offset = monotonic_ms - timestamp;
 	lib_datetime_interval_t offset = drv_timer_getMonotonicTime() - timestamp;
 	if (!absoluteDateInitialized) return DRV_TIMER_ERR__ABSOLUTE_DATE_TMP_UNAVAILABLE;
-	*dt = absoluteTime;
+	//*dt = absoluteTime;
+	lib_datetime_copy(&absoluteTime, dt);
 	lib_datetime_addIntervalToDatetime(dt, offset);
 	lib_datetime_clearTime(dt);
 	return DRV_TIMER_ERR__NONE;
@@ -158,10 +160,17 @@ enum drv_timer_err_e drv_timer_getAbsoluteTime(lib_datetime_time_t * time) {
 }
 
 enum drv_timer_err_e drv_timer_getRealtime(lib_datetime_realtime_t * realtime) {
+	/*
 	struct lib_datetime_s dt;
 	enum drv_timer_err_e err = drv_timer_getAbsoluteDateTime(&dt);
 	if (err != DRV_TIMER_ERR__NONE) return err;
 	lib_datetime_convertDatetimeToRealtime(&dt, realtime);
+	return DRV_TIMER_ERR__NONE;
+	*/
+	if (!absoluteTimeInitialized) return DRV_TIMER_ERR__ABSOLUTE_TIME_TMP_UNAVAILABLE;
+	if (!absoluteDateInitialized) return DRV_TIMER_ERR__ABSOLUTE_DATE_TMP_UNAVAILABLE;
+	lib_datetime_convertDatetimeToRealtime(&absoluteTime, realtime);
+	*realtime += (drv_timer_getMonotonicTime() - timestamp);
 	return DRV_TIMER_ERR__NONE;
 }
 
