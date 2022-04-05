@@ -1,4 +1,4 @@
-#include "RTClib.h"
+#include "RTClib_MULTI.h"
 
 RTC_DS3231 rtcMasterClock;
 RTC_DS3231 rtcSlaveClock;
@@ -18,9 +18,9 @@ void setup() {
   pinMode(CLOCK_INTERRUPT_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(CLOCK_INTERRUPT_PIN), onAlarm, FALLING);
 
-  while (!Serial) {
-    Serial.begin(115200);
-  }
+  //while (!Serial) {
+  Serial.begin(115200);
+  //}
 
   // initializing the rtc
   while (!rtcMasterClock.begin(0b10100100)) {
