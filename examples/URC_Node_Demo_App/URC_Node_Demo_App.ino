@@ -68,8 +68,9 @@ void setup() {
   con3.show();            
   con3.setBrightness(BRIGHTNESS);
   
-  while (!Serial);
-  Serial.begin(115200);
+  while (!Serial) {
+    Serial.begin(115200);
+  }
 
   Serial.print("Serial Ready\n");
 
