@@ -8,22 +8,21 @@ uint8_t sensordata = 0;
 
 RTC_DS3231 GPSRTC;
 
-#define CLOCK_INTERRUPT_PIN 2
-#define GPSRTC_SETTING_PIN 3
-#define SENSOR_PIN 4
+#define CLOCK_INTERRUPT_PIN 0
+#define SENSOR_PIN A4
 #define INTERNAL_LED_PIN 6
 
 //NeoPixel
 #define BRIGHTNESS 50 // Set BRIGHTNESS to about 1/5 (max = 255)
 #define RING_LED_COUNT 12
-#define RING_LED_DATA_PIN 5
+#define RING_LED_DATAIN_PIN 5
 #define CON_STRIP_COUNT 10
 #define CON1_STRIP_DATA_PIN 7
 #define CON2_STRIP_DATA_PIN 8
 #define CON3_STRIP_DATA_PIN 9
 
 
-Adafruit_NeoPixel ring(RING_LED_COUNT, RING_LED_DATA_PIN, NEO_GRBW + NEO_KHZ800);
+Adafruit_NeoPixel ring(RING_LED_COUNT, RING_LED_DATAIN_PIN, NEO_GRBW + NEO_KHZ800);
 
 Adafruit_NeoPixel con1(CON_STRIP_COUNT, CON1_STRIP_DATA_PIN, NEO_GRBW + NEO_KHZ800);
 Adafruit_NeoPixel con2(CON_STRIP_COUNT, CON2_STRIP_DATA_PIN, NEO_GRBW + NEO_KHZ800);
@@ -33,12 +32,11 @@ Adafruit_NeoPixel con3(CON_STRIP_COUNT, CON3_STRIP_DATA_PIN, NEO_GRBW + NEO_KHZ8
 void setup() {
 
   pinMode(INTERNAL_LED_PIN, OUTPUT);
-  pinMode(GPSRTC_SETTING_PIN, INPUT_PULLDOWN);
-  pinMode(CLOCK_INTERRUPT_PIN, INPUT_PULLUP);
+  //pinMode(CLOCK_INTERRUPT_PIN, INPUT_PULLUP);
   pinMode(SENSOR_PIN, INPUT);
 
   // the value at SQW-Pin (because of pullup 1 means no alarm)
-  attachInterrupt(digitalPinToInterrupt(CLOCK_INTERRUPT_PIN), onAlarm, FALLING);
+  //attachInterrupt(digitalPinToInterrupt(CLOCK_INTERRUPT_PIN), onAlarm, FALLING);
 
   digitalWrite(INTERNAL_LED_PIN, LOW);
 
@@ -74,11 +72,12 @@ void setup() {
 
   GPSRTC.disableAlarm(2);
   GPSRTC.disable32K();
-  GPSRTC.clearAlarm(1);
+  //GPSRTC.clearAlarm(1);
   GPSRTC.clearAlarm(2);
   GPSRTC.writeSqwPinMode(DS3231_OFF);
   digitalWrite(INTERNAL_LED_PIN, HIGH);
-  
+
+  Serial.print("RTC GPS Substitute Ready\n");
   
   drv_sched_init();
 
@@ -91,7 +90,7 @@ void setup() {
 
 void loop() {}
 
-void resetForNextAlarm(void *) {
+/*void resetForNextAlarm(void *) {
 
   DateTime curr = GPSRTC.now();
 
@@ -122,7 +121,7 @@ void onAlarm(void) {
     timestamp = drv_timer_getMonotonicTime();
     drv_sched_once(resetForNextAlarm, NULL, DRV_SCHED_PRI__NORMAL, 0);
     
-}
+}*/
 
 void readSensorVal(void*) {
 

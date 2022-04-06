@@ -20,9 +20,9 @@ void setup() {
   pinMode(CLOCK_INTERRUPT_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(CLOCK_INTERRUPT_PIN), onAlarm, FALLING);
 
-  while (!Serial) {
+  //while (!Serial) {
     Serial.begin(115200);
-  }
+  //}
 
   Wire.setTimeout(100);
 
