@@ -100,7 +100,7 @@ void loop() {}
 
 void messageReceived(struct drv_mesh_packet_s * receivedData) {
 
-  if (receivedData->len < 0) {
+  if (receivedData->len > 0) {
     switch (receivedData->buf[0]) {
       case RGBPAKCT:
         if (receivedData->len == 4) {
