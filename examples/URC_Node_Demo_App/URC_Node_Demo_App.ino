@@ -1,10 +1,14 @@
+//LoRa Mesh library includes
 #include "LoRaMeshCapstone.h"
+#include "lib/byteorder/lib_byteorder.h"
+
+//demo only inlcudes
 #include "RTClib.h" //included only for use with external rtc for The demonstration
 #include <Adafruit_NeoPixel.h>
 #include <stdint.h>
 
 static volatile lib_datetime_interval_t timestamp = 0;
-uint8_t sensordata = 0;
+uint16_t sensordata = 0;
 
 RTC_DS3231 GPSRTC;
 
@@ -83,12 +87,32 @@ void setup() {
 
   drv_sched_repeating(readSensorVal, NULL, DRV_SCHED_PRI__NORMAL, 0, 60000);
 
-  drv_mesh_init(NULL);
+  drv_mesh_init(messageReceived);
   drv_sched_start();
   
 }
 
 void loop() {}
+
+void messageReceived(struct drv_mesh_packet_s * receivedData) {
+  
+  if (receivedData->len == 3) {
+    uint8_t r = receivedData->buf[0];
+    uint8_t g = receivedData->buf[1];
+    uint8_t b = receivedData->buf[2];
+    setLEDStripColor(&ring, r, g, b);
+  }
+  else if (receivedData->len == 1) {
+    char color = receivedData->buf[0];
+    setLEDPreDefColor(&ring, color);
+  }
+  else {
+
+
+    
+  }
+  
+}
 
 /*void resetForNextAlarm(void *) {
 
@@ -126,6 +150,12 @@ void onAlarm(void) {
 void readSensorVal(void*) {
 
   sensordata = analogRead(SENSOR_PIN);
+  struct drv_mesh_packet_s sensorPacket = {
+  .ip = {10, 0, 0, 0},
+  .len = 0x01,
+  };
+  *((uint16_t *)&(sensorPacket.buf[0])) = LIB_BYTEORDER_HTON_U16(sensordata);
+  drv_mesh_send(&sensorPacket);
   
 }
 
@@ -152,7 +182,14 @@ void multiPixelColors(Adafruit_NeoPixel *strip) {
   }
 }
 
-void setRingColor(Adafruit_NeoPixel *strip, char color) {
+void setLEDStripColor(Adafruit_NeoPixel *strip, uint8_t red, uint8_t green, uint8_t blue) {
+
+  strip->fill(strip->Color(red, green, blue));
+  strip->show();
+  
+}
+
+void setLEDPreDefColor(Adafruit_NeoPixel *strip, char color) {
 
   switch (color) {
     case 'r':
