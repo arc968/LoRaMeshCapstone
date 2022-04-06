@@ -13,17 +13,21 @@ uint16_t sensordata = 0;
 RTC_DS3231 GPSRTC;
 
 #define CLOCK_INTERRUPT_PIN 0
-#define SENSOR_PIN A4
-#define INTERNAL_LED_PIN 6
+#define SENSOR_PIN          A4
+#define INTERNAL_LED_PIN    6
 
 //NeoPixel
-#define BRIGHTNESS 50 // Set BRIGHTNESS to about 1/5 (max = 255)
-#define RING_LED_COUNT 12
+#define BRIGHTNESS          50 // Set BRIGHTNESS to about 1/5 (max = 255)
+#define RING_LED_COUNT      12
 #define RING_LED_DATAIN_PIN 5
-#define CON_STRIP_COUNT 10
+#define CON_STRIP_COUNT     10
 #define CON1_STRIP_DATA_PIN 7
 #define CON2_STRIP_DATA_PIN 8
 #define CON3_STRIP_DATA_PIN 9
+
+//packet type defines
+#define RGBPAKCT            0x00
+#define PREDEFCOLORPACKET   0x01
 
 
 Adafruit_NeoPixel ring(RING_LED_COUNT, RING_LED_DATAIN_PIN, NEO_GRBW + NEO_KHZ800);
@@ -95,21 +99,22 @@ void setup() {
 void loop() {}
 
 void messageReceived(struct drv_mesh_packet_s * receivedData) {
-  
-  if (receivedData->len == 3) {
-    uint8_t r = receivedData->buf[0];
-    uint8_t g = receivedData->buf[1];
-    uint8_t b = receivedData->buf[2];
-    setLEDStripColor(&ring, r, g, b);
-  }
-  else if (receivedData->len == 1) {
-    char color = receivedData->buf[0];
-    setLEDPreDefColor(&ring, color);
-  }
-  else {
 
-
-    
+  if (receivedData->len < 0) {
+    switch (receivedData->buf[0]) {
+      case RGBPAKCT:
+        if (receivedData->len == 4) {
+          setLEDStripColor(&ring, receivedData->buf[0], receivedData->buf[1], receivedData->buf[2]);
+        }
+        break;
+      case PREDEFCOLORPACKET:
+        if (receivedData->len == 2) {
+          setLEDPreDefColor(&ring, (char) receivedData->buf[0]);
+        }
+        break;
+      default:
+        break;
+    }
   }
   
 }
