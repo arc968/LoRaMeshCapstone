@@ -19,7 +19,7 @@ RTC_DS3231 GPSRTC;
 //NeoPixel
 #define BRIGHTNESS          50 // Set BRIGHTNESS to about 1/5 (max = 255)
 #define RING_LED_COUNT      12
-#define RING_LED_DATAIN_PIN 5
+#define RING_LED_DATAIN_PIN 1
 #define CON_STRIP_COUNT     10
 #define CON1_STRIP_DATA_PIN 7
 #define CON2_STRIP_DATA_PIN 8
