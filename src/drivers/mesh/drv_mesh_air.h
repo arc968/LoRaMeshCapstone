@@ -11,7 +11,7 @@ enum packet_type_e {
 	//layer 2 (Data Link)
 	PACKET_TYPE__DISC = 2,
 	PACKET_TYPE__DISC_REPLY = 3,
-	PACKET_TYPE__DISC_HANDSHAKE = 4,
+	//PACKET_TYPE__DISC_HANDSHAKE = 4,
 	PACKET_TYPE__ACK = 5,
 	PACKET_TYPE__NACK = 6,
 	PACKET_TYPE__ROUTE = 7,
@@ -58,37 +58,48 @@ hash sent/received public key with pre-shared key, then calculate key exchange
 #pragma scalar_storage_order big-endian
 static struct packet_type_disc_s {
 	struct packet_header_s header;
-	peer_uid_t broadcast_peer_uid;
-	//struct ciphermask_s ciphermask; //all capable/allowed bits are set
-	//uint8_t key_ephemeral[32];
-	//uint8_t hmac[8];
+	struct {
+		uint8_t key_dh_pub[32];
+		lib_datetime_realtime_t timestamp;
+	} body;
+	uint8_t nonce[24];
+	uint8_t mac[16];
 } __attribute__((packed, aligned(1))) const packet_type_disc_s_default = {
 	.header.type = PACKET_TYPE__DISC,
 };
 #pragma scalar_storage_order default
 
 #pragma scalar_storage_order big-endian
-struct packet_type_discReply_s {
+struct packet_type_discReply_s { //CAN WE JUST SEND THIS BACK AND FORTH? CAN ACK COMPLETE THE HANDSHAKE INSTEAD?
 	struct packet_header_s header;
-	peer_uid_t broadcast_peer_uid;
-	peer_uid_t reply_peer_uid;
-	//struct ciphermask_s ciphermask; //only a single bit set for selected mode
-	//uint8_t key_ephemeral[32];
-	//uint8_t hmac[8];
+	uint8_t key_once_pub[32];
+	struct {
+		uint8_t key_ephemeral_pub[32];
+		uint16_t index;
+		uint8_t key_dh_pub[32];
+		lib_datetime_realtime_t timestamp;
+	} body; //encrypted with DH(recv.key_dh_pub, key_once_priv) as key
+	uint8_t hmac[16]; //needs to include timestamp, DH(once,priv), DH(eph,priv), DH(pub,priv), AEAD MAC, and psk for auth
 } __attribute__((packed, aligned(1))) const packet_type_discReply_s_default = {
 	.header.type = PACKET_TYPE__DISC_REPLY,
 };
 #pragma scalar_storage_order default
 
-#pragma scalar_storage_order big-endian
+/* #pragma scalar_storage_order big-endian
 struct packet_type_discHandshake_s {
 	struct packet_header_s header;
-	peer_uid_t sender_peer_uid;
-	
+	uint8_t key_once_pub[32];
+	struct {
+		uint8_t key_ephemeral_pub[32];
+		uint16_t index_send;
+		uint16_t index_recv;
+		lib_datetime_realtime_t timestamp;
+	} body; //encrypted with DH(recv.key_dh_pub, key_once_priv) as key
+	uint8_t hmac[16]; //needs to include timestamp, DH(once,priv), DH(eph,priv), DH(pub,priv), AEAD MAC, and psk for auth
 } __attribute__((packed, aligned(1))) const packet_type_discHandshake_s_default = {
 	.header.type = PACKET_TYPE__DISC_HANDSHAKE,
 };
-#pragma scalar_storage_order default
+#pragma scalar_storage_order default */
 
 #pragma scalar_storage_order big-endian
 struct packet_linkHeader_s {

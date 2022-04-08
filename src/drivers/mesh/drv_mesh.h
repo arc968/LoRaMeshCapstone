@@ -33,6 +33,12 @@ struct drv_mesh_stats_s {
 	uint32_t broadcasts_sent;
 	uint32_t broadcasts_recv;
 	uint32_t peer_count;
+	lib_datetime_realtime_t last_packet_send;
+	lib_datetime_realtime_t last_packet_recv;
+	lib_datetime_realtime_t last_packet_disc_send;
+	lib_datetime_realtime_t last_packet_disc_recv;
+	lib_datetime_realtime_t last_packet_data_send;
+	lib_datetime_realtime_t last_packet_data_recv;
 };
 
 void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *));

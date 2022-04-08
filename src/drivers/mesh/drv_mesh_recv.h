@@ -5,7 +5,7 @@ extern "C" {
 #endif
 
 static void drv_mesh_parsePacket_disc(struct packet_s * raw_packet) {
-	DEBUG_PRINT("\tINFO: Discovery packet received from [%llX] (%lu bytes).\n", raw_packet->asDisc.broadcast_peer_uid, raw_packet->size);
+	DEBUG_PRINT("\tINFO: Discovery packet received (%lu bytes).\n", raw_packet->size);
 	
 	if (raw_packet->size != sizeof(struct packet_type_disc_s)) {
 		DEBUG_PRINT("\tWARNING: Packet size does not match type.\n");
@@ -16,7 +16,21 @@ static void drv_mesh_parsePacket_disc(struct packet_s * raw_packet) {
 	
 	state.stats.broadcasts_recv++;
 	
-	struct peer_s * peer = getPeerByUID(packet->broadcast_peer_uid);
+	int corrupt = crypto_unlock_aead((uint8_t *)&(packet->body), state.psk, packet->nonce, packet->mac, (uint8_t *)&(packet->header), sizeof(packet->header), (uint8_t *)&(packet->body), sizeof(packet->body));
+	
+	if (corrupt) {
+		DEBUG_PRINT("\tWARNING: Discovery packet corrupt.\n");
+		return;
+	}
+	
+	lib_datetime_realtime_t curtime;
+	drv_timer_getRealtime(&curtime);
+	if (absI64((int64_t)(packet->body.timestamp) - (int64_t)(curtime)) > (60*1000)) {
+		DEBUG_PRINT("\tWARNING: Discovery packet timestamp out of range.\n");
+		return;
+	}
+	
+	struct peer_s * peer = getPeerByPubDhKey(packet->body.key_dh_pub);
 	if (peer == NULL) {
 		DEBUG_PRINT("\tINFO: Discovery packet from unknown peer (new peer found).\n");
 		peer = popEmptyPeer();
@@ -25,38 +39,40 @@ static void drv_mesh_parsePacket_disc(struct packet_s * raw_packet) {
 			return;
 		}
 		peer->status = PEER_PASSERBY;
-		peer->uid = packet->broadcast_peer_uid;
-		//memcpy(packet->key_ephemeral, peer->key, sizeof(peer->key));
-		//crypto_x25519(peer->key, state.privkey, packet->key_ephemeral);
-		//crypto_blake2b_general(peer->key, sizeof(peer->key), state.psk, sizeof(state.psk), peer->key, sizeof(peer->key));
+		memcpy(peer->key_dh_pub, packet->body.key_dh_pub, sizeof(peer->key_dh_pub));
 		
-		/*uint8_t tmp_hmac[sizeof(packet->hmac)];
-		crypto_blake2b_general(tmp_hmac, sizeof(tmp_hmac), state.psk, sizeof(state.psk), (uint8_t *)&(*packet), sizeof(*packet)-sizeof(tmp_hmac));
-		if (memcmp(tmp_hmac, packet->hmac, sizeof(tmp_hmac)) != 0) {
-			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: HMAC mismatch.\n");
-			state.stats.mac_failures++;
+		uint8_t key_tmp[32];
+		crypto_x25519(key_tmp, state.key_dh_priv, peer->key_dh_pub);
+		crypto_blake2b_general(key_tmp, sizeof(key_tmp), state.psk, sizeof(state.psk), key_tmp, sizeof(key_tmp));
+		crypto_blake2b_general(peer->key_chan_send, sizeof(peer->key_chan_send), key_tmp, sizeof(key_tmp), peer->key_dh_pub, sizeof(peer->key_dh_pub));
+		crypto_blake2b_general(peer->key_chan_recv, sizeof(peer->key_chan_recv), key_tmp, sizeof(key_tmp), state.key_dh_pub, sizeof(state.key_dh_pub));
+		crypto_wipe(key_tmp, sizeof(key_tmp));
+		
+		crypto_wipe(peer->key_data_send, sizeof(peer->key_data_send));
+		peer->counter_data_send = 0;
+		crypto_wipe(peer->key_data_recv, sizeof(peer->key_data_recv));
+		peer->counter_data_recv = 0;
+		
+		drv_rand_fillBuf(peer->key_ephemeral_priv, sizeof(peer->key_ephemeral_priv));
+		
+		peer->last_packet_timestamp = packet->body.timestamp;
+		
+		peer->packet = popEmptyPacket();
+		if (peer->packet == NULL) {
+			DEBUG_PRINT("\tWARNING: Failed to save new peer, no empty packets available\n");
 			insertEmptyPeer(peer);
-		} else {
-			insertReadyPeer(peer);
-		}*/
+			return;
+		}
+		drv_mesh_buildPacket_discReply(peer);
+		
 		insertReadyPeer(peer);
 	} else {
 		DEBUG_PRINT("\tINFO: Discovery packet from known peer.\n");
-		//peer already known
-		if (peer->status == PEER_PASSERBY) {
-			//heard their broadcast again, check if key is the same
-		} else if (peer->status == PEER_ACQUAINTANCE) {
-			//can't check if peer's key has changed since we wiped it... oops.
-		} else if (peer->status == PEER_FRIEND) {
-			//can't check if peer's key has changed since we wiped it... oops.
-		} else {
-			//shouldn't be possible
-		}
 	}
 }
 
 static void drv_mesh_parsePacket_discReply(struct packet_s * raw_packet) {
-	DEBUG_PRINT("\tINFO: Discovery reply packet received from [%llX] (%lu bytes).\n", raw_packet->asDiscReply.reply_peer_uid, raw_packet->size);
+	DEBUG_PRINT("\tINFO: Discovery reply packet received (%lu bytes).\n", raw_packet->size);
 	
 	if (raw_packet->size != sizeof(struct packet_type_discReply_s)) {
 		DEBUG_PRINT("\tWARNING: Packet size does not match type.\n");
@@ -65,7 +81,95 @@ static void drv_mesh_parsePacket_discReply(struct packet_s * raw_packet) {
 	
 	struct packet_type_discReply_s * packet = (struct packet_type_discReply_s *)&(raw_packet->asDiscReply);
 	
-	if (packet->broadcast_peer_uid != state.uid) {
+	uint8_t key_once[32];
+	crypto_x25519(key_once, state.key_dh_priv, packet->key_once_pub);
+	crypto_blake2b_general(key_once, sizeof(key_once), state.psk, sizeof(state.psk), key_once, sizeof(key_once));
+	
+	DEBUG_PRINT("\tkey_once [%hhu]: [", sizeof(key_once));
+	for (uint32_t i=0; i<sizeof(key_once); i++) DEBUG_PRINT(((i+1==sizeof(key_once)) ? "%hhu" : "%hhu,"), (key_once)[i]);
+	DEBUG_PRINT("]\n");
+	
+	uint8_t nonce_tmp[24];
+	crypto_wipe(nonce_tmp, sizeof(nonce_tmp));
+	crypto_xchacha20((uint8_t *)&(packet->body), (uint8_t *)&(packet->body), sizeof(packet->body), key_once, nonce_tmp);
+	
+	uint8_t hmac_tmp[sizeof(packet->hmac)];
+	crypto_blake2b_general(hmac_tmp, sizeof(hmac_tmp), key_once, sizeof(key_once), (uint8_t *)(packet), (uint8_t *)&(packet->hmac[0]) - (uint8_t *)(packet));
+	
+	DEBUG_PRINT("\thmac_tmp [%hhu]: [", sizeof(hmac_tmp));
+	for (uint32_t i=0; i<sizeof(hmac_tmp); i++) DEBUG_PRINT(((i+1==sizeof(hmac_tmp)) ? "%hhu" : "%hhu,"), (hmac_tmp)[i]);
+	DEBUG_PRINT("]\n");
+	
+	crypto_x25519(key_once, state.key_dh_priv, packet->body.key_dh_pub);
+	crypto_blake2b_general(hmac_tmp, sizeof(hmac_tmp), hmac_tmp, sizeof(hmac_tmp), key_once, sizeof(key_once));
+	
+	DEBUG_PRINT("\thmac_tmp [%hhu]: [", sizeof(hmac_tmp));
+	for (uint32_t i=0; i<sizeof(hmac_tmp); i++) DEBUG_PRINT(((i+1==sizeof(hmac_tmp)) ? "%hhu" : "%hhu,"), (hmac_tmp)[i]);
+	DEBUG_PRINT("]\n");
+	
+	crypto_x25519(key_once, state.key_dh_priv, packet->body.key_ephemeral_pub);
+	crypto_blake2b_general(hmac_tmp, sizeof(hmac_tmp), hmac_tmp, sizeof(hmac_tmp), key_once, sizeof(key_once));
+	
+	DEBUG_PRINT("\thmac_tmp [%hhu]: [", sizeof(hmac_tmp));
+	for (uint32_t i=0; i<sizeof(hmac_tmp); i++) DEBUG_PRINT(((i+1==sizeof(hmac_tmp)) ? "%hhu" : "%hhu,"), (hmac_tmp)[i]);
+	DEBUG_PRINT("]\n");
+	
+	crypto_wipe(key_once, sizeof(key_once));
+	
+	if (crypto_verify16(hmac_tmp, packet->hmac)) {
+		DEBUG_PRINT("\tWARNING: Discovery reply packet corrupt.\n");
+		return;
+	}
+	
+	{ //parse body of packet
+		/* lib_datetime_realtime_t curtime;
+		drv_timer_getRealtime(&curtime);
+		if (absI64((int64_t)(packet->body.timestamp) - (int64_t)(curtime)) > (60*1000)) {
+			DEBUG_PRINT("\tWARNING: Discovery reply packet timestamp out of range.\n");
+			return;
+		} */
+		
+		struct peer_s * peer = getPeerByPubDhKey(packet->body.key_dh_pub);
+		if (peer == NULL) {
+			DEBUG_PRINT("\tWARNING: Discovery reply packet from unknown peer, dropping.\n");
+			return;
+		}
+		
+		if (packet->body.timestamp < peer->last_packet_timestamp) {
+			DEBUG_PRINT("\tWARNING: Discovery reply packet from known peer is too old, dropping.\n");
+			return;
+		}
+		
+		peer->last_packet_timestamp = packet->body.timestamp;
+		
+		peer->index = packet->body.index;
+		
+		if (peer->status == PEER_PASSERBY) {
+			peer->status = PEER_STRANGER;
+			
+			uint8_t key_tmp[32];
+			crypto_x25519(key_tmp, peer->key_ephemeral_priv, packet->body.key_ephemeral_pub);
+			crypto_blake2b_general(peer->key_data_send, sizeof(peer->key_data_send), state.psk, sizeof(state.psk), key_tmp, sizeof(key_tmp));
+			
+			crypto_x25519(key_tmp, peer->key_ephemeral_priv, peer->key_dh_pub);
+			crypto_blake2b_general(peer->key_data_send, sizeof(peer->key_data_send), peer->key_data_send, sizeof(peer->key_data_send), key_tmp, sizeof(key_tmp));
+			
+			crypto_x25519(key_tmp, state.key_dh_priv, peer->key_dh_pub);
+			crypto_blake2b_general(peer->key_data_send, sizeof(peer->key_data_send), peer->key_data_send, sizeof(peer->key_data_send), key_tmp, sizeof(key_tmp));
+			crypto_wipe(key_tmp, sizeof(key_tmp));
+			
+			peer->counter_data_send = 0;
+			
+			//queue ACK somehow???
+			
+		} else if (peer->status == PEER_STRANGER) {
+			
+		} else if (peer->status == PEER_ACQUAINTANCE) {
+			
+		}
+	}
+	
+	/* if (packet->broadcast_peer_uid != state.uid) {
 		DEBUG_PRINT("\tINFO: Discovery reply packet intended for different broadcaster.\n");
 		return;
 	}
@@ -83,15 +187,15 @@ static void drv_mesh_parsePacket_discReply(struct packet_s * raw_packet) {
 		//crypto_x25519(peer->key, state.privkey, packet->key_ephemeral);
 		//crypto_blake2b_general(peer->key, sizeof(peer->key), state.psk, sizeof(state.psk), peer->key, sizeof(peer->key));
 		
-		/*uint8_t tmp_hmac[sizeof(packet->hmac)];
-		crypto_blake2b_general(tmp_hmac, sizeof(tmp_hmac), state.psk, sizeof(state.psk), (uint8_t *)&(*packet), sizeof(*packet)-sizeof(tmp_hmac));
-		if (memcmp(tmp_hmac, packet->hmac, sizeof(tmp_hmac)) != 0) {
-			DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: HMAC mismatch.\n");
-			state.stats.mac_failures++;
-			insertEmptyPeer(peer);
-		} else {
-			insertReadyPeer(peer);
-		}*/
+		// uint8_t tmp_hmac[sizeof(packet->hmac)];
+		// crypto_blake2b_general(tmp_hmac, sizeof(tmp_hmac), state.psk, sizeof(state.psk), (uint8_t *)&(*packet), sizeof(*packet)-sizeof(tmp_hmac));
+		// if (memcmp(tmp_hmac, packet->hmac, sizeof(tmp_hmac)) != 0) {
+			// DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: HMAC mismatch.\n");
+			// state.stats.mac_failures++;
+			// insertEmptyPeer(peer);
+		// } else {
+			// insertReadyPeer(peer);
+		// }
 		insertReadyPeer(peer);
 	} else {
 		if (peer->status == PEER_PASSERBY) {
@@ -102,15 +206,15 @@ static void drv_mesh_parsePacket_discReply(struct packet_s * raw_packet) {
 			//crypto_x25519(peer->key, state.privkey, packet->key_ephemeral);
 			//crypto_blake2b_general(peer->key, sizeof(peer->key), state.psk, sizeof(state.psk), peer->key, sizeof(peer->key));
 			
-			/*uint8_t tmp_hmac[sizeof(packet->hmac)];
-			crypto_blake2b_general(tmp_hmac, sizeof(tmp_hmac), state.psk, sizeof(state.psk), (uint8_t *)&(*packet), sizeof(*packet)-sizeof(tmp_hmac));
-			if (memcmp(tmp_hmac, packet->hmac, sizeof(tmp_hmac)) != 0) {
-				DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: HMAC mismatch.\n");
-				state.stats.mac_failures++;
-				insertEmptyPeer(peer); //CANT DO THIS HERE, INFINITE LOOP
-			} else {
-				insertReadyPeer(peer); //CANT DO THIS HERE, INFINITE LOOP
-			}*/
+			// uint8_t tmp_hmac[sizeof(packet->hmac)];
+			// crypto_blake2b_general(tmp_hmac, sizeof(tmp_hmac), state.psk, sizeof(state.psk), (uint8_t *)&(*packet), sizeof(*packet)-sizeof(tmp_hmac));
+			// if (memcmp(tmp_hmac, packet->hmac, sizeof(tmp_hmac)) != 0) {
+				// DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: HMAC mismatch.\n");
+				// state.stats.mac_failures++;
+				// insertEmptyPeer(peer); //CANT DO THIS HERE, INFINITE LOOP
+			// } else {
+				// insertReadyPeer(peer); //CANT DO THIS HERE, INFINITE LOOP
+			// }
 		} else if (peer->status == PEER_ACQUAINTANCE) {
 			
 		} else if (peer->status == PEER_FRIEND) {
@@ -118,11 +222,11 @@ static void drv_mesh_parsePacket_discReply(struct packet_s * raw_packet) {
 		} else {
 			//shouldn't be possible
 		}
-	}
+	} */
 }
 
-static void drv_mesh_parsePacket_discHandshake(struct packet_s * raw_packet) {
-	DEBUG_PRINT("\tINFO: Discovery handshake packet received from [%llX] (%lu bytes).\n", raw_packet->asDiscReply.reply_peer_uid, raw_packet->size);
+/* static void drv_mesh_parsePacket_discHandshake(struct packet_s * raw_packet) {
+	DEBUG_PRINT("\tINFO: Discovery handshake packet received (%lu bytes).\n", raw_packet->size);
 	
 	if (raw_packet->size != sizeof(struct packet_type_discHandshake_s)) {
 		DEBUG_PRINT("\tWARNING: Packet size does not match type.\n");
@@ -131,7 +235,7 @@ static void drv_mesh_parsePacket_discHandshake(struct packet_s * raw_packet) {
 	
 	struct packet_type_discHandshake_s * packet = (struct packet_type_discHandshake_s *)&(raw_packet->asDiscHandshake);
 	
-}
+} */
 
 static void drv_mesh_parsePacket_data(struct packet_s * raw_packet) {
 	DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: Data packet received (%lu bytes).\n", raw_packet->size);
@@ -168,9 +272,9 @@ static void drv_mesh_parsePacket(struct packet_s * raw_packet) {
 		drv_mesh_parsePacket_disc(raw_packet);
 	} else if (raw_packet->header.type == PACKET_TYPE__DISC_REPLY) {
 		drv_mesh_parsePacket_discReply(raw_packet);
-	} else if (raw_packet->header.type == PACKET_TYPE__DISC_HANDSHAKE) {
+	}/*  else if (raw_packet->header.type == PACKET_TYPE__DISC_HANDSHAKE) {
 		drv_mesh_parsePacket_discHandshake(raw_packet);
-	} else if (raw_packet->header.type == PACKET_TYPE__DATA) {
+	} */ else if (raw_packet->header.type == PACKET_TYPE__DATA) {
 		drv_mesh_parsePacket_data(raw_packet);
 	} else {
 		DEBUG_PRINT("\tWARNING: Unknown packet [%X] received.\n", raw_packet->header.type);
@@ -207,10 +311,10 @@ static void drv_mesh_worker_recv(void * arg) {
 	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
 	struct appointment_s * appt = (struct appointment_s *) arg;
 	
-	if (appt->type != APPT_RECV) { //error checking
+/* 	if (appt->type != APPT_RECV) { //error checking
 		DEBUG_PRINT("\tERROR: Unexpected appointment type in drv_mesh_worker_recv()\n");
 		goto EXIT;
-	}
+	} */
 	
 	{lib_datetime_realtime_t rt;
 	drv_timer_getRealtime(&rt);

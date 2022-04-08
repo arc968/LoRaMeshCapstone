@@ -122,9 +122,9 @@ static void removeReadyPeer(struct peer_s * peer) {
 	}
 }
 
-static struct peer_s * getPeerByUID(peer_uid_t uid) {
+static struct peer_s * getPeerByPubDhKey(uint8_t key_dh_pub[32]) {
 	struct peer_s * peer = state.head_peer_ready;
-	while (peer != NULL && peer->uid != uid) peer = peer->next;
+	while (peer != NULL && crypto_verify32(peer->key_dh_pub, key_dh_pub)) peer = peer->next;
 	return peer;
 }
 
@@ -174,6 +174,11 @@ static uint64_t constrainU64(uint64_t x, uint64_t a, uint64_t b) {
 	} else {
 		return x;
 	}
+}
+
+static int64_t absI64(int64_t x) {
+	if (x < 0) x = -(x);
+	return x;
 }
 
 static uint64_t map(uint64_t x, uint64_t in_min, uint64_t in_max, uint64_t out_min, uint64_t out_max) {
