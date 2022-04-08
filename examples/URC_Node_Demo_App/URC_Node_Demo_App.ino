@@ -3,16 +3,12 @@
 #include "lib/byteorder/lib_byteorder.h"
 
 //demo only inlcudes
-#include "RTClib.h" //included only for use with external rtc for The demonstration
 #include <Adafruit_NeoPixel.h>
 #include <stdint.h>
 
 static volatile lib_datetime_interval_t timestamp = 0;
 uint16_t sensordata = 0;
 
-RTC_DS3231 GPSRTC;
-
-#define CLOCK_INTERRUPT_PIN 0
 #define SENSOR_PIN          A4
 #define INTERNAL_LED_PIN    6
 
@@ -42,10 +38,7 @@ void setup() {
   pinMode(INTERNAL_LED_PIN, OUTPUT);
   //pinMode(CLOCK_INTERRUPT_PIN, INPUT_PULLUP);
   pinMode(SENSOR_PIN, INPUT);
-
-  // the value at SQW-Pin (because of pullup 1 means no alarm)
-  //attachInterrupt(digitalPinToInterrupt(CLOCK_INTERRUPT_PIN), onAlarm, FALLING);
-
+  
   digitalWrite(INTERNAL_LED_PIN, LOW);
 
   ring.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
@@ -75,18 +68,6 @@ void setup() {
   Serial.print("Serial Ready\n");
 
   readSensorVal(NULL);
-
-  // initializing the rtc
-  while (!GPSRTC.begin());
-
-  GPSRTC.disableAlarm(2);
-  GPSRTC.disable32K();
-  //GPSRTC.clearAlarm(1);
-  GPSRTC.clearAlarm(2);
-  GPSRTC.writeSqwPinMode(DS3231_OFF);
-  digitalWrite(INTERNAL_LED_PIN, HIGH);
-
-  Serial.print("RTC GPS Substitute Ready\n");
   
   drv_sched_init();
 
@@ -119,39 +100,6 @@ void messageReceived(struct drv_mesh_packet_s * receivedData) {
   }
   
 }
-
-/*void resetForNextAlarm(void *) {
-
-  DateTime curr = GPSRTC.now();
-
-  lib_datetime_s dt;
-  dt.year = curr.year();
-  dt.month = curr.month(); 
-  dt.day = curr.day();
-  dt.hour = curr.hour();
-  dt.min = curr.minute(); 
-  dt.sec = curr.second();
-  dt.ms = 0;
-
-  lib_datetime_interval_t temptimestamp = drv_timer_getMonotonicTime();
-
-  temptimestamp = timestamp + (((temptimestamp - timestamp) / 1000) * 1000);
-  
-  //lib_datetime_addIntervalToDatetime(&dt, temptimestamp);
-  drv_timer_setAbsoluteDateTimeWithTimestamp(&dt, temptimestamp);
-
-  GPSRTC.clearAlarm(1);
-  while(!GPSRTC.setAlarm1(curr + TimeSpan(15), DS3231_A1_Day));
-    
-}
-
-void onAlarm(void) {
-    //clear alarm and set it to 15 seconds in the future without resetting RTC time
-    
-    timestamp = drv_timer_getMonotonicTime();
-    drv_sched_once(resetForNextAlarm, NULL, DRV_SCHED_PRI__NORMAL, 0);
-    
-}*/
 
 void readSensorVal(void*) {
 

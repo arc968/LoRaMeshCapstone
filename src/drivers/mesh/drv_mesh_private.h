@@ -10,19 +10,46 @@ typedef uint64_t peer_uid_t;
 
 #include "drv_mesh_air.h"
 
-enum peer_status_e {
+/* enum peer_status_e {
 	PEER_EMPTY = 0,
 	PEER_PASSERBY, //only heard their broadcast
 	PEER_STRANGER, //they heard our broadcast, but we did not hear theirs
 	PEER_ACQUAINTANCE, //handshake complete
 	PEER_FRIEND, //PSK handshake complete
+}; */
+
+/* enum peer_status_e {
+	PEER_EMPTY = 0,
+	PEER_PASSERBY, //have heard broadcast, will send discReply
+	PEER_STRANGER, //have received discReply, will send discHandshake
+	PEER_ACQUAINTANCE, //have received discHandshake, will send ACK for each discHandshake received
+	//PEER_FRIEND, 
+}; */
+
+enum peer_status_e {
+	PEER_EMPTY = 0,
+	PEER_PASSERBY = 1, //have heard broadcast, will send discReply
+	PEER_STRANGER = 2, //have received discReply, will send discReply, will send ACK for each discReply received
+	PEER_ACQUAINTANCE = 3, //have received ACK, will send ACK for each discReply received
 };
 
 struct peer_s {
 	struct peer_s * next;
 	enum peer_status_e status;
-	peer_uid_t uid;
-	//uint8_t key[32];
+	//peer_uid_t uid;
+	uint16_t index;
+	uint8_t key_dh_pub[32];
+	uint8_t key_chan_send[8];
+	uint8_t key_chan_recv[8];
+	uint32_t counter_data_send;
+	uint8_t key_data_send[32];
+	uint32_t counter_data_recv;
+	union {
+		uint8_t key_data_recv[32];
+		uint8_t key_ephemeral_priv[32]; // of this peer
+	};
+	lib_datetime_realtime_t last_packet_timestamp;
+	struct packet_s * packet;
 };
 
 struct radio_cfg_s {
@@ -33,25 +60,25 @@ struct radio_cfg_s {
 	enum drv_lora_codingRate_e codingRate;
 };
 
-enum appointment_type_e {
+/* enum appointment_type_e {
 	APPT_RECV,
 	APPT_SEND_DISC,
 	APPT_SEND_DISC_REPLY,
-	APPT_SEND_DISC_HANDSHAKE,
+	//APPT_SEND_DISC_HANDSHAKE,
 	APPT_SEND_DATA,
 	APPT_SEND_ROUTE,
-/* 	APPT_DISC_RECV,
-	APPT_DISC_REPLY_SEND,
-	APPT_DISC_REPLY_RECV,
-	APPT_DATA_SEND, */
+	// APPT_DISC_RECV,
+	// APPT_DISC_REPLY_SEND,
+	// APPT_DISC_REPLY_RECV,
+	// APPT_DATA_SEND,
 };
-
+ */
 struct appointment_s {
 	struct appointment_s * next;
 	
 	lib_datetime_realtime_t realtime;
 	
-	enum appointment_type_e type;
+	//enum appointment_type_e type;
 	
 	struct peer_s * peer;
 	
@@ -65,10 +92,11 @@ struct packet_s {
 	uint8_t size;
 	union {
 		struct packet_header_s header;
+		struct packet_linkHeader_s linkHeader;
 		struct packet_type_data_s asData;
 		struct packet_type_disc_s asDisc;
 		struct packet_type_discReply_s asDiscReply;
-		struct packet_type_discHandshake_s asDiscHandshake;
+		//struct packet_type_discHandshake_s asDiscHandshake;
 		struct packet_type_ack_s asAck;
 		struct packet_type_nack_s asNack;
 		struct packet_type_route_s asRoute;
@@ -88,7 +116,9 @@ struct route_s {
 
 static struct state_s {
 	ipv4_t ip;
-	peer_uid_t uid;
+	//peer_uid_t uid;
+	uint8_t key_dh_pub[32];
+	uint8_t key_dh_priv[32];
 	//uint8_t pubkey[32];
 	//uint8_t privkey[32];
 	uint8_t psk[32];

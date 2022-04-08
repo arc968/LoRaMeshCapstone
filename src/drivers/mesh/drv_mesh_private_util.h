@@ -122,9 +122,9 @@ static void removeReadyPeer(struct peer_s * peer) {
 	}
 }
 
-static struct peer_s * getPeerByUID(peer_uid_t uid) {
+static struct peer_s * getPeerByPubDhKey(uint8_t key_dh_pub[32]) {
 	struct peer_s * peer = state.head_peer_ready;
-	while (peer != NULL && peer->uid != uid) peer = peer->next;
+	while (peer != NULL && crypto_verify32(peer->key_dh_pub, key_dh_pub)) peer = peer->next;
 	return peer;
 }
 
@@ -176,6 +176,11 @@ static uint64_t constrainU64(uint64_t x, uint64_t a, uint64_t b) {
 	}
 }
 
+static int64_t absI64(int64_t x) {
+	if (x < 0) x = -(x);
+	return x;
+}
+
 static uint64_t map(uint64_t x, uint64_t in_min, uint64_t in_max, uint64_t out_min, uint64_t out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
@@ -214,24 +219,24 @@ static void setupRadioFromConfig(struct drv_lora_s * radio, struct radio_cfg_s *
 
 static enum drv_lora_bandwidth_e drv_lora_bandwidth_e_arr[] = {
 	DRV_LORA_BW__500kHz,
-	DRV_LORA_BW__250kHz,
-	DRV_LORA_BW__125kHz,
+	//DRV_LORA_BW__250kHz,
+	//DRV_LORA_BW__125kHz,
 	//DRV_LORA_BW__62_5kHz,
 };
 static enum drv_lora_spreadingFactor_e drv_lora_spreadingFactor_e_arr[] = {
 	//DRV_LORA_SF__6,
 	DRV_LORA_SF__7,
-	DRV_LORA_SF__8,
-	DRV_LORA_SF__9,
+	//DRV_LORA_SF__8,
+	//DRV_LORA_SF__9,
 	//DRV_LORA_SF__10,
 	//DRV_LORA_SF__11,
 	//DRV_LORA_SF__12,
 };
 static enum drv_lora_codingRate_e drv_lora_codingRate_e_arr[] = {
-	DRV_LORA_CR__4_5,
-	DRV_LORA_CR__4_6,
+	//DRV_LORA_CR__4_5,
+	//DRV_LORA_CR__4_6,
 	DRV_LORA_CR__4_7,
-	DRV_LORA_CR__4_8,
+	//DRV_LORA_CR__4_8,
 };
 static void setRadioCfgAtTimeFromSeed(struct radio_cfg_s * cfg, lib_datetime_realtime_t rt, uint32_t seed) {
 	seed = LIB_BYTEORDER_HTON_U32(seed);
