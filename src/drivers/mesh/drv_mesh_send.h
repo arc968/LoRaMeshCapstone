@@ -5,6 +5,7 @@ extern "C" {
 #endif
 
 static void drv_mesh_buildPacket_disc(struct appointment_s * appt) {
+	DEBUG_PRINT("\tBuilding discovery packet...\n");
 	struct packet_s * raw_packet = appt->packet;
 	raw_packet->size = sizeof(struct packet_type_disc_s);
 	struct packet_type_disc_s * packet = (struct packet_type_disc_s *)&(raw_packet->asDisc);
@@ -17,10 +18,11 @@ static void drv_mesh_buildPacket_disc(struct appointment_s * appt) {
 	drv_rand_fillBuf(packet->nonce, sizeof(packet->nonce));
 	crypto_lock_aead(packet->mac, (uint8_t *)&(packet->body), state.psk, packet->nonce, (uint8_t *)&(packet->header), sizeof(packet->header), (uint8_t *)&(packet->body), sizeof(packet->body));
 	
-	DEBUG_PRINT("\tBuilding discovery packet...\n");
+	DEBUG_PRINT("\tBuilt discovery packet.\n");
 }
 
 static void drv_mesh_buildPacket_discReply(struct peer_s * peer) {
+	DEBUG_PRINT("\tBuilding discovery reply packet ...\n");
 	struct packet_s * raw_packet = peer->packet;
 	raw_packet->size = sizeof(struct packet_type_discReply_s);
 	struct packet_type_discReply_s * packet = (struct packet_type_discReply_s *)&(raw_packet->asDiscReply);
@@ -45,7 +47,7 @@ static void drv_mesh_buildPacket_discReply(struct peer_s * peer) {
 		
 		DEBUG_PRINT("\tCalc index...\n");
 		packet->body.index = ((uint8_t *)(peer) - (uint8_t *)&(state.peers[0])) / sizeof(struct peer_s);
-		DEBUG_PRINT("\tDone.\n");
+		DEBUG_PRINT("\tDone (index: %hu).\n", packet->body.index);
 		
 		memcpy(packet->body.key_dh_pub, state.key_dh_pub, sizeof(state.key_dh_pub));
 		
@@ -87,13 +89,18 @@ static void drv_mesh_buildPacket_discReply(struct peer_s * peer) {
 	
 	crypto_wipe(key_once, sizeof(key_once));
 	//DEBUG_PRINT("\tBuilding discovery reply packet as [%llX] to [%llX]...\n", packet->reply_peer_uid, packet->broadcast_peer_uid);
-	DEBUG_PRINT("\tBuilding discovery reply packet ...\n");
+	DEBUG_PRINT("\tBuilt discovery reply packet.\n");
 }
 
 /* static void drv_mesh_buildPacket_discHandshake(struct appointment_s * appt) {
 	struct packet_s * raw_packet = appt->packet;
 	raw_packet->size = sizeof(struct packet_type_discHandshake_s);
 	struct packet_type_discHandshake_s * packet = (struct packet_type_discHandshake_s *)&(raw_packet->asDiscHandshake);
+	
+} */
+
+/* static void drv_mesh_buildPacket_ack(struct peer_s * peer) {
+	struct packet_s * raw_packet = appt->packet;
 	
 } */
 
@@ -158,6 +165,17 @@ static void drv_mesh_worker_send(void * arg) {
 		packet = appt->packet;
 	} else {
 		packet = appt->peer->packet;
+		appt->peer->packet = appt->peer->packet->next;
+		
+		if (packet->header.type == PACKET_TYPE__LINK) {
+			struct packet_s * cur = packet;
+			while (cur->next != packet) cur = cur->next;
+			cur->next = packet->next;
+			insertEmptyPacket(packet);
+			if (appt->peer->packet == packet) {
+				appt->peer->packet = NULL;
+			}
+		}
 	}
 	
 	if (packet == NULL) {

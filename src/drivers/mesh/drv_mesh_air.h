@@ -15,6 +15,7 @@ enum packet_type_e {
 	PACKET_TYPE__ACK = 5,
 	PACKET_TYPE__NACK = 6,
 	PACKET_TYPE__ROUTE = 7,
+	PACKET_TYPE__LINK = 8,
 };
 
 enum nack_reason_e {
@@ -104,11 +105,12 @@ struct packet_type_discHandshake_s {
 #pragma scalar_storage_order big-endian
 struct packet_linkHeader_s {
 	struct packet_header_s header;
-	uint16_t index_recv;
+	uint16_t index;
 	uint32_t counter;
 	uint8_t mac[16]; //poly1305
-	uint8_t type; //actual type is encrypted
-	uint8_t reserved;
+	struct {
+		uint8_t type; //actual type is encrypted
+	} body;
 } __attribute__((packed, aligned(1)));
 #pragma scalar_storage_order default
 
@@ -117,7 +119,9 @@ struct packet_type_ack_s {
 	struct packet_linkHeader_s header;
 	uint32_t counter_range_min;
 	uint32_t counter_range_max;
-} __attribute__((packed, aligned(1)));
+} __attribute__((packed, aligned(1))) const packet_type_ack_s_default = {
+	.header.body.type = PACKET_TYPE__ACK,
+};
 #pragma scalar_storage_order default
 
 #pragma scalar_storage_order big-endian

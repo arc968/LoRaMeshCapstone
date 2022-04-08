@@ -219,24 +219,24 @@ static void setupRadioFromConfig(struct drv_lora_s * radio, struct radio_cfg_s *
 
 static enum drv_lora_bandwidth_e drv_lora_bandwidth_e_arr[] = {
 	DRV_LORA_BW__500kHz,
-	DRV_LORA_BW__250kHz,
-	DRV_LORA_BW__125kHz,
+	//DRV_LORA_BW__250kHz,
+	//DRV_LORA_BW__125kHz,
 	//DRV_LORA_BW__62_5kHz,
 };
 static enum drv_lora_spreadingFactor_e drv_lora_spreadingFactor_e_arr[] = {
 	//DRV_LORA_SF__6,
 	DRV_LORA_SF__7,
-	DRV_LORA_SF__8,
-	DRV_LORA_SF__9,
+	//DRV_LORA_SF__8,
+	//DRV_LORA_SF__9,
 	//DRV_LORA_SF__10,
 	//DRV_LORA_SF__11,
 	//DRV_LORA_SF__12,
 };
 static enum drv_lora_codingRate_e drv_lora_codingRate_e_arr[] = {
-	DRV_LORA_CR__4_5,
-	DRV_LORA_CR__4_6,
+	//DRV_LORA_CR__4_5,
+	//DRV_LORA_CR__4_6,
 	DRV_LORA_CR__4_7,
-	DRV_LORA_CR__4_8,
+	//DRV_LORA_CR__4_8,
 };
 static void setRadioCfgAtTimeFromSeed(struct radio_cfg_s * cfg, lib_datetime_realtime_t rt, uint32_t seed) {
 	seed = LIB_BYTEORDER_HTON_U32(seed);

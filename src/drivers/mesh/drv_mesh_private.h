@@ -28,9 +28,9 @@ typedef uint64_t peer_uid_t;
 
 enum peer_status_e {
 	PEER_EMPTY = 0,
-	PEER_PASSERBY, //have heard broadcast, will send discReply
-	PEER_STRANGER, //have received discReply, will send discReply, will send ACK for each discReply received
-	PEER_ACQUAINTANCE, //have received ACK, will send ACK for each discReply received
+	PEER_PASSERBY = 1, //have heard broadcast, will send discReply
+	PEER_STRANGER = 2, //have received discReply, will send discReply, will send ACK for each discReply received
+	PEER_ACQUAINTANCE = 3, //have received ACK, will send ACK for each discReply received
 };
 
 struct peer_s {
@@ -92,6 +92,7 @@ struct packet_s {
 	uint8_t size;
 	union {
 		struct packet_header_s header;
+		struct packet_linkHeader_s linkHeader;
 		struct packet_type_data_s asData;
 		struct packet_type_disc_s asDisc;
 		struct packet_type_discReply_s asDiscReply;
