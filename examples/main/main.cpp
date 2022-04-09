@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include "LoRaMeshCapstone.h"
 
 void onSleep() {
@@ -83,9 +82,7 @@ void setup() {
 
   Serial.print("Ready\n");
 
-
   delay(1500);
-
 
   drv_sched_init();
   drv_sched_setOnSleepCallback(onSleep);
