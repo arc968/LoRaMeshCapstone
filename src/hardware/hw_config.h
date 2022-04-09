@@ -27,11 +27,11 @@ extern "C" {
 
 ///////////////////IDE DEFINES/////////////////////////////
 //uncomment this to define using the arduine ide software and its premade libraries
-//#define HW_ARDUINO
+#define HW_ARDUINO
 
 
 ///////////////////IC CHIP DEFINES////////////////////////
-//#define MKRWAN1300
+#define MKRWAN1300
 //#define RAK4260 //iBug
 //#define RAK4600
 //#define RAK11300
@@ -45,7 +45,7 @@ extern "C" {
 
 ///////////////////LORA RADIO DEFINES//////////////////////
 //#define LORA_NONE
-//#define LORA_ARDUINO_MKRWAN1300
+#define LORA_ARDUINO_MKRWAN1300
 //#define LORA_SEMTECH_SX1276
 
 #ifdef __cplusplus

@@ -21,6 +21,9 @@
 extern "C" {
 #endif
 
+#include <stdio.h>
+#include <string.h>
+
 int  snprintf_(char* buffer, size_t count, const char* format, ...);
 #define DEBUG_PRINT_FUNCTION() {char tbuf[256]; snprintf_(tbuf, sizeof(tbuf), "%s()\n",__func__); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}
 
