@@ -6,6 +6,7 @@ extern "C" {
 
 #define RB_CAPACITY(rb) ((uint16_t)(sizeof(rb.buf)/sizeof(__typeof__(rb.buf[0]))))
 #define RB_COUNT(rb) ((uint16_t)rb.count)
+#define RB_SPACE(rb) ((uint16_t)(RB_CAPACITY(rb) - RB_COUNT(rb)))
 #define RB_GET(rb) ((__typeof__(rb.buf[0]) *)(\
     (rb.count == 0) ? NULL : \
         (rb.tail = ((rb.tail+1)%RB_CAPACITY(rb)),\
@@ -161,7 +162,7 @@ static void insertEmptyAppt(struct appointment_s * appt) {
 		insertEmptyPacket(appt->packet);
 		appt->packet = NULL;
 	}
-	appt->peer = NULL;
+	//appt->peer = NULL;
 	appt->next = state.head_appt_empty;
 	state.head_appt_empty = appt;
 }
@@ -250,6 +251,8 @@ static void setRadioCfgAtTimeFromSeed(struct radio_cfg_s * cfg, lib_datetime_rea
 	cfg->spreadingFactor = drv_lora_spreadingFactor_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_spreadingFactor_e_arr)/sizeof(drv_lora_spreadingFactor_e_arr[0]))];
 	cfg->codingRate = drv_lora_codingRate_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_codingRate_e_arr)/sizeof(drv_lora_codingRate_e_arr[0]))];
 }
+
+
 
 #if defined (__cplusplus)
 }

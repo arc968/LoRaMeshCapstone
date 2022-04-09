@@ -8,6 +8,7 @@ static void drv_mesh_buildPacket_disc(struct appointment_s * appt) {
 	DEBUG_PRINT("\tBuilding discovery packet...\n");
 	struct packet_s * raw_packet = appt->packet;
 	raw_packet->size = sizeof(struct packet_type_disc_s);
+	raw_packet->once = true;
 	struct packet_type_disc_s * packet = (struct packet_type_disc_s *)&(raw_packet->asDisc);
 	
 	packet->header.type = PACKET_TYPE__DISC;
@@ -21,10 +22,11 @@ static void drv_mesh_buildPacket_disc(struct appointment_s * appt) {
 	DEBUG_PRINT("\tBuilt discovery packet.\n");
 }
 
-static void drv_mesh_buildPacket_discReply(struct peer_s * peer) {
+static void drv_mesh_buildPacket_discReply(struct peer_s * peer, struct packet_s * raw_packet) {
 	DEBUG_PRINT("\tBuilding discovery reply packet ...\n");
-	struct packet_s * raw_packet = peer->packet;
+	//struct packet_s * raw_packet = peer->packet;
 	raw_packet->size = sizeof(struct packet_type_discReply_s);
+	raw_packet->once = false;
 	struct packet_type_discReply_s * packet = (struct packet_type_discReply_s *)&(raw_packet->asDiscReply);
 	
 	//*packet = packet_type_discReply_s_default;
@@ -160,23 +162,7 @@ static void drv_mesh_worker_send(void * arg) {
 		goto EXIT;
 	}
 	
-	struct packet_s * packet;
-	if (appt->peer == NULL) {
-		packet = appt->packet;
-	} else {
-		packet = appt->peer->packet;
-		appt->peer->packet = appt->peer->packet->next;
-		
-		if (packet->header.type == PACKET_TYPE__LINK) {
-			struct packet_s * cur = packet;
-			while (cur->next != packet) cur = cur->next;
-			cur->next = packet->next;
-			insertEmptyPacket(packet);
-			if (appt->peer->packet == packet) {
-				appt->peer->packet = NULL;
-			}
-		}
-	}
+	struct packet_s * packet = appt->packet;
 	
 	if (packet == NULL) {
 		DEBUG_PRINT("\tWARNING: Unexpected NULL packet.\n");
