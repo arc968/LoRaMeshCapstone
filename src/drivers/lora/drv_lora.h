@@ -13,10 +13,10 @@ extern "C" {
 #include "../../hardware/hardware.h"
 
 enum drv_lora_bandwidth_e {
-	DRV_LORA_BW__500kHz,
-	DRV_LORA_BW__250kHz,
-	DRV_LORA_BW__125kHz,
-	DRV_LORA_BW__62_5kHz,
+	DRV_LORA_BW__500kHz = 500000,
+	DRV_LORA_BW__250kHz = 250000,
+	DRV_LORA_BW__125kHz = 125000,
+	DRV_LORA_BW__62_5kHz = 62500,
 };
 
 enum drv_lora_spreadingFactor_e {

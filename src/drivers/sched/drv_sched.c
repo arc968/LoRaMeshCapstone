@@ -23,7 +23,7 @@ struct job_s {
 	enum job_type_e type;
 };
 
-struct state_s {
+static struct state_s {
 	struct job_s * head_ready;
 	struct job_s * head_timed;
 	//struct job_s * head_later;

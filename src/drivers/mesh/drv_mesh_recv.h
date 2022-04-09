@@ -56,16 +56,23 @@ static void drv_mesh_parsePacket_disc(struct packet_s * raw_packet) {
 		drv_rand_fillBuf(peer->key_ephemeral_priv, sizeof(peer->key_ephemeral_priv));
 		
 		peer->last_packet_timestamp = 0; //packet->body.timestamp;
+
+		if (!RB_SPACE(peer->rb_packets)) {
+			DEBUG_PRINT("\tWARNING: Failed to save new peer, no empty slots in peer packet queue available\n");
+			return;
+		}
 		
-		peer->packet = popEmptyPacket();
-		if (peer->packet == NULL) {
+		struct packet_s * packet_tmp = popEmptyPacket();
+		if (packet_tmp == NULL) {
 			DEBUG_PRINT("\tWARNING: Failed to save new peer, no empty packets available\n");
 			insertEmptyPeer(peer);
 			return;
 		}
-		peer->packet->next = peer->packet;
-		drv_mesh_buildPacket_discReply(peer);
+
+		drv_mesh_buildPacket_discReply(peer, packet_tmp);
 		
+		*RB_PUT(peer->rb_packets) = packet_tmp;
+
 		insertReadyPeer(peer);
 	} else {
 		DEBUG_PRINT("\tINFO: Discovery packet from known peer.\n");
@@ -176,21 +183,22 @@ static void drv_mesh_parsePacket_discReply(struct packet_s * raw_packet) {
 		}
 		
 		//queue ACK
+
+		if (!RB_SPACE(peer->rb_packets)) {
+			DEBUG_PRINT("\tWARNING: Failed to create peer ACK, no empty slots in peer packet queue available\n");
+			return;
+		}
+
 		struct packet_s * packet_tmp = popEmptyPacket();
 		if (packet_tmp == NULL) {
 			DEBUG_PRINT("\tWARNING: Failed to create peer ACK, no empty packets available\n");
 			return;
 		}
 		
-		if (peer->packet == NULL) {
-			packet_tmp->next = packet_tmp;
-			peer->packet = packet_tmp;
-		} else {
-			packet_tmp->next = peer->packet->next;
-			peer->packet->next = packet_tmp;
-		}
+		*RB_PUT(peer->rb_packets) = packet_tmp;
 		
 		packet_tmp->size = sizeof(struct packet_type_ack_s);
+		packet_tmp->once = true;
 		struct packet_type_ack_s * ack = (struct packet_type_ack_s *)&(packet_tmp->asAck);
 		ack->header.header.type = PACKET_TYPE__LINK;
 		ack->header.index = peer->index;
@@ -299,18 +307,18 @@ static void drv_mesh_parsePacket_ack(struct packet_s * raw_packet, struct peer_s
 	if (peer->status == PEER_STRANGER) {
 		peer->status = PEER_ACQUAINTANCE;
 		
-		struct packet_s * packet = peer->packet;
-		peer->packet = peer->packet->next;
+		// struct packet_s * packet = peer->packet;
+		// peer->packet = peer->packet->next;
 		
-		while (packet->header.type != PACKET_TYPE__DISC_REPLY) packet = packet->next;
+		// while (packet->header.type != PACKET_TYPE__DISC_REPLY) packet = packet->next;
 		
-		struct packet_s * cur = packet;
-		while (cur->next != packet) cur = cur->next;
-		cur->next = packet->next;
-		insertEmptyPacket(packet);
-		if (peer->packet == packet) {
-			peer->packet = NULL;
-		}
+		// struct packet_s * cur = packet;
+		// while (cur->next != packet) cur = cur->next;
+		// cur->next = packet->next;
+		// insertEmptyPacket(packet);
+		// if (peer->packet == packet) {
+		// 	peer->packet = NULL;
+		// }
 		
 		DEBUG_PRINT("\tINFO: Now acquainted with peer.\n");
 	} else {

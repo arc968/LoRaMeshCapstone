@@ -49,7 +49,12 @@ struct peer_s {
 		uint8_t key_ephemeral_priv[32]; // of this peer
 	};
 	lib_datetime_realtime_t last_packet_timestamp;
-	struct packet_s * packet;
+	struct {
+		uint16_t count;
+		uint16_t head;
+		uint16_t tail;
+		struct packet_s * buf[BUFFER_PER_PEER_PACKETS_SIZE];
+	} rb_packets;
 };
 
 struct radio_cfg_s {
@@ -80,7 +85,7 @@ struct appointment_s {
 	
 	//enum appointment_type_e type;
 	
-	struct peer_s * peer;
+	//struct peer_s * peer;
 	
 	struct packet_s * packet;
 	
@@ -89,6 +94,7 @@ struct appointment_s {
 
 struct packet_s {
 	struct packet_s * next;
+	bool once;
 	uint8_t size;
 	union {
 		struct packet_header_s header;

@@ -85,7 +85,7 @@ static void drv_mesh_worker_scheduler(void * arg) {
 			uint32_t tmp2 = (uint32_t)constrainU64(map(curTime, 0, LIB_DATETIME__MS_IN_DAY/24, 2, 20), 2, 20); // Ends at sending 1/n times
 			uint32_t tmp3 = lib_misc_fastrange32(drv_rand_getU32(), tmp2);
 			
-			appt->peer = NULL;
+			//appt->peer = NULL;
 
 			uint32_t seed;
 			crypto_blake2b_general((uint8_t *)&seed, sizeof(seed), state.psk, sizeof(state.psk), (uint8_t *)&(appt->realtime), sizeof(appt->realtime));
@@ -120,13 +120,33 @@ static void drv_mesh_worker_scheduler(void * arg) {
 		}
 	}
 	
-	{ //schedule per-peer discovery send periods
+	{ //schedule per-peer send periods
 		struct peer_s * peer = state.head_peer_ready;
 		for (; peer != NULL; peer = peer->next) {
-			if (peer->packet != NULL) {
+			struct packet_s * packet = NULL;
+			{ // decide which packet to send this period
+				if (!RB_COUNT(peer->rb_packets)) {
+					continue; //no packets queued
+				}
+				packet = *RB_GET(peer->rb_packets);
+				if (peer->status == PEER_ACQUAINTANCE && packet->header.type == PACKET_TYPE__DISC_REPLY) {
+					insertEmptyPacket(packet);
+					if (!RB_COUNT(peer->rb_packets)) {
+						continue; //no packets queued
+					}
+					packet = *RB_GET(peer->rb_packets);
+				}
+				if (!packet->once) {
+					*RB_PUT(peer->rb_packets) = packet;
+				}
+			}
+			if (packet != NULL) {
 				struct appointment_s * appt = popEmptyAppt();
 				if (appt == NULL) {
 					DEBUG_PRINT("\tWARNING: Failed to schedule peer send appointment, no empty appointments available\n");
+					if (packet->once) {
+						*RB_PUT(peer->rb_packets) = packet; //requeue packet that would otherwise be leaking memory
+					}
 					break; //the rest will fail anyway
 				}
 				
@@ -138,28 +158,18 @@ static void drv_mesh_worker_scheduler(void * arg) {
 				appt->realtime = rt_disc + offset;
 				setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), appt->realtime, seed);
 				
-/* 				if (peer->status == PEER_PASSERBY) {
-					//appt->type = APPT_SEND_DISC_REPLY;
-					DEBUG_PRINT("\tINFO: Scheduling discReply send at t+%lu\n", offset);
-				} else if (peer->status == PEER_STRANGER) {
-					//appt->type = APPT_SEND_DISC_REPLY;
-					DEBUG_PRINT("\tINFO: Scheduling discReply send at t+%lu\n", offset);
-				} else { //shouldn't be possible
-					DEBUG_PRINT("\tERROR: Unexpected peer status in drv_mesh_worker_scheduler()\n");
-					insertEmptyAppt(appt);
-					continue;
-				} */
-				
-				appt->peer = peer;
-				appt->packet = NULL;
-				/* peer->packet = popEmptyPacket();
-				if (peer->packet == NULL) {
-					DEBUG_PRINT("\tWARNING: Failed to schedule peer send appointment, no empty packets available\n");
-					insertEmptyAppt(appt);
-					break; //the rest will fail anyway
+				if (packet->once) {
+					appt->packet = packet;
+				} else {
+					appt->packet = popEmptyPacket();
+					if (appt->packet == NULL) {
+						DEBUG_PRINT("\tWARNING: Failed to schedule peer send appointment, no empty packets available\n");
+						insertEmptyAppt(appt);
+						return; //the rest will fail anyway
+					}
+					memcpy(appt->packet, packet, sizeof(struct packet_s));
 				}
-				drv_mesh_buildPacket_discReply(peer); */
-				
+
 				DEBUG_PRINT("\tINFO: Scheduling peer send at t+%lu\n", offset);
 				
 				enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_send, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
@@ -188,7 +198,7 @@ static void drv_mesh_worker_scheduler(void * arg) {
 			uint32_t offset = lib_misc_fastrange32(seed, DISCOVERY_INTERVAL_MILLIS - 10000) + 5000; //use middle 5 seconds
 			appt->realtime = rt_disc + offset;
 			//appt->type = APPT_RECV;
-			appt->peer = NULL;
+			//appt->peer = NULL;
 			appt->packet = NULL;
 			setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), appt->realtime, seed);
 			
@@ -201,10 +211,6 @@ static void drv_mesh_worker_scheduler(void * arg) {
 				break; //the rest will fail anyway
 			}
 		}
-	}
-	
-	{ //schedule data packets
-	
 	}
 }
 
