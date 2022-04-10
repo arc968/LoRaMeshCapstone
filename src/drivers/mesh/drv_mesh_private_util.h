@@ -205,54 +205,66 @@ static uint64_t getCenterFrequency(channel_t channel, enum drv_lora_bandwidth_e 
 
 static void setupRadioFromConfig(struct drv_lora_s * radio, struct radio_cfg_s * cfg) {
 	DEBUG_PRINT("\t"); DEBUG_PRINT_FUNCTION();
-	DEBUG_PRINT("\t\tpreamble:%hu, bandwidth:%lu, frequency:%llu, spreadingFactor:%lu, codingRate:%lu\n", cfg->preambleSymbols, cfg->bandwidth, cfg->frequency, cfg->spreadingFactor, cfg->codingRate);
+	DEBUG_PRINT("\t\tpreamble:%hu, bandwidth:%lu, frequency:%llu, spreadingFactor:%lu, codingRate:4/%lu\n", cfg->preambleSymbols, cfg->bandwidth, cfg->frequency, cfg->spreadingFactor, cfg->codingRate+4);
 	
 	drv_lora_setPreamble(radio, cfg->preambleSymbols);
 	drv_lora_setBandwidth(radio, cfg->bandwidth);
 	drv_lora_setFrequency(radio, cfg->frequency);
 	drv_lora_setSpreadingFactor(radio, cfg->spreadingFactor);
-	drv_lora_setCodingRate(radio, cfg->codingRate);
+	drv_lora_setCodingRate(radio, cfg->codingRate + 4);
 }
 
 /* static lib_datetime_realtime_t roundRealtimeToBlock(lib_datetime_realtime_t rt) {
 	return 0;
 } */
 
-static enum drv_lora_bandwidth_e drv_lora_bandwidth_e_arr[] = {
-	DRV_LORA_BW__500kHz,
-	//DRV_LORA_BW__250kHz,
-	//DRV_LORA_BW__125kHz,
-	//DRV_LORA_BW__62_5kHz,
-};
-static enum drv_lora_spreadingFactor_e drv_lora_spreadingFactor_e_arr[] = {
-	//DRV_LORA_SF__6,
-	DRV_LORA_SF__7,
-	//DRV_LORA_SF__8,
-	//DRV_LORA_SF__9,
-	//DRV_LORA_SF__10,
-	//DRV_LORA_SF__11,
-	//DRV_LORA_SF__12,
-};
-static enum drv_lora_codingRate_e drv_lora_codingRate_e_arr[] = {
-	//DRV_LORA_CR__4_5,
-	//DRV_LORA_CR__4_6,
-	DRV_LORA_CR__4_7,
-	//DRV_LORA_CR__4_8,
-};
-static void setRadioCfgAtTimeFromSeed(struct radio_cfg_s * cfg, lib_datetime_realtime_t rt, uint32_t seed) {
+#ifndef min
+#define min(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a < _b ? _a : _b; })
+#endif
+#ifndef max
+#define max(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a > _b ? _a : _b; })
+#endif
+static void estimateTimeOnAirInMsFromRadioCfg(struct radio_cfg_s * cfg, uint8_t packet_size) {
+	const uint32_t CRC = 1;
+	const uint32_t IH = 0;
+	const uint32_t DE = 0;
+	uint32_t Rs = cfg->bandwidth / (1 << cfg->spreadingFactor);
+	uint32_t num = 8*packet_size - 4*cfg->spreadingFactor + 28 + 16*CRC - 20*IH;
+	uint32_t den = 4*(cfg->spreadingFactor - 2*DE);
+	uint32_t n_payload = 8 + (max(((num/den) + 1)*(cfg->codingRate + 4), 0)); //instead of ceil, add 1
+	uint32_t t_payload = (n_payload * 1000) / Rs;
+
+	cfg->preambleSymbols = (uint16_t)((PREAMBLE_MS*Rs)/1000) - 4;
+	//uint32_t t_preamble = ((cfg->preambleSymbols + 5) * 1000) / Rs; //should be 4.25, rounding up to 5
+
+	cfg->toaEstimate = PREAMBLE_MS + t_payload;
+	DEBUG_PRINT("\tPacket ToA estimate: %ums preamble (%u symbols) + %ums payload (%u symbols) = %ums packet (%hhu bytes)\n", PREAMBLE_MS, cfg->preambleSymbols, t_payload, n_payload, cfg->toaEstimate, packet_size);
+}
+
+static void setRadioCfgAtTimeFromSeed(struct radio_cfg_s * cfg, lib_datetime_realtime_t rt, uint32_t seed, uint8_t packet_size) {
 	seed = LIB_BYTEORDER_HTON_U32(seed);
 	rt = LIB_BYTEORDER_HTON_U64(rt); //probably doesn't work properly
 	crypto_blake2b_general((uint8_t *)&seed, sizeof(seed), (uint8_t *)&seed, sizeof(seed), (uint8_t *)&rt, sizeof(rt));
 	seed = LIB_BYTEORDER_NTOH_U32(seed);
 	
-	cfg->preambleSymbols = PREAMBLE_LENGTH;
-	cfg->bandwidth = drv_lora_bandwidth_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_bandwidth_e_arr)/sizeof(drv_lora_bandwidth_e_arr[0]))];
-	cfg->frequency = getCenterFrequency(lib_misc_fastrange32(seed, getChannelCount(cfg->bandwidth)), cfg->bandwidth);
-	cfg->spreadingFactor = drv_lora_spreadingFactor_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_spreadingFactor_e_arr)/sizeof(drv_lora_spreadingFactor_e_arr[0]))];
-	cfg->codingRate = drv_lora_codingRate_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_codingRate_e_arr)/sizeof(drv_lora_codingRate_e_arr[0]))];
+	do {
+		seed = LIB_BYTEORDER_NTOH_U32(lib_misc_XORshiftLFSR32(LIB_BYTEORDER_HTON_U32(seed)));
+		cfg->bandwidth = drv_lora_bandwidth_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_bandwidth_e_arr)/sizeof(drv_lora_bandwidth_e_arr[0]))];
+		seed = LIB_BYTEORDER_NTOH_U32(lib_misc_XORshiftLFSR32(LIB_BYTEORDER_HTON_U32(seed)));
+		cfg->frequency = getCenterFrequency(lib_misc_fastrange32(seed, getChannelCount(cfg->bandwidth)), cfg->bandwidth);
+		seed = LIB_BYTEORDER_NTOH_U32(lib_misc_XORshiftLFSR32(LIB_BYTEORDER_HTON_U32(seed)));
+		cfg->spreadingFactor = drv_lora_spreadingFactor_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_spreadingFactor_e_arr)/sizeof(drv_lora_spreadingFactor_e_arr[0]))];
+		seed = LIB_BYTEORDER_NTOH_U32(lib_misc_XORshiftLFSR32(LIB_BYTEORDER_HTON_U32(seed)));
+		cfg->codingRate = drv_lora_codingRate_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_codingRate_e_arr)/sizeof(drv_lora_codingRate_e_arr[0]))];
+		estimateTimeOnAirInMsFromRadioCfg(cfg, packet_size);
+	} while (cfg->toaEstimate > PACKET_TOA_MAX_GENERATE);
 }
-
-
 
 #if defined (__cplusplus)
 }

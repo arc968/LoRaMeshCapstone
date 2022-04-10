@@ -28,17 +28,20 @@ struct drv_mesh_packet_s {
 struct drv_mesh_stats_s {
 	uint32_t packets_dropped;
 	uint32_t packets_forwarded;
-	uint32_t checksum_failures;
-	uint32_t mac_failures;
+	uint32_t corrupt_packets;
 	uint32_t broadcasts_sent;
 	uint32_t broadcasts_recv;
-	uint32_t peer_count;
+	
 	lib_datetime_realtime_t last_packet_send;
 	lib_datetime_realtime_t last_packet_recv;
 	lib_datetime_realtime_t last_packet_disc_send;
 	lib_datetime_realtime_t last_packet_disc_recv;
-	lib_datetime_realtime_t last_packet_data_send;
-	lib_datetime_realtime_t last_packet_data_recv;
+	lib_datetime_realtime_t last_packet_discReply_send;
+	lib_datetime_realtime_t last_packet_discReply_recv;
+	lib_datetime_realtime_t last_packet_link_send;
+	lib_datetime_realtime_t last_packet_link_recv;
+
+	uint32_t peer_count;
 };
 
 void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *));

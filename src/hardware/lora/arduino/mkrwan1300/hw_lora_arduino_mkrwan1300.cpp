@@ -397,6 +397,10 @@ bool drv_lora_isHeaderValid(struct drv_lora_s * handle) {
 	return drv_lora_readRegister(REG_MODEM_STATUS) & (0x1 << 3);
 }
 
+uint8_t drv_lora_getStatusReg(struct drv_lora_s * handle) {
+	return drv_lora_readRegister(REG_MODEM_STATUS);
+}
+
 bool drv_lora_isRecvTimeout(struct drv_lora_s * handle) {
 	//return drv_lora_readRegister(REG_MODEM_STATUS) & (0x1 << 3);
 	uint8_t tirqFlags = drv_lora_readRegister(REG_IRQ_FLAGS);

@@ -64,9 +64,44 @@
 	return appt;
 } */
 
+void drv_mesh_getStats(struct drv_mesh_stats_s * stats) {
+	memcpy(stats, &(state.stats), sizeof(struct drv_mesh_stats_s));
+	stats->peer_count = 0;
+	struct peer_s * peer = state.head_peer_ready;
+	while (peer != NULL) {
+		stats->peer_count++;
+		peer = peer->next;
+	}
+}
+
+static void printStats(struct drv_mesh_stats_s * stats) {
+	DEBUG_PRINT("\t packets_dropped: %lu\n", stats->packets_dropped);
+	DEBUG_PRINT("\t packets_forwarded: %lu\n", stats->packets_forwarded);
+	DEBUG_PRINT("\t corrupt_packets: %lu\n", stats->corrupt_packets);
+	DEBUG_PRINT("\t broadcasts_sent: %lu\n", stats->broadcasts_sent);
+	DEBUG_PRINT("\t broadcasts_recv: %lu\n", stats->broadcasts_recv);
+
+	DEBUG_PRINT("\t peer_count: %lu\n", stats->peer_count);
+}
+
+static void printPeerStats(struct peer_s * peer) {
+	DEBUG_PRINT("[status=%s,last_packet_timestamp=%llu]\n", peer_status_string_arr[peer->status], peer->last_packet_timestamp);
+}
+
 static void drv_mesh_worker_scheduler(void * arg) {
 	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
 	
+	{ // debug output
+		struct drv_mesh_stats_s stats;
+		drv_mesh_getStats(&stats);
+		printStats(&stats);
+		for (uint32_t i=0; i<BUFFER_PEERS_SIZE; i++) {
+			DEBUG_PRINT("\t peer %u: ", i);
+			struct peer_s * peer = &(state.peers[i]);
+			printPeerStats(peer);
+		}
+	}
+
 	lib_datetime_realtime_t rt_disc;
 	drv_timer_getRealtime(&rt_disc);
 	rt_disc = (rt_disc / DISCOVERY_INTERVAL_MILLIS) * DISCOVERY_INTERVAL_MILLIS;
@@ -82,7 +117,7 @@ static void drv_mesh_worker_scheduler(void * arg) {
 			uint32_t tmp = 0;//lib_misc_fastrange32(short_rt, 5*1000); //Will be in first 5 seconds of block
 			appt->realtime = rt_disc + tmp;
 			lib_datetime_interval_t curTime = drv_timer_getMonotonicTime();
-			uint32_t tmp2 = (uint32_t)constrainU64(map(curTime, 0, LIB_DATETIME__MS_IN_DAY/24, 2, 20), 2, 20); // Ends at sending 1/n times
+			uint32_t tmp2 = (uint32_t)constrainU64(map(curTime, 0, LIB_DATETIME__MS_IN_DAY/24, 4, 20), 2, 20); // Ends at sending 1/n times
 			uint32_t tmp3 = lib_misc_fastrange32(drv_rand_getU32(), tmp2);
 			
 			//appt->peer = NULL;
@@ -90,13 +125,13 @@ static void drv_mesh_worker_scheduler(void * arg) {
 			uint32_t seed;
 			crypto_blake2b_general((uint8_t *)&seed, sizeof(seed), state.psk, sizeof(state.psk), (uint8_t *)&(appt->realtime), sizeof(appt->realtime));
 			seed = LIB_BYTEORDER_NTOH_U32(seed);
-			setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), appt->realtime, seed);
 			
 			enum drv_sched_err_e err;
 			if (tmp3) { //TESTING
 				DEBUG_PRINT("\tNext disc: RECV with odds: %lu/%lu\n", tmp2-1, tmp2);
 				//appt->type = APPT_RECV;
 				DEBUG_PRINT("\tINFO: Scheduling disc recv at t+%lu\n", appt->realtime - rt_disc);
+				setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), appt->realtime, seed, sizeof(struct packet_type_disc_s));
 				err = drv_sched_once_at(drv_mesh_worker_recv, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
 			} else {
 				DEBUG_PRINT("\tNext disc: SEND with odds: 1/%lu\n", tmp2);
@@ -109,6 +144,7 @@ static void drv_mesh_worker_scheduler(void * arg) {
 				}
 				drv_mesh_buildPacket_disc(appt);
 				DEBUG_PRINT("\tINFO: Scheduling disc send at t+%lu\n", appt->realtime - rt_disc);
+				setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), appt->realtime, seed, appt->packet->size);
 				err = drv_sched_once_at(drv_mesh_worker_send, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
 			}
 			
@@ -120,6 +156,37 @@ static void drv_mesh_worker_scheduler(void * arg) {
 		}
 	}
 	
+	{ //schedule per-peer receive periods
+		struct peer_s * peer = state.head_peer_ready;
+		for (; peer != NULL; peer = peer->next) {
+			struct appointment_s * appt = popEmptyAppt();
+			if (appt == NULL) {
+				DEBUG_PRINT("\tWARNING: Failed to schedule peer receive appointment, no empty appointments available\n");
+				break; //the rest will fail anyway
+			}
+			
+			uint32_t seed;
+			crypto_blake2b_general((uint8_t *)&seed, sizeof(seed), peer->key_chan_recv, sizeof(peer->key_chan_recv), (uint8_t *)&(rt_disc), sizeof(rt_disc)); //doesn't handle byteorder correctly
+			seed = LIB_BYTEORDER_HTON_U32(seed);
+			
+			uint32_t offset = lib_misc_fastrange32(seed, DISCOVERY_INTERVAL_MILLIS - 10000) + 5000; //use middle 5 seconds
+			appt->realtime = rt_disc + offset;
+			//appt->type = APPT_RECV;
+			//appt->peer = NULL;
+			appt->packet = NULL;
+			setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), appt->realtime, seed, 255);
+			
+			DEBUG_PRINT("\tINFO: Scheduling peer recv at t+%lu\n", offset);
+			
+			enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_recv, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
+			if (err != DRV_SCHED_ERR__NONE) {
+				DEBUG_PRINT("\tWARNING: Failed to schedule receive appointment\n");
+				insertEmptyAppt(appt);
+				break; //the rest will fail anyway
+			}
+		}
+	}
+
 	{ //schedule per-peer send periods
 		struct peer_s * peer = state.head_peer_ready;
 		for (; peer != NULL; peer = peer->next) {
@@ -156,7 +223,7 @@ static void drv_mesh_worker_scheduler(void * arg) {
 				
 				uint32_t offset = lib_misc_fastrange32(seed, DISCOVERY_INTERVAL_MILLIS - 10000) + 5000; //use middle 5 seconds
 				appt->realtime = rt_disc + offset;
-				setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), appt->realtime, seed);
+				setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), appt->realtime, seed, packet->size);
 				
 				if (packet->once) {
 					appt->packet = packet;
@@ -181,37 +248,7 @@ static void drv_mesh_worker_scheduler(void * arg) {
 			}
 		}
 	}
-	
-	{ //schedule per-peer receive periods
-		struct peer_s * peer = state.head_peer_ready;
-		for (; peer != NULL; peer = peer->next) {
-			struct appointment_s * appt = popEmptyAppt();
-			if (appt == NULL) {
-				DEBUG_PRINT("\tWARNING: Failed to schedule peer receive appointment, no empty appointments available\n");
-				break; //the rest will fail anyway
-			}
-			
-			uint32_t seed;
-			crypto_blake2b_general((uint8_t *)&seed, sizeof(seed), peer->key_chan_recv, sizeof(peer->key_chan_recv), (uint8_t *)&(rt_disc), sizeof(rt_disc)); //doesn't handle byteorder correctly
-			seed = LIB_BYTEORDER_HTON_U32(seed);
-			
-			uint32_t offset = lib_misc_fastrange32(seed, DISCOVERY_INTERVAL_MILLIS - 10000) + 5000; //use middle 5 seconds
-			appt->realtime = rt_disc + offset;
-			//appt->type = APPT_RECV;
-			//appt->peer = NULL;
-			appt->packet = NULL;
-			setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), appt->realtime, seed);
-			
-			DEBUG_PRINT("\tINFO: Scheduling peer recv at t+%lu\n", offset);
-			
-			enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_recv, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
-			if (err != DRV_SCHED_ERR__NONE) {
-				DEBUG_PRINT("\tWARNING: Failed to schedule receive appointment\n");
-				insertEmptyAppt(appt);
-				break; //the rest will fail anyway
-			}
-		}
-	}
+
 }
 
 //runs once absolute scheduling is available
@@ -294,16 +331,6 @@ void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *)) {
 
 enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * packet) {
 	return 0;
-}
-
-void drv_mesh_getStats(struct drv_mesh_stats_s * stats) {
-	memcpy(&(state.stats), stats, sizeof(struct drv_mesh_stats_s));
-	stats->peer_count = 0;
-	struct peer_s * peer = state.head_peer_ready;
-	while (peer != NULL) {
-		stats->peer_count++;
-		peer = peer->next;
-	}
 }
 
 #endif

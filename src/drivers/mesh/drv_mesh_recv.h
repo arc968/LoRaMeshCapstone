@@ -477,16 +477,27 @@ static void drv_mesh_worker_recv(void * arg) {
 	setupRadioFromConfig(&state.radio, &(appt->radio_cfg));
 	
 	drv_lora_setMode(&state.radio, DRV_LORA_MODE__RECV_ONCE);
-	hal_timer_delay(250); //idk if this value makes sense
 	
-	if (!drv_lora_isSignalDetected(&state.radio)) {
-		DEBUG_PRINT("\tINFO: No preamble detected in drv_mesh_worker_recv(), aborting receive.\n");
-		drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
-		state.radio_mutex = 0;
-		goto EXIT;
+	//hal_timer_delay(PREAMBLE_MS + PADDING_MS);
+	{
+		lib_datetime_interval_t start, current;
+		start = drv_timer_getMonotonicTime();
+		current = drv_timer_getMonotonicTime();
+		uint8_t reg_status = 0;
+		while ((current - start < PREAMBLE_MS + PADDING_MS) && !(reg_status)) {
+			reg_status = drv_lora_getStatusReg(&state.radio) & ((0x1 << 3) || (0x1 << 1) || (0x1 << 0));
+			current = drv_timer_getMonotonicTime();
+		}
+
+		if (!(reg_status)) {
+			DEBUG_PRINT("\tINFO: No preamble detected in drv_mesh_worker_recv(), aborting receive.\n");
+			drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
+			state.radio_mutex = 0;
+			goto EXIT;
+		}
 	}
 	
-	enum drv_sched_err_e err = drv_sched_once(drv_mesh_worker_recv_finish, NULL, DRV_SCHED_PRI__REALTIME, 5000); //the interval should be calculated
+	enum drv_sched_err_e err = drv_sched_once(drv_mesh_worker_recv_finish, NULL, DRV_SCHED_PRI__REALTIME, appt->radio_cfg.toaEstimate + PADDING_MS);
 	if (err != DRV_SCHED_ERR__NONE) { //error checking
 		DEBUG_PRINT("\tWARNING: Failed to schedule drv_mesh_worker_recv_finish()\n");
 		drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);

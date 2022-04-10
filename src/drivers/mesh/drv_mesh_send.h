@@ -158,7 +158,7 @@ static void drv_mesh_worker_send(void * arg) {
 	}}
 	
 	if (state.radio_mutex) { //error checking
-		DEBUG_PRINT("\tINFO: Radio busy, unable to send discovery packet.\n");
+		DEBUG_PRINT("\tINFO: Radio busy, unable to send packet.\n");
 		goto EXIT;
 	}
 	
@@ -168,10 +168,11 @@ static void drv_mesh_worker_send(void * arg) {
 		DEBUG_PRINT("\tWARNING: Unexpected NULL packet.\n");
 		goto EXIT;
 	}
-	
-	DEBUG_PRINT("\tsend PACKET_RAW [%hhu]: [", packet->size);
-	for (uint32_t i=0; i<packet->size; i++) DEBUG_PRINT(((i+1==packet->size) ? "%hhu" : "%hhu,"), (packet->raw)[i]);
-	DEBUG_PRINT("]\n");
+
+	if (appt->radio_cfg.toaEstimate > PACKET_TOA_MAX_SEND) {
+		DEBUG_PRINT("\tWARNING: Packet duration (%ums) longer than configured send limit (%ums).\n", appt->radio_cfg.toaEstimate, PACKET_TOA_MAX_SEND);
+		goto EXIT;
+	}
 	
 	state.radio_mutex = 1;
 	drv_lora_setMode(&state.radio, DRV_LORA_MODE__IDLE);
@@ -180,13 +181,17 @@ static void drv_mesh_worker_send(void * arg) {
 	
 	drv_lora_sendRawPacket_async(&state.radio, &(packet->raw[0]), packet->size);
 	
-	enum drv_sched_err_e err = drv_sched_once(drv_mesh_worker_send_finish, NULL, DRV_SCHED_PRI__REALTIME, 5000);
+	enum drv_sched_err_e err = drv_sched_once(drv_mesh_worker_send_finish, NULL, DRV_SCHED_PRI__REALTIME, appt->radio_cfg.toaEstimate + PADDING_MS);
 	if (err != DRV_SCHED_ERR__NONE) {
 		DEBUG_PRINT_REALTIME(); DEBUG_PRINT("WARNING: Failed to schedule drv_mesh_worker_send_finish()\n");
 		drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
 		state.radio_mutex = 0;
 		goto EXIT;
 	}
+
+	DEBUG_PRINT("\tsend PACKET_RAW [%hhu]: [", packet->size);
+	for (uint32_t i=0; i<packet->size; i++) DEBUG_PRINT(((i+1==packet->size) ? "%hhu" : "%hhu,"), (packet->raw)[i]);
+	DEBUG_PRINT("]\n");
 	
 /* 	if (appt->type == APPT_SEND_DISC) {
 		state.stats.broadcasts_sent++;

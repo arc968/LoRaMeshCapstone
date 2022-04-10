@@ -33,6 +33,13 @@ enum peer_status_e {
 	PEER_ACQUAINTANCE = 3, //have received ACK, will send ACK for each discReply received
 };
 
+char * peer_status_string_arr[] = {
+	[PEER_EMPTY] = "PEER_EMPTY",
+	[PEER_PASSERBY] = "PEER_PASSERBY",
+	[PEER_STRANGER] = "PEER_STRANGER",
+	[PEER_ACQUAINTANCE] = "PEER_ACQUAINTANCE",
+};
+
 struct peer_s {
 	struct peer_s * next;
 	enum peer_status_e status;
@@ -63,6 +70,7 @@ struct radio_cfg_s {
 	enum drv_lora_bandwidth_e bandwidth;
 	enum drv_lora_spreadingFactor_e spreadingFactor;
 	enum drv_lora_codingRate_e codingRate;
+	uint32_t toaEstimate;
 };
 
 /* enum appointment_type_e {
