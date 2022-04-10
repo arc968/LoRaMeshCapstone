@@ -26,11 +26,11 @@ uint16_t sensordata = 0;
 #define PREDEFCOLORPACKET   0x01
 
 
-Adafruit_NeoPixel ring(RING_LED_COUNT, RING_LED_DATAIN_PIN, NEO_GRBW + NEO_KHZ800);
+Adafruit_NeoPixel ring(RING_LED_COUNT, RING_LED_DATAIN_PIN, NEO_GRB + NEO_KHZ800);
 
-Adafruit_NeoPixel con1(CON_STRIP_COUNT, CON1_STRIP_DATA_PIN, NEO_GRBW + NEO_KHZ800);
-Adafruit_NeoPixel con2(CON_STRIP_COUNT, CON2_STRIP_DATA_PIN, NEO_GRBW + NEO_KHZ800);
-Adafruit_NeoPixel con3(CON_STRIP_COUNT, CON3_STRIP_DATA_PIN, NEO_GRBW + NEO_KHZ800);
+//Adafruit_NeoPixel con1(CON_STRIP_COUNT, CON1_STRIP_DATA_PIN, NEO_GRBW + NEO_KHZ800);
+//Adafruit_NeoPixel con2(CON_STRIP_COUNT, CON2_STRIP_DATA_PIN, NEO_GRBW + NEO_KHZ800);
+//Adafruit_NeoPixel con3(CON_STRIP_COUNT, CON3_STRIP_DATA_PIN, NEO_GRBW + NEO_KHZ800);
 
 
 void setup() {
@@ -46,7 +46,7 @@ void setup() {
   ring.show();            
   ring.setBrightness(BRIGHTNESS);
 
-  con1.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
+  /*con1.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
   con1.fill(con1.Color(255, 0, 0));
   con1.show();            
   con1.setBrightness(BRIGHTNESS);
@@ -59,13 +59,18 @@ void setup() {
   con3.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
   con1.fill(con3.Color(255, 0, 0));
   con3.show();            
-  con3.setBrightness(BRIGHTNESS);
+  con3.setBrightness(BRIGHTNESS);*/
   
-  while (!Serial) {
+  //while (!Serial) {
     Serial.begin(115200);
+  //}
+
+  if (Serial) {
+    Serial.print("Serial Ready\n");
   }
 
-  Serial.print("Serial Ready\n");
+  ring.fill(ring.Color(0, 255, 0));
+  ring.show();
 
   readSensorVal(NULL);
   
