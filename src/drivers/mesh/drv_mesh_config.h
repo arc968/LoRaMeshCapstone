@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-#define BUFFER_PEERS_SIZE 16
+#define BUFFER_PEERS_SIZE 8
 #define BUFFER_ROUTES_SIZE 16
 #define BUFFER_RECENT_PACKETS_SIZE 16
 #define HASHMAP_ROUTES_BUCKET_COUNT 16
@@ -21,7 +21,11 @@ extern "C" {
 #define FREQ_125kHz 125000
 #define FREQ_62_5kHz 62500
 
-#define PREAMBLE_LENGTH 32
+//#define PREAMBLE_LENGTH 8192
+#define PREAMBLE_MS 50
+#define PADDING_MS 10
+#define PACKET_TOA_MAX_SEND 2000
+#define PACKET_TOA_MAX_GENERATE 2500
 
 #define DISCOVERY_INTERVAL_SECONDS 15
 #define DISCOVERY_INTERVAL_MILLIS (DISCOVERY_INTERVAL_SECONDS*1000)
@@ -40,6 +44,28 @@ extern "C" {
 #define LORA_US_PADDING_62_5kHz ((uint64_t)(((LORA_US_FREQ_WIDTH - (LORA_US_CHANNELCOUNT_62_5kHz * FREQ_62_5kHz)) / LORA_US_CHANNELCOUNT_62_5kHz) / 2))
 
 #define DRV_MESH__PACKET_SIZE_MAX 255
+
+static enum drv_lora_bandwidth_e drv_lora_bandwidth_e_arr[] = {
+	DRV_LORA_BW__500kHz,
+	DRV_LORA_BW__250kHz,
+	DRV_LORA_BW__125kHz,
+	//DRV_LORA_BW__62_5kHz,
+};
+static enum drv_lora_spreadingFactor_e drv_lora_spreadingFactor_e_arr[] = {
+	//DRV_LORA_SF__6,
+	DRV_LORA_SF__7,
+	DRV_LORA_SF__8,
+	DRV_LORA_SF__9,
+    //DRV_LORA_SF__10,
+	//DRV_LORA_SF__11,
+	//DRV_LORA_SF__12,
+};
+static enum drv_lora_codingRate_e drv_lora_codingRate_e_arr[] = {
+	DRV_LORA_CR__4_5,
+	DRV_LORA_CR__4_6,
+	DRV_LORA_CR__4_7,
+	DRV_LORA_CR__4_8,
+};
 
 #if defined (__cplusplus)
 }
