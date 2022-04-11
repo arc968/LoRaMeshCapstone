@@ -4,9 +4,8 @@
 extern "C" {
 #endif
 
-static void drv_mesh_buildPacket_disc(struct appointment_s * appt) {
+static void drv_mesh_buildPacket_disc(struct packet_s * raw_packet) {
 	DEBUG_PRINT("\tBuilding discovery packet...\n");
-	struct packet_s * raw_packet = appt->packet;
 	raw_packet->size = sizeof(struct packet_type_disc_s);
 	raw_packet->once = true;
 	struct packet_type_disc_s * packet = (struct packet_type_disc_s *)&(raw_packet->asDisc);
@@ -27,6 +26,7 @@ static void drv_mesh_buildPacket_discReply(struct peer_s * peer, struct packet_s
 	//struct packet_s * raw_packet = peer->packet;
 	raw_packet->size = sizeof(struct packet_type_discReply_s);
 	raw_packet->once = false;
+	raw_packet->puid = 0;
 	struct packet_type_discReply_s * packet = (struct packet_type_discReply_s *)&(raw_packet->asDiscReply);
 	
 	//*packet = packet_type_discReply_s_default;
@@ -94,42 +94,30 @@ static void drv_mesh_buildPacket_discReply(struct peer_s * peer, struct packet_s
 	DEBUG_PRINT("\tBuilt discovery reply packet.\n");
 }
 
-/* static void drv_mesh_buildPacket_discHandshake(struct appointment_s * appt) {
-	struct packet_s * raw_packet = appt->packet;
-	raw_packet->size = sizeof(struct packet_type_discHandshake_s);
-	struct packet_type_discHandshake_s * packet = (struct packet_type_discHandshake_s *)&(raw_packet->asDiscHandshake);
+static void drv_mesh_buildPacket_ack(struct peer_s * peer, struct packet_s * raw_packet, uint32_t puid) {
+	raw_packet->size = sizeof(struct packet_type_ack_s);
+	raw_packet->once = true;
+	struct packet_type_ack_s * ack = (struct packet_type_ack_s *)&(raw_packet->asAck);
+	ack->header.header.type = PACKET_TYPE__LINK;
+	ack->header.index = peer->index;
+	ack->header.counter = peer->counter_data_send++;
+	ack->header.body.type = PACKET_TYPE__ACK;
+	ack->puid = puid;
 	
-} */
+	uint8_t nonce_tmp[24];
+	uint32_t counter_tmp = LIB_BYTEORDER_HTON_U32(ack->header.counter);
+	crypto_blake2b_general(nonce_tmp, sizeof(nonce_tmp), peer->key_data_send, sizeof(peer->key_data_send), (uint8_t *)&(counter_tmp), sizeof(counter_tmp));
+	crypto_lock_aead(ack->header.mac, (uint8_t *)&(ack->header.body), peer->key_data_send, nonce_tmp, (uint8_t *)ack, ((uint8_t *)&(ack->header.mac[0])) - ((uint8_t *)ack), (uint8_t *)&(ack->header.body), sizeof(struct packet_type_ack_s) - (((uint8_t *)&(ack->header.body)) - ((uint8_t *)ack)));
+}
 
-/* static void drv_mesh_buildPacket_ack(struct peer_s * peer) {
-	struct packet_s * raw_packet = appt->packet;
-	
-} */
-
-static void drv_mesh_buildPacket_data(struct appointment_s * appt) {
-	struct packet_s * raw_packet = appt->packet;
+static void drv_mesh_buildPacket_data(struct packet_s * raw_packet) {
+	struct packet_type_data_s * packet = &(raw_packet->asData);
 	
 }
 
-static void drv_mesh_buildPacket_route(struct appointment_s * appt) {
+/* static void drv_mesh_buildPacket_route(struct appointment_s * appt) {
 	struct packet_s * raw_packet = appt->packet;
 	
-}
-
-/* static void drv_mesh_buildPacket(struct appointment_s * appt) {
-	if (appt->type == APPT_SEND_DISC) {
-		drv_mesh_buildPacket_disc(appt);
-	} else if (appt->type == APPT_SEND_DISC_REPLY) {
-		drv_mesh_buildPacket_discReply(appt);
-	}
-	// else if (appt->type == APPT_SEND_DISC_HANDSHAKE) {
-		// drv_mesh_buildPacket_discHandshake(appt);
-	// } 
-	else if (appt->type == APPT_SEND_DATA) {
-		drv_mesh_buildPacket_data(appt);
-	} else {
-		DEBUG_PRINT("\tERROR: Unexpected appointment type in drv_mesh_buildPacket().\n");
-	}
 } */
 
 static void drv_mesh_worker_send_finish(void * arg) {
@@ -144,11 +132,6 @@ static void drv_mesh_worker_send(void * arg) {
 	__label__ EXIT;
 	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
 	struct appointment_s * appt = (struct appointment_s *) arg;
-	
-/* 	if (appt->type == APPT_RECV) { //error checking
-		DEBUG_PRINT("\tERROR: Unexpected appointment type in drv_mesh_worker_send()\n");
-		goto EXIT;
-	} */
 	
 	{lib_datetime_realtime_t rt;
 	drv_timer_getRealtime(&rt);

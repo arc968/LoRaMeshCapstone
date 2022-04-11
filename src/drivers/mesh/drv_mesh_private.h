@@ -43,11 +43,12 @@ char * peer_status_string_arr[] = {
 struct peer_s {
 	struct peer_s * next;
 	enum peer_status_e status;
-	//peer_uid_t uid;
-	uint16_t index;
+	
 	uint8_t key_dh_pub[32];
 	uint8_t key_chan_send[8];
 	uint8_t key_chan_recv[8];
+	
+	uint16_t index;
 	uint32_t counter_data_send;
 	uint8_t key_data_send[32];
 	uint32_t counter_data_recv;
@@ -102,6 +103,7 @@ struct appointment_s {
 
 struct packet_s {
 	struct packet_s * next;
+	uint32_t puid; //only matters if bool once is false
 	bool once;
 	uint8_t size;
 	union {
@@ -112,8 +114,8 @@ struct packet_s {
 		struct packet_type_discReply_s asDiscReply;
 		//struct packet_type_discHandshake_s asDiscHandshake;
 		struct packet_type_ack_s asAck;
-		struct packet_type_nack_s asNack;
-		struct packet_type_route_s asRoute;
+		//struct packet_type_nack_s asNack;
+		//struct packet_type_route_s asRoute;
 		uint8_t raw[DRV_MESH__PACKET_SIZE_MAX];
 	};
 } __attribute__((packed, aligned(1)));
@@ -159,6 +161,12 @@ static struct state_s {
 
 	struct packet_s * head_packet_empty;
 	struct packet_s packets[BUFFER_PACKETS_SIZE];
+	struct {
+		uint16_t count;
+		uint16_t head;
+		uint16_t tail;
+		struct packet_s * buf[BUFFER_OUTBOUND_PACKETS_SIZE];
+	} rb_outboundPackets;
 
 	struct appointment_s * head_appt_empty;
 	struct appointment_s appointments[BUFFER_APPOINTMENTS_SIZE];

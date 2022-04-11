@@ -71,7 +71,7 @@ static struct packet_type_disc_s {
 #pragma scalar_storage_order default
 
 #pragma scalar_storage_order big-endian
-struct packet_type_discReply_s { //CAN WE JUST SEND THIS BACK AND FORTH? CAN ACK COMPLETE THE HANDSHAKE INSTEAD?
+struct packet_type_discReply_s {
 	struct packet_header_s header;
 	uint8_t key_once_pub[32];
 	struct {
@@ -117,57 +117,48 @@ struct packet_linkHeader_s {
 #pragma scalar_storage_order big-endian
 struct packet_type_ack_s {
 	struct packet_linkHeader_s header;
-	uint32_t counter_range_min;
-	uint32_t counter_range_max;
+	uint32_t puid;
 } __attribute__((packed, aligned(1))) const packet_type_ack_s_default = {
 	.header.body.type = PACKET_TYPE__ACK,
 };
 #pragma scalar_storage_order default
 
-#pragma scalar_storage_order big-endian
+/* #pragma scalar_storage_order big-endian
 struct packet_type_nack_s {
 	struct packet_linkHeader_s header;
-	uint32_t counter_range_min;
-	uint32_t counter_range_max;
+	uint32_t puid;
 } __attribute__((packed, aligned(1)));
-#pragma scalar_storage_order default
+#pragma scalar_storage_order default */
 
 #pragma scalar_storage_order big-endian
 struct packet_type_data_s {
 	struct packet_linkHeader_s header;
 	//dynamic, "public"
 	uint8_t ttl; //increments on each hop
-	//uint32_t puid; //random on each hop for ACK purposes
-	uint16_t index_send;
-	uint16_t index_recv;
 	//static, "public"
 	ipv4_t ip_src;
-	port_t port_src;
 	ipv4_t ip_dst;
+	port_t port_src;
 	port_t port_dst;
+	uint32_t num_seq;
+	uint32_t num_ack;
 	//"private"
-	//uint16_t seq_num;
-	//uint16_t ack_num;
-	uint32_t counter;
 	uint8_t data[];
 } __attribute__((packed, aligned(1)));
 #pragma scalar_storage_order default
 
-#pragma scalar_storage_order big-endian
+/* #pragma scalar_storage_order big-endian
 struct packet_type_route_s {
 	struct packet_linkHeader_s header;
 	//dynamic, "public"
 	uint8_t ttl; //increments on each hop
-	//uint32_t puid; //random on each hop for ACK purposes
-	uint16_t index_send;
-	uint16_t index_recv;
 	//static, "public"
 	ipv4_t ip_src;
 	ipv4_t ip_dst;
-	uint32_t counter;
-	uint8_t data[];
+	uint32_t puid;
+	uint8_t pttl;
 } __attribute__((packed, aligned(1)));
-#pragma scalar_storage_order default
+#pragma scalar_storage_order default */
 
 #if defined (__cplusplus)
 }

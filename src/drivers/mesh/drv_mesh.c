@@ -142,7 +142,7 @@ static void drv_mesh_worker_scheduler(void * arg) {
 					insertEmptyAppt(appt);
 					return;
 				}
-				drv_mesh_buildPacket_disc(appt);
+				drv_mesh_buildPacket_disc(appt->packet);
 				DEBUG_PRINT("\tINFO: Scheduling disc send at t+%lu\n", appt->realtime - rt_disc);
 				setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), appt->realtime, seed, appt->packet->size);
 				err = drv_sched_once_at(drv_mesh_worker_send, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
@@ -169,7 +169,7 @@ static void drv_mesh_worker_scheduler(void * arg) {
 			crypto_blake2b_general((uint8_t *)&seed, sizeof(seed), peer->key_chan_recv, sizeof(peer->key_chan_recv), (uint8_t *)&(rt_disc), sizeof(rt_disc)); //doesn't handle byteorder correctly
 			seed = LIB_BYTEORDER_HTON_U32(seed);
 			
-			uint32_t offset = lib_misc_fastrange32(seed, DISCOVERY_INTERVAL_MILLIS - 10000) + 5000; //use middle 5 seconds
+			uint32_t offset = lib_misc_fastrange32(seed, (DISCOVERY_INTERVAL_MILLIS - DISCOVERY_PADDING) - PACKET_TOA_MAX_GENERATE) + DISCOVERY_PADDING;
 			appt->realtime = rt_disc + offset;
 			//appt->type = APPT_RECV;
 			//appt->peer = NULL;
@@ -196,13 +196,13 @@ static void drv_mesh_worker_scheduler(void * arg) {
 					continue; //no packets queued
 				}
 				packet = *RB_GET(peer->rb_packets);
-				if (peer->status == PEER_ACQUAINTANCE && packet->header.type == PACKET_TYPE__DISC_REPLY) {
+				/* if (peer->status == PEER_ACQUAINTANCE && packet->header.type == PACKET_TYPE__DISC_REPLY) {
 					insertEmptyPacket(packet);
 					if (!RB_COUNT(peer->rb_packets)) {
 						continue; //no packets queued
 					}
 					packet = *RB_GET(peer->rb_packets);
-				}
+				} */
 				if (!packet->once) {
 					*RB_PUT(peer->rb_packets) = packet;
 				}
@@ -221,7 +221,7 @@ static void drv_mesh_worker_scheduler(void * arg) {
 				crypto_blake2b_general((uint8_t *)&seed, sizeof(seed), peer->key_chan_send, sizeof(peer->key_chan_send), (uint8_t *)&(rt_disc), sizeof(rt_disc)); //doesn't handle byteorder correctly
 				seed = LIB_BYTEORDER_HTON_U32(seed);
 				
-				uint32_t offset = lib_misc_fastrange32(seed, DISCOVERY_INTERVAL_MILLIS - 10000) + 5000; //use middle 5 seconds
+				uint32_t offset = lib_misc_fastrange32(seed, (DISCOVERY_INTERVAL_MILLIS - DISCOVERY_PADDING) - PACKET_TOA_MAX_GENERATE) + DISCOVERY_PADDING;
 				appt->realtime = rt_disc + offset;
 				setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), appt->realtime, seed, packet->size);
 				
@@ -329,8 +329,46 @@ void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *)) {
 		//DEBUG_PRINT("UID: [%llX]\n", state.uid);
 }
 
-enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * packet) {
-	return 0;
+enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * mesh_packet) {
+
+	struct drv_mesh_stats_s stats;
+	drv_mesh_getStats(&stats);
+	if (stats.peer_count == 0) {
+		DEBUG_PRINT("\tWARNING: Failed to send mesh packet, no peers available\n");
+		return DRV_MESH_ERR__NO_PEERS;
+	}
+
+/* 	struct route_s * route = findRoute(packet->ip, 0);
+	if (route == NULL) {
+		DEBUG_PRINT("\tWARNING: Failed to send mesh packet, no route available\n");
+		return DRV_MESH_ERR__NO_ROUTE;
+	} */
+
+	if (mesh_packet->len > DRV_MESH__PAYLOAD_SIZE_MAX) {
+		DEBUG_PRINT("\tWARNING: Failed to send mesh packet, payload too large\n");
+		return DRV_MESH_ERR__MESSAGE_TOO_LARGE;
+	}
+
+	if (!RB_SPACE(state.rb_outboundPackets)) {
+		DEBUG_PRINT("\tWARNING: Failed to send mesh packet, outbound packet buffer full\n");
+		return DRV_MESH_ERR__BUFFER_FULL;
+	}
+
+	struct packet_s * raw_packet = popEmptyPacket();
+	if (raw_packet == NULL) {
+		DEBUG_PRINT("\tWARNING: Failed to send mesh packet, no empty packets available\n");
+		return DRV_MESH_ERR__BUFFER_FULL;
+	}
+
+	raw_packet->size = mesh_packet->len;
+	struct packet_type_data_s * packet = &(raw_packet->asData);
+	memcpy(packet->ip_dst, mesh_packet->ip, sizeof(ipv4_t));
+	packet->port_dst = mesh_packet->port;
+	memcpy(packet->data, mesh_packet->buf, mesh_packet->len);
+
+	*RB_PUT(state.rb_outboundPackets) = raw_packet;
+
+	return DRV_MESH_ERR__NONE;
 }
 
 #endif

@@ -8,7 +8,7 @@ extern "C" {
 
 #include <stdint.h>
 
-#define DRV_MESH__PAYLOAD_SIZE_MAX 255
+#define DRV_MESH__PAYLOAD_SIZE_MAX 128
 
 enum drv_mesh_error_e {
 	DRV_MESH_ERR__NONE = 0,
@@ -21,6 +21,7 @@ enum drv_mesh_error_e {
 
 struct drv_mesh_packet_s {
 	ipv4_t ip;
+	uint16_t port;
 	uint8_t len;
 	uint8_t buf[DRV_MESH__PAYLOAD_SIZE_MAX];
 };

@@ -67,12 +67,12 @@ static struct route_s * deleteOldestRoute(void) { //should only be called if all
 
 static struct route_s * findRoute(ipv4_t ip_src, lib_datetime_realtime_t realtime) {
 	if (ip_src[0] != 10) {
-		state.route_gateway.last_usage = realtime;
+		if (realtime != 0) state.route_gateway.last_usage = realtime;
 		return &(state.route_gateway);
 	}
 	struct route_s * route = state.hm_route_buckets[getBucketIndex(ip_src)];
 	while (route != NULL && route->ip_src != ip_src) route = route->next;
-	if (route != NULL) route->last_usage = realtime;
+	if (route != NULL && realtime != 0) route->last_usage = realtime;
 	return route;
 }
 
