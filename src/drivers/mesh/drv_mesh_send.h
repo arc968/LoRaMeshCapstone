@@ -154,6 +154,7 @@ static void drv_mesh_worker_send(void * arg) {
 	}
 	
 	state.radio_mutex = 1;
+	
 	drv_lora_setMode(&state.radio, DRV_LORA_MODE__IDLE);
 	
 	setupRadioFromConfig(&state.radio, &(appt->radio_cfg));

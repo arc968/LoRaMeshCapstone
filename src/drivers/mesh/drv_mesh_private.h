@@ -122,6 +122,8 @@ static struct state_s {
 	uint8_t psk[32];
 	uint8_t key_hashtable[8];
 
+	lib_datetime_realtime_t scheduleBy;
+
 	void (*func_onRecv_ptr)(struct drv_mesh_packet_s *);
 	
 	struct {

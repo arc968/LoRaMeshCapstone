@@ -14,23 +14,23 @@ enum job_type_e {
 };
 
 struct job_s {
-	struct job_s * next;
-	lib_datetime_interval_t interval;
-	lib_datetime_interval_t time;
-	void (*func_ptr)(void*);
-	void * func_arg;
-	enum drv_sched_pri_e priority;
-	enum job_type_e type;
+	struct job_s * volatile next;
+	volatile lib_datetime_interval_t interval;
+	volatile lib_datetime_interval_t time;
+	void (*volatile func_ptr)(void*);
+	void * volatile func_arg;
+	volatile enum drv_sched_pri_e priority;
+	volatile enum job_type_e type;
 };
 
 static struct state_s {
-	struct job_s * head_ready;
-	struct job_s * head_timed;
+	struct job_s * volatile head_ready;
+	struct job_s * volatile head_timed;
 	//struct job_s * head_later;
-	struct job_s * head_empty;
-	struct job_s * head_onAbsoluteAvailable;
-	void (*func_onSleep_ptr)(void);
-	void (*func_onWake_ptr)(void);
+	struct job_s * volatile head_empty;
+	struct job_s * volatile head_onAbsoluteAvailable;
+	void (*volatile func_onSleep_ptr)(void);
+	void (*volatile func_onWake_ptr)(void);
 	//lib_datetime_time_t lastRunTime;
 	struct job_s jobs[DRV_SCHED__MAX_JOBS];
 } state;
@@ -78,8 +78,8 @@ static struct job_s * popEmptyJob(void) {
 	struct job_s * job = state.head_empty; //get empty job slot
 	if (job != NULL) {
 		state.head_empty = job->next; //remove from linked list of empty jobs
+		job->next = NULL;
 	}
-	job->next = NULL;
 	return job;
 }
 
@@ -154,6 +154,7 @@ static enum drv_sched_err_e schedule(void (*func_ptr)(void*), void * func_arg, e
 	struct job_s * job = popEmptyJob();
 	if (job == NULL) {
 		if (interruptsEnabled) hal_interrupt_enable();
+		DEBUG_PRINT("\tWARNING: Failed to schedule job, no job slots remaining.\n");
 		return DRV_SCHED_ERR__NO_JOB_SLOTS; //failed to schedule, no job slots remaining
 	}
 	
@@ -170,13 +171,10 @@ static enum drv_sched_err_e schedule(void (*func_ptr)(void*), void * func_arg, e
 	} else if (type == JOB_TYPE__ONCE_AT || type == JOB_TYPE__REPEAT_AT) {
 		job->time = delay_or_timeOfDay;
 		insertTimedJob(job);
-		/* if (curTime < job->time) {
-			insertTimedJob(job);
-		} else {
-			insertLaterJob(job);
-		} */
 	} else {
 		//shouldn't be possible
+		DEBUG_PRINT("\tERROR: Unexpected job type in schedule().\n");
+		insertEmptyJob(job);
 	}
 	
 	if (interruptsEnabled) hal_interrupt_enable();

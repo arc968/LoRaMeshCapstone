@@ -28,8 +28,8 @@ static struct route_s * popEmptyRoute(void) {
 	struct route_s * route = state.head_route_empty;
 	if (route != NULL) {
 		state.head_route_empty = route->next;
+		route->next = NULL;
 	}
-	route->next = NULL;
 	return route;
 }
 
@@ -102,8 +102,8 @@ static struct peer_s * popEmptyPeer(void) {
 	struct peer_s * peer = state.head_peer_empty;
 	if (peer != NULL) {
 		state.head_peer_empty = peer->next;
+		peer->next = NULL;
 	}
-	peer->next = NULL;
 	return peer;
 }
 
@@ -138,8 +138,8 @@ static struct packet_s * popEmptyPacket(void) {
 	struct packet_s * packet = state.head_packet_empty;
 	if (packet != NULL) {
 		state.head_packet_empty = packet->next;
+		packet->next = NULL;
 	}
-	packet->next = NULL;
 	return packet;
 }
 
@@ -152,8 +152,8 @@ static struct appointment_s * popEmptyAppt(void) {
 	struct appointment_s * appt = state.head_appt_empty;
 	if (appt != NULL) {
 		state.head_appt_empty = appt->next;
+		appt->next = NULL;
 	}
-	appt->next = NULL;
 	return appt;
 }
 
@@ -204,8 +204,8 @@ static uint64_t getCenterFrequency(channel_t channel, enum drv_lora_bandwidth_e 
 }
 
 static void setupRadioFromConfig(struct drv_lora_s * radio, struct radio_cfg_s * cfg) {
-	DEBUG_PRINT("\t"); DEBUG_PRINT_FUNCTION();
-	DEBUG_PRINT("\t\tpreamble:%hu, bandwidth:%lu, frequency:%llu, spreadingFactor:%lu, codingRate:4/%lu\n", cfg->preambleSymbols, cfg->bandwidth, cfg->frequency, cfg->spreadingFactor, cfg->codingRate+4);
+	//DEBUG_PRINT("\t"); DEBUG_PRINT_FUNCTION();
+	DEBUG_PRINT("\tpreamble:%hu, BW:%lu, Hz:%llu, SF:%lu, CR:4/%lu\n", cfg->preambleSymbols, cfg->bandwidth, cfg->frequency, cfg->spreadingFactor, cfg->codingRate+4);
 	
 	drv_lora_setPreamble(radio, cfg->preambleSymbols);
 	drv_lora_setBandwidth(radio, cfg->bandwidth);
@@ -230,6 +230,7 @@ static void setupRadioFromConfig(struct drv_lora_s * radio, struct radio_cfg_s *
        __typeof__ (b) _b = (b); \
      _a > _b ? _a : _b; })
 #endif
+
 static void estimateTimeOnAirInMsFromRadioCfg(struct radio_cfg_s * cfg, uint8_t packet_size) {
 	const uint32_t CRC = 1;
 	const uint32_t IH = 0;
@@ -240,11 +241,13 @@ static void estimateTimeOnAirInMsFromRadioCfg(struct radio_cfg_s * cfg, uint8_t 
 	uint32_t n_payload = 8 + (max(((num/den) + 1)*(cfg->codingRate + 4), 0)); //instead of ceil, add 1
 	uint32_t t_payload = (n_payload * 1000) / Rs;
 
-	cfg->preambleSymbols = (uint16_t)((PREAMBLE_MS*Rs)/1000) - 4;
+	cfg->preambleSymbols = (uint16_t)((PREAMBLE_MS*Rs)/1000) + 4;
 	//uint32_t t_preamble = ((cfg->preambleSymbols + 5) * 1000) / Rs; //should be 4.25, rounding up to 5
 
 	cfg->toaEstimate = PREAMBLE_MS + t_payload;
-	DEBUG_PRINT("\tPacket ToA estimate: %ums preamble (%u symbols) + %ums payload (%u symbols) = %ums packet (%hhu bytes)\n", PREAMBLE_MS, cfg->preambleSymbols, t_payload, n_payload, cfg->toaEstimate, packet_size);
+	if (packet_size != 0) {
+		DEBUG_PRINT("\tPacket ToA estimate: %ums preamble (%u symbols) + %ums payload (%u symbols) = %ums packet (%hhu bytes)\n", PREAMBLE_MS, cfg->preambleSymbols, t_payload, n_payload, cfg->toaEstimate, packet_size);
+	}
 }
 
 static void setRadioCfgAtTimeFromSeed(struct radio_cfg_s * cfg, lib_datetime_realtime_t rt, uint32_t seed, uint8_t packet_size) {
@@ -263,6 +266,7 @@ static void setRadioCfgAtTimeFromSeed(struct radio_cfg_s * cfg, lib_datetime_rea
 		seed = LIB_BYTEORDER_NTOH_U32(lib_misc_XORshiftLFSR32(LIB_BYTEORDER_HTON_U32(seed)));
 		cfg->codingRate = drv_lora_codingRate_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_codingRate_e_arr)/sizeof(drv_lora_codingRate_e_arr[0]))];
 		estimateTimeOnAirInMsFromRadioCfg(cfg, packet_size);
+		DEBUG_PRINT("\t\tradio cfg seed: %u\n", seed);
 	} while (cfg->toaEstimate > PACKET_TOA_MAX_GENERATE);
 }
 

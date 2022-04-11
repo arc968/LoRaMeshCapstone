@@ -22,15 +22,20 @@ extern "C" {
 #define FREQ_125kHz 125000
 #define FREQ_62_5kHz 62500
 
+#define MAX_RECV_BAILOUT_TIME 5000
+
 //#define PREAMBLE_LENGTH 8192
 #define PREAMBLE_MS 50
-#define PADDING_MS 10
+#define PADDING_MS 50
 #define PACKET_TOA_MAX_GENERATE 2000
 #define PACKET_TOA_MAX_SEND PACKET_TOA_MAX_GENERATE
 
-#define DISCOVERY_INTERVAL_SECONDS 15
+#define SCHEDULER_PRE_DISCOVERY_INTERVAL_MS 2500 //2500
+#define SCHEDULER_PRE_DISCOVERY_WINDOW_MS 500 //500
+#define DISCOVERY_INTERVAL_SECONDS 15 
 #define DISCOVERY_INTERVAL_MILLIS (DISCOVERY_INTERVAL_SECONDS*1000)
-#define DISCOVERY_PADDING (PREAMBLE_MS + (2*PADDING_MS))
+#define DISCOVERY_PADDING PACKET_TOA_MAX_GENERATE //(PREAMBLE_MS + (2*PADDING_MS)) + 500
+//(DISCOVERY_INTERVAL_MILLIS - DISCOVERY_PADDING) must be greater than PACKET_TOA_MAX_GENERATE
 
 #define LORA_US_FREQ 902000000
 #define LORA_US_FREQ_MIN LORA_US_FREQ
@@ -52,16 +57,16 @@ static enum drv_lora_bandwidth_e drv_lora_bandwidth_e_arr[] = {
 	DRV_LORA_BW__500kHz,
 	DRV_LORA_BW__250kHz,
 	DRV_LORA_BW__125kHz,
-	//DRV_LORA_BW__62_5kHz,
+	DRV_LORA_BW__62_5kHz,
 };
 static enum drv_lora_spreadingFactor_e drv_lora_spreadingFactor_e_arr[] = {
-	//DRV_LORA_SF__6,
+	//DRV_LORA_SF__6, //do not use
 	DRV_LORA_SF__7,
 	DRV_LORA_SF__8,
 	DRV_LORA_SF__9,
-	//DRV_LORA_SF__10,
-	//DRV_LORA_SF__11,
-	//DRV_LORA_SF__12,
+	DRV_LORA_SF__10,
+	DRV_LORA_SF__11,
+	DRV_LORA_SF__12,
 };
 static enum drv_lora_codingRate_e drv_lora_codingRate_e_arr[] = {
 	DRV_LORA_CR__4_5,

@@ -153,6 +153,10 @@ void drv_lora_setMode(struct drv_lora_s * handle, enum drv_lora_mode_e mode) {
 					drv_lora_writeRegister(REG_IRQ_FLAGS, tirqFlags);
 					// reset FIFO address
 					drv_lora_writeRegister(REG_FIFO_ADDR_PTR, 0);
+					// clear payload length
+					drv_lora_writeRegister(REG_PAYLOAD_LENGTH, 1);
+					// set explicit header mode
+					drv_lora_writeRegister(REG_MODEM_CONFIG_1, drv_lora_readRegister(REG_MODEM_CONFIG_1) & 0xfe);
 					// put in single RX mode
 					drv_lora_writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_RX_SINGLE);
 				}
@@ -399,6 +403,10 @@ bool drv_lora_isHeaderValid(struct drv_lora_s * handle) {
 
 uint8_t drv_lora_getStatusReg(struct drv_lora_s * handle) {
 	return drv_lora_readRegister(REG_MODEM_STATUS);
+}
+
+uint8_t drv_lora_getHeaderPacketSize(struct drv_lora_s * handle) {
+	return drv_lora_readRegister(REG_PAYLOAD_LENGTH);
 }
 
 bool drv_lora_isRecvTimeout(struct drv_lora_s * handle) {

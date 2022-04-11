@@ -68,9 +68,9 @@ void onRecv(struct drv_mesh_packet_s *) {
 }
 
 void checkSerial(void * arg __attribute__((unused))) {
-	Serial.print("checkSerial()\n");
+	//Serial.print("checkSerial()\n");
 	uint8_t buf[256];
-	int index = 0;
+	uint32_t index = 0;
 	while (Serial.available() > 0 && index < sizeof(buf)-1) {
 		buf[index++] = Serial.read();
 	}

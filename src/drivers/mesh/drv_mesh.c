@@ -90,7 +90,20 @@ static void printPeerStats(struct peer_s * peer) {
 
 static void drv_mesh_worker_scheduler(void * arg) {
 	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
-	
+
+	lib_datetime_realtime_t rt_disc;
+	drv_timer_getRealtime(&rt_disc);
+	if (rt_disc >= state.scheduleBy - SCHEDULER_PRE_DISCOVERY_WINDOW_MS) {
+		DEBUG_PRINT("\tWARNING: drv_mesh_worker_scheduler() late, skipping.\n");
+		state.scheduleBy += DISCOVERY_INTERVAL_MILLIS;
+		return;
+	} else {
+		state.scheduleBy += DISCOVERY_INTERVAL_MILLIS;
+	}
+	rt_disc = (rt_disc / DISCOVERY_INTERVAL_MILLIS) * DISCOVERY_INTERVAL_MILLIS;
+	rt_disc += DISCOVERY_INTERVAL_MILLIS;
+	//rt_disc is the start of the upcoming period
+
 	{ // debug output
 		struct drv_mesh_stats_s stats;
 		drv_mesh_getStats(&stats);
@@ -102,11 +115,6 @@ static void drv_mesh_worker_scheduler(void * arg) {
 		}
 		DEBUG_PRINT_ARRAY(state.ip);
 	}
-
-	lib_datetime_realtime_t rt_disc;
-	drv_timer_getRealtime(&rt_disc);
-	rt_disc = (rt_disc / DISCOVERY_INTERVAL_MILLIS) * DISCOVERY_INTERVAL_MILLIS;
-	rt_disc += DISCOVERY_INTERVAL_MILLIS;
 	
 	{ //schedule global discovery broadcast/receive
 		struct appointment_s * appt = popEmptyAppt();
@@ -115,16 +123,23 @@ static void drv_mesh_worker_scheduler(void * arg) {
 			return;
 		}
 		{
-			uint32_t tmp = 0;//lib_misc_fastrange32(short_rt, 5*1000); //Will be in first 5 seconds of block
+			uint32_t seed;
+
+			// uint64_t rt_disc_tmp = LIB_BYTEORDER_HTON_U64(rt_disc);
+			// crypto_blake2b_general((uint8_t *)&seed, sizeof(seed), state.psk, sizeof(state.psk), (uint8_t *)&(rt_disc_tmp), sizeof(rt_disc_tmp));
+			// seed = LIB_BYTEORDER_NTOH_U32(seed);
+
+			uint32_t tmp = 0; //lib_misc_fastrange32(seed, DISCOVERY_INTERVAL_MILLIS);
 			appt->realtime = rt_disc + tmp;
 			lib_datetime_interval_t curTime = drv_timer_getMonotonicTime();
-			uint32_t tmp2 = (uint32_t)constrainU64(map(curTime, 0, LIB_DATETIME__MS_IN_DAY/24, 4, 20), 2, 20); // Ends at sending 1/n times
+			uint32_t tmp2 = (uint32_t)constrainU64(map(curTime, 0, LIB_DATETIME__MS_IN_DAY/24, 8, 20), 8, 20); // Ends at sending 1/n times
 			uint32_t tmp3 = lib_misc_fastrange32(drv_rand_getU32(), tmp2);
 			
 			//appt->peer = NULL;
 
-			uint32_t seed;
-			crypto_blake2b_general((uint8_t *)&seed, sizeof(seed), state.psk, sizeof(state.psk), (uint8_t *)&(appt->realtime), sizeof(appt->realtime));
+			//uint32_t seed;
+			uint64_t appt_rt_tmp = LIB_BYTEORDER_HTON_U64(appt->realtime);
+			crypto_blake2b_general((uint8_t *)&seed, sizeof(seed), state.psk, sizeof(state.psk), (uint8_t *)&(appt_rt_tmp), sizeof(appt_rt_tmp));
 			seed = LIB_BYTEORDER_NTOH_U32(seed);
 			
 			enum drv_sched_err_e err;
@@ -146,6 +161,7 @@ static void drv_mesh_worker_scheduler(void * arg) {
 				drv_mesh_buildPacket_disc(appt->packet);
 				DEBUG_PRINT("\tINFO: Scheduling disc send at t+%lu\n", appt->realtime - rt_disc);
 				setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), appt->realtime, seed, appt->packet->size);
+				//estimateTimeOnAirInMsFromRadioCfg(&(appt->radio_cfg), appt->packet->size);
 				err = drv_sched_once_at(drv_mesh_worker_send, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
 			}
 			
@@ -237,6 +253,7 @@ static void drv_mesh_worker_scheduler(void * arg) {
 				DEBUG_PRINT("\tINFO: Scheduling peer send at t+%lu\n", offset);
 
 				setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), appt->realtime, seed, packet->size);
+				//estimateTimeOnAirInMsFromRadioCfg(&(appt->radio_cfg), packet->size);
 				
 				if (packet->once) {
 					appt->packet = packet;
@@ -259,7 +276,7 @@ static void drv_mesh_worker_scheduler(void * arg) {
 			}
 		}
 	}
-
+	DEBUG_PRINT_REALTIME(); DEBUG_PRINT("drv_mesh_worker_scheduler() return\n");
 }
 
 //runs once absolute scheduling is available
@@ -272,7 +289,8 @@ static void drv_mesh_start(void * arg __attribute__((unused))) {
 	rt = (rt / DISCOVERY_INTERVAL_MILLIS) * DISCOVERY_INTERVAL_MILLIS;
 	rt += DISCOVERY_INTERVAL_MILLIS;
 	
-	enum drv_sched_err_e err = drv_sched_repeating_at(drv_mesh_worker_scheduler, NULL, DRV_SCHED_PRI__REALTIME, rt-5000, DISCOVERY_INTERVAL_MILLIS);
+	state.scheduleBy = rt;
+	enum drv_sched_err_e err = drv_sched_repeating_at(drv_mesh_worker_scheduler, NULL, DRV_SCHED_PRI__REALTIME, rt-SCHEDULER_PRE_DISCOVERY_INTERVAL_MS, DISCOVERY_INTERVAL_MILLIS);
 	if (err != DRV_SCHED_ERR__NONE) { //error checking
 		DEBUG_PRINT("\tWARNING: Failed to schedule drv_mesh_worker_scheduler()\n");
 		return;

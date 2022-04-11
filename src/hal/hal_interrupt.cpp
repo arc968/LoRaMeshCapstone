@@ -1,11 +1,13 @@
 #define HAL_LIB
 #include "hal_interrupt.h"
 
-uint8_t globalinterruptsenabled = 1;
+volatile uint8_t globalinterruptsenabled = 1;
 
 void hal_interrupt_enable(void) {
 	#if defined(HW_ARDUINO)
+		__DSB();
 		interrupts();
+		__DSB();
 	#elif defined(HW_MKRWAN1300_H)
 		
 	#elif defined(HW_RAK4260_H)
@@ -24,7 +26,9 @@ void hal_interrupt_enable(void) {
 
 void hal_interrupt_disable(void) {
 	#if defined(HW_ARDUINO)
+		__DSB();
 		noInterrupts();
+		__DSB();
 	#elif defined(HW_MKRWAN1300_H)
 		
 	#elif defined(HW_RAK4260_H)
@@ -50,7 +54,9 @@ bool hal_interrupt_isEnabled(void) {
 void hal_interrupt_attachPin(pin_t pin, void (*isr)(void), enum hal_interrupt_mode_e mode) {
 	#if defined(HW_ARDUINO)
 		#if defined(HW_MKRWAN1300_H)
+			__DSB();
 			attachInterrupt(digitalPinToInterrupt(pin), isr, (PinStatus) mode);
+			__DSB();
 		#else
 			attachInterrupt(digitalPinToInterrupt(pin), isr, mode);
 		#endif

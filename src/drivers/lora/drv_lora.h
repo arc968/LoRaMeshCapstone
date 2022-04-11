@@ -24,9 +24,9 @@ enum drv_lora_spreadingFactor_e {
 	DRV_LORA_SF__7 = 7,
 	DRV_LORA_SF__8 = 8,
 	DRV_LORA_SF__9 = 9,
-	//DRV_LORA_SF__10 = 10,
-	//DRV_LORA_SF__11 = 11,
-	//DRV_LORA_SF__12 = 12,
+	DRV_LORA_SF__10 = 10,
+	DRV_LORA_SF__11 = 11,
+	DRV_LORA_SF__12 = 12,
 };
 
 enum drv_lora_codingRate_e {
@@ -108,6 +108,8 @@ bool drv_lora_isSignalSynchronized(struct drv_lora_s * handle);
 bool drv_lora_isHeaderValid(struct drv_lora_s * handle);
 bool drv_lora_isRecvTimeout(struct drv_lora_s * handle);
 uint8_t drv_lora_getStatusReg(struct drv_lora_s * handle);
+
+uint8_t drv_lora_getHeaderPacketSize(struct drv_lora_s * handle);
 
 uint8_t drv_lora_random(struct drv_lora_s * handle);
 
