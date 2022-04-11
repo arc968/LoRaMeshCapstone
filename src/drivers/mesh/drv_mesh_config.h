@@ -46,6 +46,7 @@ extern "C" {
 #define LORA_US_PADDING_62_5kHz ((uint64_t)(((LORA_US_FREQ_WIDTH - (LORA_US_CHANNELCOUNT_62_5kHz * FREQ_62_5kHz)) / LORA_US_CHANNELCOUNT_62_5kHz) / 2))
 
 #define DRV_MESH__PACKET_SIZE_MAX 255
+#define DRV_MESH__PAYLOAD_SIZE_MAX 192
 
 static enum drv_lora_bandwidth_e drv_lora_bandwidth_e_arr[] = {
 	DRV_LORA_BW__500kHz,

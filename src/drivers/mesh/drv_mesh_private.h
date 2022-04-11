@@ -121,6 +121,8 @@ static struct state_s {
 	//uint8_t privkey[32];
 	uint8_t psk[32];
 	uint8_t key_hashtable[8];
+
+	void (*func_onRecv_ptr)(struct drv_mesh_packet_s *);
 	
 	struct {
 		uint16_t head;
@@ -143,6 +145,7 @@ static struct state_s {
 
 	struct packet_s * head_packet_empty;
 	struct packet_s packets[BUFFER_PACKETS_SIZE];
+	
 	struct {
 		uint16_t count;
 		uint16_t head;

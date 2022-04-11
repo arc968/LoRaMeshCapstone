@@ -10,19 +10,6 @@ enum packet_type_e {
 	PACKET_TYPE__AUTH,
 	PACKET_TYPE__LINK,
 };
-	//layer 2 (Data Link)
-/* 	//layer 3 (Network) (Relayable)
-	PACKET_TYPE__DATA,
-	PACKET_TYPE__ACK,
-	PACKET_TYPE__NACK,
-	PACKET_TYPE__ROUTE, */
-
-
-/* enum nack_reason_e {
-	NACK_REASON__NONE = 0,
-	NACK_REASON__NO_ROUTE,
-	NACK_REASON__BUFFER_FULL,
-}; */
 
 #pragma scalar_storage_order big-endian
 struct packet_header_s {
@@ -72,19 +59,43 @@ struct packet_type_link_s {
 		uint16_t index;
 		uint32_t counter;
 	} auth;
+	uint8_t mac[16]; //poly1305
 	struct {
 		uint32_t ack;
 	} lock;
-	uint8_t mac[16]; //poly1305
-	uint8_t data[];
+	uint8_t payload[];
 } __attribute__((packed, aligned(1))) const packet_type_link_s_default = {
 	.auth.header.type = PACKET_TYPE__LINK,
 };
 #pragma scalar_storage_order default
 
-/* #pragma scalar_storage_order big-endian
-struct packet_type_data_s {
-	struct packet_link_s link;
+enum payload_type_e {
+	PAYLOAD_TYPE__NONE = 0,
+	PAYLOAD_TYPE__DATA,
+	//PAYLOAD_TYPE__ACK,
+	//PAYLOAD_TYPE__NACK,
+	//PAYLOAD_TYPE__FLOOD,
+	//PAYLOAD_TYPE__BROADCAST,
+	//PAYLOAD_TYPE__BEST_EFFORT,
+	//PAYLOAD_TYPE__RELIABLE,
+	//PAYLOAD_TYPE__ROUTE,
+};
+
+/* enum nack_reason_e {
+	NACK_REASON__NONE = 0,
+	NACK_REASON__NO_ROUTE,
+	NACK_REASON__BUFFER_FULL,
+}; */
+
+#pragma scalar_storage_order big-endian
+struct payload_header_s {
+	uint8_t type;
+} __attribute__((packed, aligned(1)));
+#pragma scalar_storage_order default
+
+#pragma scalar_storage_order big-endian
+struct payload_type_data_s {
+	struct payload_header_s header;
 	//dynamic, "public"
 	uint8_t ttl; //increments on each hop
 	//static, "public"
@@ -96,10 +107,18 @@ struct packet_type_data_s {
 	uint32_t num_ack;
 	//"private"
 	uint8_t data[];
-} __attribute__((packed, aligned(1))) const packet_type_data_s_default = {
-	.link.header.type = PACKET_TYPE__DATA,
+} __attribute__((packed, aligned(1))) const payload_type_data_s_default = {
+	.header.type = PAYLOAD_TYPE__DATA,
 };
-#pragma scalar_storage_order default */
+#pragma scalar_storage_order default
+
+struct payload_s {
+	union {
+		struct payload_header_s header;
+		struct payload_type_data_s asData;
+		uint8_t raw[DRV_MESH__PAYLOAD_SIZE_MAX];
+	};
+} __attribute__((packed, aligned(1)));
 
 /* #pragma scalar_storage_order big-endian
 struct packet_type_ack_s {

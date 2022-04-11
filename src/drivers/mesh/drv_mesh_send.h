@@ -99,14 +99,16 @@ static void drv_mesh_buildPacket_link(struct peer_s * peer, struct packet_s * ra
 	raw_packet->header.type = PACKET_TYPE__LINK;
 	struct packet_type_link_s * packet = (struct packet_type_link_s *)&(raw_packet->asLink);
 
-	packet->auth.index = peer->index;
-	packet->auth.counter = raw_packet->counter;
-	packet->lock.ack = peer->counter_ack;
+	packet->auth.index = LIB_BYTEORDER_HTON_U16(peer->index);
+	packet->auth.counter = LIB_BYTEORDER_HTON_U32(raw_packet->counter);
+	packet->lock.ack = LIB_BYTEORDER_HTON_U32(peer->counter_ack);
+
+	memcpy(&(packet->payload[0]), payload_buf, payload_size);
 	
 	uint8_t nonce_tmp[24];
-	uint32_t counter_tmp = LIB_BYTEORDER_HTON_U32(packet->auth.counter);
+	uint32_t counter_tmp = LIB_BYTEORDER_HTON_U32(raw_packet->counter);
 	crypto_blake2b_general(nonce_tmp, sizeof(nonce_tmp), peer->key_send, sizeof(peer->key_send), (uint8_t *)&(counter_tmp), sizeof(counter_tmp));
-	crypto_lock_aead(packet->mac, (uint8_t *)&(packet->lock), peer->key_send, nonce_tmp, (uint8_t *)&(packet->auth), sizeof(packet->auth), (uint8_t *)&(packet->lock), raw_packet->size);
+	crypto_lock_aead(packet->mac, (uint8_t *)&(packet->lock), peer->key_send, nonce_tmp, (uint8_t *)&(packet->auth), sizeof(packet->auth), (uint8_t *)&(packet->lock), sizeof(packet->lock) + payload_size);
 }
 
 /* static void drv_mesh_buildPayload_data(struct packet_s * raw_packet) {

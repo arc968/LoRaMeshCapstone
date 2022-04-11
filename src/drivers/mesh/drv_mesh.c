@@ -46,8 +46,8 @@
 #include "drv_mesh_config.h"
 #include "drv_mesh.h"
 #include "drv_mesh_private.h"
-#include "drv_mesh_route.h"
 #include "drv_mesh_send.h"
+#include "drv_mesh_route.h"
 #include "drv_mesh_recv.h"
 
 //small issue, starts backing off on boot not after initialization
@@ -171,12 +171,12 @@ static void drv_mesh_worker_scheduler(void * arg) {
 			
 			uint32_t offset = lib_misc_fastrange32(seed, (DISCOVERY_INTERVAL_MILLIS - DISCOVERY_PADDING) - PACKET_TOA_MAX_GENERATE) + DISCOVERY_PADDING;
 			appt->realtime = rt_disc + offset;
+
+			DEBUG_PRINT("\tINFO: Scheduling peer recv at t+%lu\n", offset);
 			//appt->type = APPT_RECV;
 			//appt->peer = NULL;
 			appt->packet = NULL;
 			setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), appt->realtime, seed, 255);
-			
-			DEBUG_PRINT("\tINFO: Scheduling peer recv at t+%lu\n", offset);
 			
 			enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_recv, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
 			if (err != DRV_SCHED_ERR__NONE) {
@@ -185,6 +185,15 @@ static void drv_mesh_worker_scheduler(void * arg) {
 				break; //the rest will fail anyway
 			}
 		}
+	}
+
+	{ //queue payloads
+		/* uint16_t count = RB_COUNT(state.rb_outboundPackets);
+		for (uint16_t i=0; i<count; i++) {
+			struct packet_s * packet = *RB_GET(state.rb_outboundPackets);
+			
+			*RB_PUT(state.rb_outboundPackets) = packet;
+		} */
 	}
 
 	{ //schedule per-peer send periods
@@ -223,6 +232,9 @@ static void drv_mesh_worker_scheduler(void * arg) {
 				
 				uint32_t offset = lib_misc_fastrange32(seed, (DISCOVERY_INTERVAL_MILLIS - DISCOVERY_PADDING) - PACKET_TOA_MAX_GENERATE) + DISCOVERY_PADDING;
 				appt->realtime = rt_disc + offset;
+
+				DEBUG_PRINT("\tINFO: Scheduling peer send at t+%lu\n", offset);
+
 				setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), appt->realtime, seed, packet->size);
 				
 				if (packet->once) {
@@ -237,8 +249,6 @@ static void drv_mesh_worker_scheduler(void * arg) {
 					memcpy(appt->packet, packet, sizeof(struct packet_s));
 				}
 
-				DEBUG_PRINT("\tINFO: Scheduling peer send at t+%lu\n", offset);
-				
 				enum drv_sched_err_e err = drv_sched_once_at(drv_mesh_worker_send, (void*)appt, DRV_SCHED_PRI__REALTIME, appt->realtime);
 				if (err != DRV_SCHED_ERR__NONE) {
 					DEBUG_PRINT("\tWARNING: Failed to schedule peer send appointment\n");
@@ -272,6 +282,8 @@ static void drv_mesh_start(void * arg __attribute__((unused))) {
 void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *)) {
 	DEBUG_PRINT_TIMESTAMP(); DEBUG_PRINT_FUNCTION();
 	//initialize datastructures
+		state.func_onRecv_ptr = func_onRecv_ptr;
+
 		state.head_route_empty = &(state.routes[0]);
 		for (int i=0; i<BUFFER_ROUTES_SIZE; i++) {
 			if (i == BUFFER_ROUTES_SIZE-1) {
@@ -327,9 +339,12 @@ void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *)) {
 		crypto_x25519_public_key(state.key_dh_pub, state.key_dh_priv);
 		//DEBUG_PRINT("UID: [%llu]\n", state.uid);
 		//DEBUG_PRINT("UID: [%llX]\n", state.uid);
+		drv_rand_fillBuf(state.ip, sizeof(state.ip));
+		state.ip[0] = 10;
+		DEBUG_PRINT_ARRAY(state.ip);
 }
 
-enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * mesh_packet) {
+enum drv_mesh_error_e drv_mesh_send(ipv4_t ip, uint16_t port, uint8_t * buf, uint8_t len) {
 
 	struct drv_mesh_stats_s stats;
 	drv_mesh_getStats(&stats);
@@ -344,7 +359,7 @@ enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * mesh_packet) {
 		return DRV_MESH_ERR__NO_ROUTE;
 	} */
 
-	if (mesh_packet->len > DRV_MESH__PAYLOAD_SIZE_MAX) {
+	if (len > DRV_MESH__MESSAGE_SIZE_MAX) {
 		DEBUG_PRINT("\tWARNING: Failed to send mesh packet, payload too large\n");
 		return DRV_MESH_ERR__MESSAGE_TOO_LARGE;
 	}
@@ -360,13 +375,30 @@ enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * mesh_packet) {
 		return DRV_MESH_ERR__BUFFER_FULL;
 	}
 
-/* 	raw_packet->size = mesh_packet->len;
-	struct packet_type_data_s * packet = &(raw_packet->asData);
-	memcpy(packet->ip_dst, mesh_packet->ip, sizeof(ipv4_t));
-	packet->port_dst = mesh_packet->port;
-	memcpy(packet->data, mesh_packet->buf, mesh_packet->len); */
+	struct payload_type_data_s * payload = (struct payload_type_data_s *)&(raw_packet->asLink.payload[0]);
+	payload->header.type = PAYLOAD_TYPE__DATA;
+	memcpy(payload->ip_dst, &ip, sizeof(ipv4_t));
+	payload->port_dst = LIB_BYTEORDER_HTON_U16(port);
+	memcpy(payload->data, buf, len);
 
 	*RB_PUT(state.rb_outboundPackets) = raw_packet;
+
+	DEBUG_PRINT("\tINFO: Sending serial message (%hhu bytes) in payload (%hhu bytes) in packet (%hhu bytes) \n", len, sizeof(struct payload_type_data_s) + len, sizeof(struct packet_type_link_s) + sizeof(struct payload_type_data_s) + len);
+
+	struct peer_s * peer = state.head_peer_ready;
+	for (; peer != NULL; peer = peer->next) {
+		if (peer->status == PEER_ACQUAINTANCE) {
+			if (RB_SPACE(peer->rb_packets)) {
+				struct packet_s * tmp_packet = popEmptyPacket();
+				if (tmp_packet == NULL) {
+					DEBUG_PRINT("\tWARNING: Failed to send mesh packet, no empty packets available\n");
+					break; //rest will fail anyway
+				}
+				drv_mesh_buildPacket_link(peer, tmp_packet, (uint8_t *)payload, sizeof(struct payload_type_data_s) + len);
+				*RB_PUT(peer->rb_packets) = tmp_packet;
+			}
+		}
+	}
 
 	return DRV_MESH_ERR__NONE;
 }

@@ -232,14 +232,14 @@ static void drv_mesh_parsePacket_link(struct packet_s * raw_packet) {
 	}
 	
 	uint8_t nonce_tmp[24];
-	uint32_t counter_tmp = LIB_BYTEORDER_HTON_U32(packet->auth.counter);
+	uint32_t counter_tmp = packet->auth.counter;
 	crypto_blake2b_general(nonce_tmp, sizeof(nonce_tmp), peer->key_recv, sizeof(peer->key_recv), (uint8_t *)&(counter_tmp), sizeof(counter_tmp));
-	int corrupt = crypto_unlock_aead((uint8_t *)&(packet->lock), peer->key_recv, nonce_tmp, (uint8_t *)&(packet->mac[0]), (uint8_t *)&(packet->auth), sizeof(packet->auth), (uint8_t *)&(packet->lock),raw_packet->size);
+	int corrupt = crypto_unlock_aead((uint8_t *)&(packet->lock), peer->key_recv, nonce_tmp, (uint8_t *)&(packet->mac[0]), (uint8_t *)&(packet->auth), sizeof(packet->auth), (uint8_t *)&(packet->lock),raw_packet->size - (sizeof(struct packet_type_link_s) - sizeof(packet->lock)));
 	
-	DEBUG_PRINT("\tkey_data_send [%hhu]: [", sizeof(peer->key_send));
+	DEBUG_PRINT("\tkey_send [%hhu]: [", sizeof(peer->key_send));
 	for (uint32_t i=0; i<sizeof(peer->key_send); i++) DEBUG_PRINT(((i+1==sizeof(peer->key_send)) ? "%hhu" : "%hhu,"), (peer->key_send)[i]);
 	DEBUG_PRINT("]\n");
-	DEBUG_PRINT("\tkey_data_recv [%hhu]: [", sizeof(peer->key_recv));
+	DEBUG_PRINT("\tkey_recv [%hhu]: [", sizeof(peer->key_recv));
 	for (uint32_t i=0; i<sizeof(peer->key_recv); i++) DEBUG_PRINT(((i+1==sizeof(peer->key_recv)) ? "%hhu" : "%hhu,"), (peer->key_recv)[i]);
 	DEBUG_PRINT("]\n");
 	
@@ -253,58 +253,46 @@ static void drv_mesh_parsePacket_link(struct packet_s * raw_packet) {
 		DEBUG_PRINT("\tINFO: Now acquainted with peer.\n");
 	}
 
-	if (packet->lock.ack > peer->counter_ack) { //may need additional logic
-		peer->counter_ack = packet->lock.ack;
+	// TODO: needs additional logic, may skip packets
+	if (peer->counter_ack < LIB_BYTEORDER_NTOH_U32(packet->auth.counter)) {
+		peer->counter_ack = LIB_BYTEORDER_NTOH_U32(packet->auth.counter);
 	}
 
-	uint16_t count = RB_COUNT(peer->rb_packets);
-	for (uint16_t i=0; i<count; i++) {
-		struct packet_s * packet_tmp = *RB_GET(peer->rb_packets);
-		if (!(packet_tmp->once) && packet_tmp->counter <= peer->counter_ack) {
-			insertEmptyPacket(packet_tmp);
-		} else {
-			*RB_PUT(peer->rb_packets) = packet_tmp;
+	{ //dequeue packets based on ACK
+		uint16_t count = RB_COUNT(peer->rb_packets);
+		for (uint16_t i=0; i<count; i++) {
+			struct packet_s * packet_tmp = *RB_GET(peer->rb_packets);
+			if (!(packet_tmp->once) && packet_tmp->counter <= packet->lock.ack) {
+				insertEmptyPacket(packet_tmp);
+			} else {
+				*RB_PUT(peer->rb_packets) = packet_tmp;
+			}
 		}
 	}
 	
-	// if (linkHeader->body.type == PACKET_TYPE__DATA) {
-	// 	drv_mesh_parsePacket_data(raw_packet, peer);
-	// } else if (linkHeader->body.type == PACKET_TYPE__ACK) {
-	// 	drv_mesh_parsePacket_ack(raw_packet, peer);
-	// }/*  else if (linkHeader->body.type == PACKET_TYPE__ROUTE) {
-	// 	drv_mesh_parsePacket_route(raw_packet, peer);
-	// } */ else {
-	// 	DEBUG_PRINT("\tWARNING: Unknown link packet [%X] received.\n", linkHeader->body.type);
-	// }
+	if (raw_packet->size - sizeof(struct packet_type_link_s) > 0) {
+		{ //queue ACK
+			if (!RB_SPACE(peer->rb_packets)) {
+				DEBUG_PRINT("\tWARNING: Failed to create peer ACK, no empty slots in peer packet queue available\n");
+				return;
+			}
+
+			struct packet_s * packet_tmp = popEmptyPacket();
+			if (packet_tmp == NULL) {
+				DEBUG_PRINT("\tWARNING: Failed to create peer ACK, no empty packets available\n");
+				return;
+			}
+			
+			*RB_PUT(peer->rb_packets) = packet_tmp;
+
+			drv_mesh_buildPacket_link(peer, packet_tmp, NULL, 0);
+			packet_tmp->once = true;
+		}
+		drv_mesh_parsePayload(raw_packet, (struct payload_s *)&(packet->payload[0]));
+	} else {
+		DEBUG_PRINT("\tINFO: Link packet has no payload.\n");
+	}
 }
-
-/* static void drv_mesh_parsePacket_ack(struct packet_s * raw_packet, struct peer_s * peer) {
-	DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: ACK packet received (%lu bytes).\n", raw_packet->size);
-	
-	struct packet_type_ack_s * packet = (struct packet_type_ack_s *)&(raw_packet->asAck);
-	
-	if (raw_packet->size != sizeof(struct packet_type_ack_s)) {
-		DEBUG_PRINT("\tWARNING: Packet size does not match type (ACK), dropping packet.\n");
-		return;
-	};
-	
-	if (peer->status == PEER_STRANGER) {
-		peer->status = PEER_ACQUAINTANCE;
-		
-		DEBUG_PRINT("\tINFO: Now acquainted with peer.\n");
-	}
-
-	uint16_t count = RB_COUNT(peer->rb_packets);
-	for (uint16_t i=0; i<count; i++) {
-		struct packet_s * packet_tmp = *RB_GET(peer->rb_packets);
-		if (!(packet_tmp->once) && packet_tmp->puid == packet->puid) {
-			insertEmptyPacket(packet_tmp);
-		} else {
-			*RB_PUT(peer->rb_packets) = packet_tmp;
-		}
-	}
-	
-} */
 
 static void drv_mesh_parsePacket(struct packet_s * raw_packet) {
 	if (raw_packet->header.type == PACKET_TYPE__DISC) {

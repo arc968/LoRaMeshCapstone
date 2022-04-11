@@ -107,6 +107,7 @@ bool drv_lora_isSignalDetected(struct drv_lora_s * handle);
 bool drv_lora_isSignalSynchronized(struct drv_lora_s * handle);
 bool drv_lora_isHeaderValid(struct drv_lora_s * handle);
 bool drv_lora_isRecvTimeout(struct drv_lora_s * handle);
+uint8_t drv_lora_getStatusReg(struct drv_lora_s * handle);
 
 uint8_t drv_lora_random(struct drv_lora_s * handle);
 

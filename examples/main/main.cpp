@@ -68,18 +68,17 @@ void onRecv(struct drv_mesh_packet_s *) {
 }
 
 void checkSerial(void * arg __attribute__((unused))) {
-	struct drv_mesh_packet_s packet = {
-		.ip = {8, 8, 8, 8},
-		.port = 25565,
-	};
+	Serial.print("checkSerial()\n");
+	uint8_t buf[256];
 	int index = 0;
-	while (Serial.available() > 0 && index < sizeof(packet.buf)-1) {
-		packet.buf[index++] = Serial.read();
+	while (Serial.available() > 0 && index < sizeof(buf)-1) {
+		buf[index++] = Serial.read();
 	}
-	packet.buf[index++] = '\0';
-	packet.len = index;
-	if (packet.len > 1) {
-		enum drv_mesh_error_e err = drv_mesh_send(&packet);
+	buf[index++] = '\0';
+	if (index > 1) {
+		Serial.print("Message found, sending...\n");
+		ipv4_t ip = {8, 8, 8, 8};
+		enum drv_mesh_error_e err = drv_mesh_send(ip, 25565, buf, index);
 	}
 }
 
