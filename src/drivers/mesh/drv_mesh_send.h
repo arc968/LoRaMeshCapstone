@@ -8,34 +8,31 @@ static void drv_mesh_buildPacket_disc(struct packet_s * raw_packet) {
 	DEBUG_PRINT("\tBuilding discovery packet...\n");
 	raw_packet->size = sizeof(struct packet_type_disc_s);
 	raw_packet->once = true;
+	raw_packet->header.type = PACKET_TYPE__DISC;
 	struct packet_type_disc_s * packet = (struct packet_type_disc_s *)&(raw_packet->asDisc);
 	
-	packet->header.type = PACKET_TYPE__DISC;
 	lib_datetime_realtime_t curtime;
 	drv_timer_getRealtime(&curtime);
-	packet->body.timestamp = curtime;
-	memcpy(packet->body.key_dh_pub, state.key_dh_pub, sizeof(state.key_dh_pub));
+	packet->lock.timestamp = curtime;
+	memcpy(packet->lock.key_dh_pub, state.key_dh_pub, sizeof(state.key_dh_pub));
 	drv_rand_fillBuf(packet->nonce, sizeof(packet->nonce));
-	crypto_lock_aead(packet->mac, (uint8_t *)&(packet->body), state.psk, packet->nonce, (uint8_t *)&(packet->header), sizeof(packet->header), (uint8_t *)&(packet->body), sizeof(packet->body));
+	crypto_lock_aead(packet->mac, (uint8_t *)&(packet->lock), state.psk, packet->nonce, (uint8_t *)&(packet->auth), sizeof(packet->auth), (uint8_t *)&(packet->lock), sizeof(packet->lock));
 	
 	DEBUG_PRINT("\tBuilt discovery packet.\n");
 }
 
-static void drv_mesh_buildPacket_discReply(struct peer_s * peer, struct packet_s * raw_packet) {
-	DEBUG_PRINT("\tBuilding discovery reply packet ...\n");
-	//struct packet_s * raw_packet = peer->packet;
-	raw_packet->size = sizeof(struct packet_type_discReply_s);
+static void drv_mesh_buildPacket_auth(struct peer_s * peer, struct packet_s * raw_packet) {
+	DEBUG_PRINT("\tBuilding auth packet ...\n");
+	raw_packet->size = sizeof(struct packet_type_auth_s);
 	raw_packet->once = false;
-	raw_packet->puid = 0;
-	struct packet_type_discReply_s * packet = (struct packet_type_discReply_s *)&(raw_packet->asDiscReply);
-	
-	//*packet = packet_type_discReply_s_default;
-	packet->header.type = PACKET_TYPE__DISC_REPLY;
+	raw_packet->counter = 0;
+	raw_packet->header.type = PACKET_TYPE__AUTH;
+	struct packet_type_auth_s * packet = (struct packet_type_auth_s *)&(raw_packet->asAuth);
 	
 	DEBUG_PRINT("\tGen key_once...\n");
 	uint8_t key_once[32];
 	drv_rand_fillBuf(key_once, sizeof(key_once));
-	crypto_x25519_public_key(packet->key_once_pub, key_once);
+	crypto_x25519_public_key(packet->auth.key_once_pub, key_once);
 	crypto_x25519(key_once, key_once, peer->key_dh_pub);
 	crypto_blake2b_general(key_once, sizeof(key_once), state.psk, sizeof(state.psk), key_once, sizeof(key_once));
 	DEBUG_PRINT("\tDone.\n");
@@ -45,21 +42,21 @@ static void drv_mesh_buildPacket_discReply(struct peer_s * peer, struct packet_s
 	DEBUG_PRINT("]\n");
 	
 	{ //load body of packet
-		crypto_x25519_public_key(packet->body.key_ephemeral_pub, peer->key_ephemeral_priv);
+		crypto_x25519_public_key(packet->lock.key_ephemeral_pub, peer->key_ephemeral_priv);
 		
 		DEBUG_PRINT("\tCalc index...\n");
-		packet->body.index = ((uint8_t *)(peer) - (uint8_t *)&(state.peers[0])) / sizeof(struct peer_s);
-		DEBUG_PRINT("\tDone (index: %hu).\n", packet->body.index);
+		packet->lock.index = ((uint8_t *)(peer) - (uint8_t *)&(state.peers[0])) / sizeof(struct peer_s);
+		DEBUG_PRINT("\tDone (index: %hu).\n", packet->lock.index);
 		
-		memcpy(packet->body.key_dh_pub, state.key_dh_pub, sizeof(state.key_dh_pub));
+		memcpy(packet->lock.key_dh_pub, state.key_dh_pub, sizeof(state.key_dh_pub));
 		
 		lib_datetime_realtime_t curtime;
 		drv_timer_getRealtime(&curtime);
-		packet->body.timestamp = curtime;
+		packet->lock.timestamp = curtime;
 	}
 	
 	DEBUG_PRINT("\tCalc packet hash...\n");
-	crypto_blake2b_general(packet->hmac, sizeof(packet->hmac), key_once, sizeof(key_once), (uint8_t *)(packet), (uint8_t *)&(packet->hmac[0]) - (uint8_t *)(packet));
+	crypto_blake2b_general(packet->hmac, sizeof(packet->hmac), key_once, sizeof(key_once), (uint8_t *)(packet), sizeof(packet->auth) + sizeof(packet->lock));
 	DEBUG_PRINT("\tDone.\n");
 	
 	DEBUG_PRINT("\tpacket->hmac [%hhu]: [", sizeof(packet->hmac));
@@ -70,7 +67,7 @@ static void drv_mesh_buildPacket_discReply(struct peer_s * peer, struct packet_s
 	//uint8_t mac_tmp[16];
 	uint8_t nonce_tmp[24];
 	crypto_wipe(nonce_tmp, sizeof(nonce_tmp));
-	crypto_xchacha20((uint8_t *)&(packet->body), (uint8_t *)&(packet->body), sizeof(packet->body), key_once, nonce_tmp);
+	crypto_xchacha20((uint8_t *)&(packet->lock), (uint8_t *)&(packet->lock), sizeof(packet->lock), key_once, nonce_tmp);
 	//crypto_lock_aead(mac_tmp, (uint8_t *)&(packet->body), key_once, nonce_tmp, (uint8_t *)&(packet), (uint8_t *)&(packet->body) - (uint8_t *)&(packet), (uint8_t *)&(packet->body), sizeof(packet->body));
 	//crypto_blake2b_general(packet->hmac, sizeof(packet->hmac), packet->hmac, sizeof(packet->hmac), mac_tmp, sizeof(mac_tmp)); // can't unless MAC is transmitted
 	DEBUG_PRINT("\tDone.\n");
@@ -94,29 +91,26 @@ static void drv_mesh_buildPacket_discReply(struct peer_s * peer, struct packet_s
 	DEBUG_PRINT("\tBuilt discovery reply packet.\n");
 }
 
-static void drv_mesh_buildPacket_ack(struct peer_s * peer, struct packet_s * raw_packet, uint32_t puid) {
-	raw_packet->size = sizeof(struct packet_type_ack_s);
-	raw_packet->once = true;
-	struct packet_type_ack_s * ack = (struct packet_type_ack_s *)&(raw_packet->asAck);
-	ack->header.header.type = PACKET_TYPE__LINK;
-	ack->header.index = peer->index;
-	ack->header.counter = peer->counter_data_send++;
-	ack->header.body.type = PACKET_TYPE__ACK;
-	ack->puid = puid;
+static void drv_mesh_buildPacket_link(struct peer_s * peer, struct packet_s * raw_packet, uint8_t * payload_buf, uint8_t payload_size) {
+	DEBUG_PRINT("\tBuilding link packet ...\n");
+	raw_packet->size = sizeof(struct packet_type_link_s) + payload_size;
+	raw_packet->once = false;
+	raw_packet->counter = peer->counter_send++;
+	raw_packet->header.type = PACKET_TYPE__LINK;
+	struct packet_type_link_s * packet = (struct packet_type_link_s *)&(raw_packet->asLink);
+
+	packet->auth.index = peer->index;
+	packet->auth.counter = raw_packet->counter;
+	packet->lock.ack = peer->counter_ack;
 	
 	uint8_t nonce_tmp[24];
-	uint32_t counter_tmp = LIB_BYTEORDER_HTON_U32(ack->header.counter);
-	crypto_blake2b_general(nonce_tmp, sizeof(nonce_tmp), peer->key_data_send, sizeof(peer->key_data_send), (uint8_t *)&(counter_tmp), sizeof(counter_tmp));
-	crypto_lock_aead(ack->header.mac, (uint8_t *)&(ack->header.body), peer->key_data_send, nonce_tmp, (uint8_t *)ack, ((uint8_t *)&(ack->header.mac[0])) - ((uint8_t *)ack), (uint8_t *)&(ack->header.body), sizeof(struct packet_type_ack_s) - (((uint8_t *)&(ack->header.body)) - ((uint8_t *)ack)));
+	uint32_t counter_tmp = LIB_BYTEORDER_HTON_U32(packet->auth.counter);
+	crypto_blake2b_general(nonce_tmp, sizeof(nonce_tmp), peer->key_send, sizeof(peer->key_send), (uint8_t *)&(counter_tmp), sizeof(counter_tmp));
+	crypto_lock_aead(packet->mac, (uint8_t *)&(packet->lock), peer->key_send, nonce_tmp, (uint8_t *)&(packet->auth), sizeof(packet->auth), (uint8_t *)&(packet->lock), raw_packet->size);
 }
 
-static void drv_mesh_buildPacket_data(struct packet_s * raw_packet) {
+/* static void drv_mesh_buildPayload_data(struct packet_s * raw_packet) {
 	struct packet_type_data_s * packet = &(raw_packet->asData);
-	
-}
-
-/* static void drv_mesh_buildPacket_route(struct appointment_s * appt) {
-	struct packet_s * raw_packet = appt->packet;
 	
 } */
 

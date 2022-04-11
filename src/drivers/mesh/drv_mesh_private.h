@@ -47,16 +47,20 @@ struct peer_s {
 	uint8_t key_dh_pub[32];
 	uint8_t key_chan_send[8];
 	uint8_t key_chan_recv[8];
-	
+
 	uint16_t index;
-	uint32_t counter_data_send;
-	uint8_t key_data_send[32];
-	uint32_t counter_data_recv;
+	uint32_t counter_send;
+	uint32_t counter_recv;
+	uint32_t counter_ack;
+
+	uint8_t key_send[32];
 	union {
-		uint8_t key_data_recv[32];
+		uint8_t key_recv[32];
 		uint8_t key_ephemeral_priv[32]; // of this peer
 	};
+
 	lib_datetime_realtime_t last_packet_timestamp;
+	
 	struct {
 		uint16_t count;
 		uint16_t head;
@@ -74,48 +78,26 @@ struct radio_cfg_s {
 	uint32_t toaEstimate;
 };
 
-/* enum appointment_type_e {
-	APPT_RECV,
-	APPT_SEND_DISC,
-	APPT_SEND_DISC_REPLY,
-	//APPT_SEND_DISC_HANDSHAKE,
-	APPT_SEND_DATA,
-	APPT_SEND_ROUTE,
-	// APPT_DISC_RECV,
-	// APPT_DISC_REPLY_SEND,
-	// APPT_DISC_REPLY_RECV,
-	// APPT_DATA_SEND,
-};
- */
 struct appointment_s {
 	struct appointment_s * next;
 	
 	lib_datetime_realtime_t realtime;
-	
-	//enum appointment_type_e type;
-	
-	//struct peer_s * peer;
-	
-	struct packet_s * packet;
-	
+
 	struct radio_cfg_s radio_cfg;
+	
+	struct packet_s * packet;	
 }; //__attribute__((packed)); //PACKED CAUSES HARD LOCKUP
 
 struct packet_s {
 	struct packet_s * next;
-	uint32_t puid; //only matters if bool once is false
 	bool once;
+	uint32_t counter;
 	uint8_t size;
 	union {
 		struct packet_header_s header;
-		struct packet_linkHeader_s linkHeader;
-		struct packet_type_data_s asData;
 		struct packet_type_disc_s asDisc;
-		struct packet_type_discReply_s asDiscReply;
-		//struct packet_type_discHandshake_s asDiscHandshake;
-		struct packet_type_ack_s asAck;
-		//struct packet_type_nack_s asNack;
-		//struct packet_type_route_s asRoute;
+		struct packet_type_auth_s asAuth;
+		struct packet_type_link_s asLink;
 		uint8_t raw[DRV_MESH__PACKET_SIZE_MAX];
 	};
 } __attribute__((packed, aligned(1)));

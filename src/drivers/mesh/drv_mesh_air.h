@@ -6,45 +6,23 @@ extern "C" {
 
 enum packet_type_e {
 	PACKET_TYPE__NONE = 0,
-	//layer 3 (Network) (Relayable)
-	PACKET_TYPE__DATA = 1,
-	//layer 2 (Data Link)
-	PACKET_TYPE__DISC = 2,
-	PACKET_TYPE__DISC_REPLY = 3,
-	//PACKET_TYPE__DISC_HANDSHAKE = 4,
-	PACKET_TYPE__ACK = 5,
-	PACKET_TYPE__NACK = 6,
-	PACKET_TYPE__ROUTE = 7,
-	PACKET_TYPE__LINK = 8,
+	PACKET_TYPE__DISC,
+	PACKET_TYPE__AUTH,
+	PACKET_TYPE__LINK,
 };
+	//layer 2 (Data Link)
+/* 	//layer 3 (Network) (Relayable)
+	PACKET_TYPE__DATA,
+	PACKET_TYPE__ACK,
+	PACKET_TYPE__NACK,
+	PACKET_TYPE__ROUTE, */
 
-enum nack_reason_e {
+
+/* enum nack_reason_e {
 	NACK_REASON__NONE = 0,
 	NACK_REASON__NO_ROUTE,
 	NACK_REASON__BUFFER_FULL,
-};
-
-/*enum ciphermask_e {
-	CIPHER__NONE = (0x1 << 0),
-	CIPHER__AES = (0x1 << 1),
-	CIPHER__PSK_AES = (0x1 << 2),
-	CIPHER__XCHACHA20 = (0x1 << 3),
-	CIPHER__PSK_XCHACHA20 = (0x1 << 4),
-};
-
-#pragma scalar_storage_order big-endian
-struct ciphermask_s {
-	union {
-		uint16_t none:1,
-				aes:1,
-				psk_aes:1,
-				xchacha20:1,
-				psk_xchacha20:1,
-				:0;
-		uint16_t mask;
-	};
-} __attribute__((packed, aligned(1)));
-#pragma scalar_storage_order default*/
+}; */
 
 #pragma scalar_storage_order big-endian
 struct packet_header_s {
@@ -53,86 +31,60 @@ struct packet_header_s {
 } __attribute__((packed, aligned(1)));
 #pragma scalar_storage_order default
 
-/*
-hash sent/received public key with pre-shared key, then calculate key exchange
-*/
 #pragma scalar_storage_order big-endian
 static struct packet_type_disc_s {
-	struct packet_header_s header;
+	struct {
+		struct packet_header_s header;
+	} auth;
 	struct {
 		uint8_t key_dh_pub[32];
 		lib_datetime_realtime_t timestamp;
-	} body;
+	} lock;
 	uint8_t nonce[24];
 	uint8_t mac[16];
 } __attribute__((packed, aligned(1))) const packet_type_disc_s_default = {
-	.header.type = PACKET_TYPE__DISC,
+	.auth.header.type = PACKET_TYPE__DISC,
 };
 #pragma scalar_storage_order default
 
 #pragma scalar_storage_order big-endian
-struct packet_type_discReply_s {
-	struct packet_header_s header;
-	uint8_t key_once_pub[32];
+struct packet_type_auth_s {
+	struct {
+		struct packet_header_s header;
+		uint8_t key_once_pub[32];
+	} auth;
 	struct {
 		uint8_t key_ephemeral_pub[32];
 		uint16_t index;
 		uint8_t key_dh_pub[32];
 		lib_datetime_realtime_t timestamp;
-	} body; //encrypted with DH(recv.key_dh_pub, key_once_priv) as key
+	} lock; //encrypted with DH(recv.key_dh_pub, key_once_priv) as key
 	uint8_t hmac[16]; //needs to include timestamp, DH(once,priv), DH(eph,priv), DH(pub,priv), AEAD MAC, and psk for auth
-} __attribute__((packed, aligned(1))) const packet_type_discReply_s_default = {
-	.header.type = PACKET_TYPE__DISC_REPLY,
+} __attribute__((packed, aligned(1))) const packet_type_auth_s_default = {
+	.auth.header.type = PACKET_TYPE__AUTH,
 };
 #pragma scalar_storage_order default
 
-/* #pragma scalar_storage_order big-endian
-struct packet_type_discHandshake_s {
-	struct packet_header_s header;
-	uint8_t key_once_pub[32];
-	struct {
-		uint8_t key_ephemeral_pub[32];
-		uint16_t index_send;
-		uint16_t index_recv;
-		lib_datetime_realtime_t timestamp;
-	} body; //encrypted with DH(recv.key_dh_pub, key_once_priv) as key
-	uint8_t hmac[16]; //needs to include timestamp, DH(once,priv), DH(eph,priv), DH(pub,priv), AEAD MAC, and psk for auth
-} __attribute__((packed, aligned(1))) const packet_type_discHandshake_s_default = {
-	.header.type = PACKET_TYPE__DISC_HANDSHAKE,
-};
-#pragma scalar_storage_order default */
-
 #pragma scalar_storage_order big-endian
-struct packet_linkHeader_s {
-	struct packet_header_s header;
-	uint16_t index;
-	uint32_t counter;
+struct packet_type_link_s {
+	struct {
+		struct packet_header_s header;
+		uint16_t index;
+		uint32_t counter;
+	} auth;
+	struct {
+		uint32_t ack;
+	} lock;
 	uint8_t mac[16]; //poly1305
-	struct {
-		uint8_t type; //actual type is encrypted
-	} body;
-} __attribute__((packed, aligned(1)));
-#pragma scalar_storage_order default
-
-#pragma scalar_storage_order big-endian
-struct packet_type_ack_s {
-	struct packet_linkHeader_s header;
-	uint32_t puid;
-} __attribute__((packed, aligned(1))) const packet_type_ack_s_default = {
-	.header.body.type = PACKET_TYPE__ACK,
+	uint8_t data[];
+} __attribute__((packed, aligned(1))) const packet_type_link_s_default = {
+	.auth.header.type = PACKET_TYPE__LINK,
 };
 #pragma scalar_storage_order default
 
 /* #pragma scalar_storage_order big-endian
-struct packet_type_nack_s {
-	struct packet_linkHeader_s header;
-	uint32_t puid;
-} __attribute__((packed, aligned(1)));
-#pragma scalar_storage_order default */
-
-#pragma scalar_storage_order big-endian
 struct packet_type_data_s {
-	struct packet_linkHeader_s header;
+	struct packet_link_s link;
 	//dynamic, "public"
 	uint8_t ttl; //increments on each hop
 	//static, "public"
@@ -144,8 +96,26 @@ struct packet_type_data_s {
 	uint32_t num_ack;
 	//"private"
 	uint8_t data[];
+} __attribute__((packed, aligned(1))) const packet_type_data_s_default = {
+	.link.header.type = PACKET_TYPE__DATA,
+};
+#pragma scalar_storage_order default */
+
+/* #pragma scalar_storage_order big-endian
+struct packet_type_ack_s {
+	struct packet_linkHeader_s header;
+	uint32_t puid;
+} __attribute__((packed, aligned(1))) const packet_type_ack_s_default = {
+	.header.body.type = PACKET_TYPE__ACK,
+};
+#pragma scalar_storage_order default */
+
+/* #pragma scalar_storage_order big-endian
+struct packet_type_nack_s {
+	struct packet_linkHeader_s header;
+	uint32_t puid;
 } __attribute__((packed, aligned(1)));
-#pragma scalar_storage_order default
+#pragma scalar_storage_order default */
 
 /* #pragma scalar_storage_order big-endian
 struct packet_type_route_s {

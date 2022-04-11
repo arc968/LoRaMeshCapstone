@@ -360,11 +360,11 @@ enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * mesh_packet) {
 		return DRV_MESH_ERR__BUFFER_FULL;
 	}
 
-	raw_packet->size = mesh_packet->len;
+/* 	raw_packet->size = mesh_packet->len;
 	struct packet_type_data_s * packet = &(raw_packet->asData);
 	memcpy(packet->ip_dst, mesh_packet->ip, sizeof(ipv4_t));
 	packet->port_dst = mesh_packet->port;
-	memcpy(packet->data, mesh_packet->buf, mesh_packet->len);
+	memcpy(packet->data, mesh_packet->buf, mesh_packet->len); */
 
 	*RB_PUT(state.rb_outboundPackets) = raw_packet;
 

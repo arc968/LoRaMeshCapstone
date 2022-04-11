@@ -78,7 +78,7 @@ void checkSerial(void * arg __attribute__((unused))) {
 	}
 	packet.buf[index++] = '\0';
 	packet.len = index;
-	if (packet.len > 0) {
+	if (packet.len > 1) {
 		enum drv_mesh_error_e err = drv_mesh_send(&packet);
 	}
 }

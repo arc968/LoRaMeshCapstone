@@ -16,7 +16,7 @@ static void drv_mesh_parsePacket_disc(struct packet_s * raw_packet) {
 	
 	state.stats.broadcasts_recv++;
 	
-	int corrupt = crypto_unlock_aead((uint8_t *)&(packet->body), state.psk, packet->nonce, packet->mac, (uint8_t *)&(packet->header), sizeof(packet->header), (uint8_t *)&(packet->body), sizeof(packet->body));
+	int corrupt = crypto_unlock_aead((uint8_t *)&(packet->lock), state.psk, packet->nonce, packet->mac, (uint8_t *)&(packet->auth), sizeof(packet->auth), (uint8_t *)&(packet->lock), sizeof(packet->lock));
 	
 	if (corrupt) {
 		DEBUG_PRINT("\tWARNING: Discovery packet corrupt.\n");
@@ -25,12 +25,12 @@ static void drv_mesh_parsePacket_disc(struct packet_s * raw_packet) {
 	
 	lib_datetime_realtime_t curtime;
 	drv_timer_getRealtime(&curtime);
-	if (absI64((int64_t)(packet->body.timestamp) - (int64_t)(curtime)) > (60*1000)) {
+	if (absI64((int64_t)(packet->lock.timestamp) - (int64_t)(curtime)) > (60*1000)) {
 		DEBUG_PRINT("\tWARNING: Discovery packet timestamp out of range.\n");
 		return;
 	}
 	
-	struct peer_s * peer = getPeerByPubDhKey(packet->body.key_dh_pub);
+	struct peer_s * peer = getPeerByPubDhKey(packet->lock.key_dh_pub);
 	if (peer == NULL) {
 		DEBUG_PRINT("\tINFO: Discovery packet from unknown peer (new peer found).\n");
 		peer = popEmptyPeer();
@@ -39,7 +39,7 @@ static void drv_mesh_parsePacket_disc(struct packet_s * raw_packet) {
 			return;
 		}
 		peer->status = PEER_PASSERBY;
-		memcpy(peer->key_dh_pub, packet->body.key_dh_pub, sizeof(peer->key_dh_pub));
+		memcpy(peer->key_dh_pub, packet->lock.key_dh_pub, sizeof(peer->key_dh_pub));
 		
 		uint8_t key_tmp[32];
 		crypto_x25519(key_tmp, state.key_dh_priv, peer->key_dh_pub);
@@ -48,10 +48,10 @@ static void drv_mesh_parsePacket_disc(struct packet_s * raw_packet) {
 		crypto_blake2b_general(peer->key_chan_recv, sizeof(peer->key_chan_recv), key_tmp, sizeof(key_tmp), state.key_dh_pub, sizeof(state.key_dh_pub));
 		crypto_wipe(key_tmp, sizeof(key_tmp));
 		
-		crypto_wipe(peer->key_data_send, sizeof(peer->key_data_send));
-		peer->counter_data_send = 0;
-		crypto_wipe(peer->key_data_recv, sizeof(peer->key_data_recv));
-		peer->counter_data_recv = 0;
+		crypto_wipe(peer->key_send, sizeof(peer->key_send));
+		peer->counter_send = 0;
+		crypto_wipe(peer->key_recv, sizeof(peer->key_recv));
+		peer->counter_recv = 0;
 		
 		drv_rand_fillBuf(peer->key_ephemeral_priv, sizeof(peer->key_ephemeral_priv));
 		
@@ -69,7 +69,7 @@ static void drv_mesh_parsePacket_disc(struct packet_s * raw_packet) {
 			return;
 		}
 
-		drv_mesh_buildPacket_discReply(peer, packet_tmp);
+		drv_mesh_buildPacket_auth(peer, packet_tmp);
 		
 		*RB_PUT(peer->rb_packets) = packet_tmp;
 
@@ -79,18 +79,18 @@ static void drv_mesh_parsePacket_disc(struct packet_s * raw_packet) {
 	}
 }
 
-static void drv_mesh_parsePacket_discReply(struct packet_s * raw_packet) {
-	DEBUG_PRINT("\tINFO: Discovery reply packet received (%lu bytes).\n", raw_packet->size);
+static void drv_mesh_parsePacket_auth(struct packet_s * raw_packet) {
+	DEBUG_PRINT("\tINFO: Auth packet received (%lu bytes).\n", raw_packet->size);
 	
-	if (raw_packet->size != sizeof(struct packet_type_discReply_s)) {
-		DEBUG_PRINT("\tWARNING: Packet size does not match type (discReply), dropping.\n");
+	if (raw_packet->size != sizeof(struct packet_type_auth_s)) {
+		DEBUG_PRINT("\tWARNING: Packet size does not match type (auth), dropping.\n");
 		return;
 	};
 	
-	struct packet_type_discReply_s * packet = (struct packet_type_discReply_s *)&(raw_packet->asDiscReply);
+	struct packet_type_auth_s * packet = (struct packet_type_auth_s *)&(raw_packet->asAuth);
 	
 	uint8_t key_once[32];
-	crypto_x25519(key_once, state.key_dh_priv, packet->key_once_pub);
+	crypto_x25519(key_once, state.key_dh_priv, packet->auth.key_once_pub);
 	crypto_blake2b_general(key_once, sizeof(key_once), state.psk, sizeof(state.psk), key_once, sizeof(key_once));
 	
 	DEBUG_PRINT("\tkey_once [%hhu]: [", sizeof(key_once));
@@ -99,7 +99,7 @@ static void drv_mesh_parsePacket_discReply(struct packet_s * raw_packet) {
 	
 	uint8_t nonce_tmp[24];
 	crypto_wipe(nonce_tmp, sizeof(nonce_tmp));
-	crypto_xchacha20((uint8_t *)&(packet->body), (uint8_t *)&(packet->body), sizeof(packet->body), key_once, nonce_tmp);
+	crypto_xchacha20((uint8_t *)&(packet->lock), (uint8_t *)&(packet->lock), sizeof(packet->lock), key_once, nonce_tmp);
 	
 	uint8_t hmac_tmp[sizeof(packet->hmac)];
 	crypto_blake2b_general(hmac_tmp, sizeof(hmac_tmp), key_once, sizeof(key_once), (uint8_t *)(packet), (uint8_t *)&(packet->hmac[0]) - (uint8_t *)(packet));
@@ -108,14 +108,14 @@ static void drv_mesh_parsePacket_discReply(struct packet_s * raw_packet) {
 	for (uint32_t i=0; i<sizeof(hmac_tmp); i++) DEBUG_PRINT(((i+1==sizeof(hmac_tmp)) ? "%hhu" : "%hhu,"), (hmac_tmp)[i]);
 	DEBUG_PRINT("]\n");
 	
-	crypto_x25519(key_once, state.key_dh_priv, packet->body.key_dh_pub);
+	crypto_x25519(key_once, state.key_dh_priv, packet->lock.key_dh_pub);
 	crypto_blake2b_general(hmac_tmp, sizeof(hmac_tmp), hmac_tmp, sizeof(hmac_tmp), key_once, sizeof(key_once));
 	
 	DEBUG_PRINT("\thmac_tmp [%hhu]: [", sizeof(hmac_tmp));
 	for (uint32_t i=0; i<sizeof(hmac_tmp); i++) DEBUG_PRINT(((i+1==sizeof(hmac_tmp)) ? "%hhu" : "%hhu,"), (hmac_tmp)[i]);
 	DEBUG_PRINT("]\n");
 	
-	crypto_x25519(key_once, state.key_dh_priv, packet->body.key_ephemeral_pub);
+	crypto_x25519(key_once, state.key_dh_priv, packet->lock.key_ephemeral_pub);
 	crypto_blake2b_general(hmac_tmp, sizeof(hmac_tmp), hmac_tmp, sizeof(hmac_tmp), key_once, sizeof(key_once));
 	
 	DEBUG_PRINT("\thmac_tmp [%hhu]: [", sizeof(hmac_tmp));
@@ -137,20 +137,20 @@ static void drv_mesh_parsePacket_discReply(struct packet_s * raw_packet) {
 			return;
 		} */
 		
-		struct peer_s * peer = getPeerByPubDhKey(packet->body.key_dh_pub);
+		struct peer_s * peer = getPeerByPubDhKey(packet->lock.key_dh_pub);
 		if (peer == NULL) {
 			DEBUG_PRINT("\tWARNING: Discovery reply packet from unknown peer, dropping.\n");
 			return;
 		}
 		
-		if (packet->body.timestamp < peer->last_packet_timestamp) {
+		if (packet->lock.timestamp < peer->last_packet_timestamp) {
 			DEBUG_PRINT("\tWARNING: Discovery reply packet from known peer is too old, dropping.\n");
 			return;
 		}
 		
-		peer->last_packet_timestamp = packet->body.timestamp;
+		peer->last_packet_timestamp = packet->lock.timestamp;
 		
-		peer->index = packet->body.index;
+		peer->index = packet->lock.index;
 		
 		if (peer->status == PEER_PASSERBY) {
 			peer->status = PEER_STRANGER;
@@ -162,23 +162,31 @@ static void drv_mesh_parsePacket_discReply(struct packet_s * raw_packet) {
 				crypto_x25519(key_tmp, state.key_dh_priv, peer->key_dh_pub);
 				crypto_blake2b_general(key_shared_tmp, sizeof(key_shared_tmp), state.psk, sizeof(state.psk), key_tmp, sizeof(key_tmp));
 				
-				crypto_x25519(key_tmp, peer->key_ephemeral_priv, packet->body.key_ephemeral_pub);
+				crypto_x25519(key_tmp, peer->key_ephemeral_priv, packet->lock.key_ephemeral_pub);
 				crypto_blake2b_general(key_shared_tmp, sizeof(key_shared_tmp), key_shared_tmp, sizeof(key_shared_tmp), key_tmp, sizeof(key_tmp));
 				
 				{ // key_data_send
 					crypto_x25519(key_tmp, peer->key_ephemeral_priv, peer->key_dh_pub);
-					crypto_blake2b_general(peer->key_data_send, sizeof(peer->key_data_send), key_shared_tmp, sizeof(key_shared_tmp), key_tmp, sizeof(key_tmp));
+					crypto_blake2b_general(peer->key_send, sizeof(peer->key_send), key_shared_tmp, sizeof(key_shared_tmp), key_tmp, sizeof(key_tmp));
 				}
 				{ // key_data_recv
-					crypto_x25519(key_tmp, state.key_dh_priv, packet->body.key_ephemeral_pub);
-					crypto_blake2b_general(peer->key_data_recv, sizeof(peer->key_data_recv), key_shared_tmp, sizeof(key_shared_tmp), key_tmp, sizeof(key_tmp));
+					crypto_x25519(key_tmp, state.key_dh_priv, packet->lock.key_ephemeral_pub);
+					crypto_blake2b_general(peer->key_recv, sizeof(peer->key_recv), key_shared_tmp, sizeof(key_shared_tmp), key_tmp, sizeof(key_tmp));
 				}
 				
 				crypto_wipe(key_tmp, sizeof(key_tmp));
 				crypto_wipe(key_shared_tmp, sizeof(key_shared_tmp));
 				
-				peer->counter_data_send = 0;
-				peer->counter_data_recv = 0;
+				peer->counter_send = 0;
+				peer->counter_recv = 0;
+				peer->counter_ack = 0;
+
+				DEBUG_PRINT("\tkey_send [%hhu]: [", sizeof(peer->key_send));
+				for (uint32_t i=0; i<sizeof(peer->key_send); i++) DEBUG_PRINT(((i+1==sizeof(peer->key_send)) ? "%hhu" : "%hhu,"), (peer->key_send)[i]);
+				DEBUG_PRINT("]\n");
+				DEBUG_PRINT("\tkey_recv [%hhu]: [", sizeof(peer->key_recv));
+				for (uint32_t i=0; i<sizeof(peer->key_recv); i++) DEBUG_PRINT(((i+1==sizeof(peer->key_recv)) ? "%hhu" : "%hhu,"), (peer->key_recv)[i]);
+				DEBUG_PRINT("]\n");
 			}
 		}
 		
@@ -195,20 +203,82 @@ static void drv_mesh_parsePacket_discReply(struct packet_s * raw_packet) {
 			}
 			
 			*RB_PUT(peer->rb_packets) = packet_tmp;
-			
-			drv_mesh_buildPacket_ack(peer, packet_tmp, 0);
-			
-			DEBUG_PRINT("\tkey_data_send [%hhu]: [", sizeof(peer->key_data_send));
-			for (uint32_t i=0; i<sizeof(peer->key_data_send); i++) DEBUG_PRINT(((i+1==sizeof(peer->key_data_send)) ? "%hhu" : "%hhu,"), (peer->key_data_send)[i]);
-			DEBUG_PRINT("]\n");
-			DEBUG_PRINT("\tkey_data_recv [%hhu]: [", sizeof(peer->key_data_recv));
-			for (uint32_t i=0; i<sizeof(peer->key_data_recv); i++) DEBUG_PRINT(((i+1==sizeof(peer->key_data_recv)) ? "%hhu" : "%hhu,"), (peer->key_data_recv)[i]);
-			DEBUG_PRINT("]\n");
+
+			drv_mesh_buildPacket_link(peer, packet_tmp, NULL, 0);
+			packet_tmp->once = true;
 		}
 	}
 }
 
-static void drv_mesh_parsePacket_ack(struct packet_s * raw_packet, struct peer_s * peer) {
+static void drv_mesh_parsePacket_link(struct packet_s * raw_packet) {
+	DEBUG_PRINT("\tINFO: Link packet received (%lu bytes).\n", raw_packet->size);
+	
+	struct packet_type_link_s * packet = (struct packet_type_link_s *)&(raw_packet->asLink);
+	
+	if (raw_packet->size < sizeof(struct packet_type_link_s)) {
+		DEBUG_PRINT("\tWARNING: Packet size does not match type (link), dropping packet.\n");
+		return;
+	};
+	
+	if (packet->auth.index >= BUFFER_PEERS_SIZE) {
+		DEBUG_PRINT("\tWARNING: Peer index out of range, dropping packet.\n");
+		return;
+	}
+	
+	struct peer_s * peer = &(state.peers[packet->auth.index]);
+	if (peer->status != PEER_ACQUAINTANCE && peer->status != PEER_STRANGER) {
+		DEBUG_PRINT("\tWARNING: Unexpected peer status (%hu) at index [%hu], dropping packet.\n", peer->status, packet->auth.index);
+		return;
+	}
+	
+	uint8_t nonce_tmp[24];
+	uint32_t counter_tmp = LIB_BYTEORDER_HTON_U32(packet->auth.counter);
+	crypto_blake2b_general(nonce_tmp, sizeof(nonce_tmp), peer->key_recv, sizeof(peer->key_recv), (uint8_t *)&(counter_tmp), sizeof(counter_tmp));
+	int corrupt = crypto_unlock_aead((uint8_t *)&(packet->lock), peer->key_recv, nonce_tmp, (uint8_t *)&(packet->mac[0]), (uint8_t *)&(packet->auth), sizeof(packet->auth), (uint8_t *)&(packet->lock),raw_packet->size);
+	
+	DEBUG_PRINT("\tkey_data_send [%hhu]: [", sizeof(peer->key_send));
+	for (uint32_t i=0; i<sizeof(peer->key_send); i++) DEBUG_PRINT(((i+1==sizeof(peer->key_send)) ? "%hhu" : "%hhu,"), (peer->key_send)[i]);
+	DEBUG_PRINT("]\n");
+	DEBUG_PRINT("\tkey_data_recv [%hhu]: [", sizeof(peer->key_recv));
+	for (uint32_t i=0; i<sizeof(peer->key_recv); i++) DEBUG_PRINT(((i+1==sizeof(peer->key_recv)) ? "%hhu" : "%hhu,"), (peer->key_recv)[i]);
+	DEBUG_PRINT("]\n");
+	
+	if (corrupt) {
+		DEBUG_PRINT("\tWARNING: Link packet corrupt, dropping packet.\n");
+		return;
+	}
+
+	if (peer->status == PEER_STRANGER) {
+		peer->status = PEER_ACQUAINTANCE;
+		DEBUG_PRINT("\tINFO: Now acquainted with peer.\n");
+	}
+
+	if (packet->lock.ack > peer->counter_ack) { //may need additional logic
+		peer->counter_ack = packet->lock.ack;
+	}
+
+	uint16_t count = RB_COUNT(peer->rb_packets);
+	for (uint16_t i=0; i<count; i++) {
+		struct packet_s * packet_tmp = *RB_GET(peer->rb_packets);
+		if (!(packet_tmp->once) && packet_tmp->counter <= peer->counter_ack) {
+			insertEmptyPacket(packet_tmp);
+		} else {
+			*RB_PUT(peer->rb_packets) = packet_tmp;
+		}
+	}
+	
+	// if (linkHeader->body.type == PACKET_TYPE__DATA) {
+	// 	drv_mesh_parsePacket_data(raw_packet, peer);
+	// } else if (linkHeader->body.type == PACKET_TYPE__ACK) {
+	// 	drv_mesh_parsePacket_ack(raw_packet, peer);
+	// }/*  else if (linkHeader->body.type == PACKET_TYPE__ROUTE) {
+	// 	drv_mesh_parsePacket_route(raw_packet, peer);
+	// } */ else {
+	// 	DEBUG_PRINT("\tWARNING: Unknown link packet [%X] received.\n", linkHeader->body.type);
+	// }
+}
+
+/* static void drv_mesh_parsePacket_ack(struct packet_s * raw_packet, struct peer_s * peer) {
 	DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: ACK packet received (%lu bytes).\n", raw_packet->size);
 	
 	struct packet_type_ack_s * packet = (struct packet_type_ack_s *)&(raw_packet->asAck);
@@ -234,92 +304,13 @@ static void drv_mesh_parsePacket_ack(struct packet_s * raw_packet, struct peer_s
 		}
 	}
 	
-}
-
-static void drv_mesh_parsePacket_data(struct packet_s * raw_packet, struct peer_s * peer) {
-	DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: Data packet received (%lu bytes).\n", raw_packet->size);
-	
-	struct packet_type_data_s * packet = (struct packet_type_data_s *)&(raw_packet->asData);
-	
-	if (raw_packet->size < ((uint8_t *)&(packet->data) - (uint8_t *)packet)) {
-		DEBUG_PRINT("\tWARNING: Packet size does not match type (data), dropping packet.\n");
-		return;
-	};
-	
-	uint8_t packet_data_size = raw_packet->size - ((uint8_t *)&(packet->data) - (uint8_t *)packet);
-	//packet size is included in MAC somehow
-	
-}
-
-/* static void drv_mesh_parsePacket_route(struct packet_s * raw_packet, struct peer_s * peer) {
-	DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: Routing packet received (%lu bytes).\n", raw_packet->size);
-	
-	struct packet_type_route_s * packet = (struct packet_type_route_s *)&(raw_packet->asRoute);
-	
-	if (raw_packet->size < ((uint8_t *)&(packet->data) - (uint8_t *)packet)) {
-		DEBUG_PRINT("\tWARNING: Packet size does not match type (route), dropping packet.\n");
-		return;
-	};
-	
-	uint8_t packet_data_size = raw_packet->size - ((uint8_t *)&(packet->data) - (uint8_t *)packet);
-	//packet size is included in MAC somehow
-	
 } */
-
-static void drv_mesh_parsePacket_link(struct packet_s * raw_packet) {
-	DEBUG_PRINT_REALTIME(); DEBUG_PRINT("INFO: Link packet received (%lu bytes).\n", raw_packet->size);
-	
-	struct packet_linkHeader_s * linkHeader = (struct packet_linkHeader_s *)&(raw_packet->linkHeader);
-	
-	if (raw_packet->size < sizeof(struct packet_linkHeader_s)) {
-		DEBUG_PRINT("\tWARNING: Packet size does not match type (link), dropping packet.\n");
-		return;
-	};
-	
-	if (linkHeader->index >= BUFFER_PEERS_SIZE) {
-		DEBUG_PRINT("\tWARNING: Peer index out of range, dropping packet.\n");
-		return;
-	}
-	
-	struct peer_s * peer = &(state.peers[linkHeader->index]);
-	if (peer->status != PEER_ACQUAINTANCE && peer->status != PEER_STRANGER) {
-		DEBUG_PRINT("\tWARNING: Unexpected peer status (%hu) at index [%hu], dropping packet.\n", peer->status, linkHeader->index);
-		return;
-	}
-	
-	uint8_t nonce_tmp[24];
-	uint32_t counter_tmp = LIB_BYTEORDER_HTON_U32(linkHeader->counter);
-	crypto_blake2b_general(nonce_tmp, sizeof(nonce_tmp), peer->key_data_recv, sizeof(peer->key_data_recv), (uint8_t *)&(counter_tmp), sizeof(counter_tmp));
-	int corrupt = crypto_unlock_aead((uint8_t *)&(linkHeader->body), peer->key_data_recv, nonce_tmp, (uint8_t *)&(linkHeader->mac[0]), (uint8_t *)linkHeader, ((uint8_t *)&(linkHeader->mac[0])) - ((uint8_t *)linkHeader), (uint8_t *)&(linkHeader->body), raw_packet->size - (((uint8_t *)&(linkHeader->body)) - ((uint8_t *)linkHeader)));
-	
-	DEBUG_PRINT("\tkey_data_send [%hhu]: [", sizeof(peer->key_data_send));
-	for (uint32_t i=0; i<sizeof(peer->key_data_send); i++) DEBUG_PRINT(((i+1==sizeof(peer->key_data_send)) ? "%hhu" : "%hhu,"), (peer->key_data_send)[i]);
-	DEBUG_PRINT("]\n");
-	DEBUG_PRINT("\tkey_data_recv [%hhu]: [", sizeof(peer->key_data_recv));
-	for (uint32_t i=0; i<sizeof(peer->key_data_recv); i++) DEBUG_PRINT(((i+1==sizeof(peer->key_data_recv)) ? "%hhu" : "%hhu,"), (peer->key_data_recv)[i]);
-	DEBUG_PRINT("]\n");
-	
-	if (corrupt) {
-		DEBUG_PRINT("\tWARNING: Link packet corrupt, dropping packet.\n");
-		return;
-	}
-	
-	if (linkHeader->body.type == PACKET_TYPE__DATA) {
-		drv_mesh_parsePacket_data(raw_packet, peer);
-	} else if (linkHeader->body.type == PACKET_TYPE__ACK) {
-		drv_mesh_parsePacket_ack(raw_packet, peer);
-	}/*  else if (linkHeader->body.type == PACKET_TYPE__ROUTE) {
-		drv_mesh_parsePacket_route(raw_packet, peer);
-	} */ else {
-		DEBUG_PRINT("\tWARNING: Unknown link packet [%X] received.\n", linkHeader->body.type);
-	}
-}
 
 static void drv_mesh_parsePacket(struct packet_s * raw_packet) {
 	if (raw_packet->header.type == PACKET_TYPE__DISC) {
 		drv_mesh_parsePacket_disc(raw_packet);
-	} else if (raw_packet->header.type == PACKET_TYPE__DISC_REPLY) {
-		drv_mesh_parsePacket_discReply(raw_packet);
+	} else if (raw_packet->header.type == PACKET_TYPE__AUTH) {
+		drv_mesh_parsePacket_auth(raw_packet);
 	} else if (raw_packet->header.type == PACKET_TYPE__LINK) {
 		drv_mesh_parsePacket_link(raw_packet);
 	} else {
