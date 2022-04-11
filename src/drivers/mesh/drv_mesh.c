@@ -100,6 +100,7 @@ static void drv_mesh_worker_scheduler(void * arg) {
 			struct peer_s * peer = &(state.peers[i]);
 			printPeerStats(peer);
 		}
+		DEBUG_PRINT_ARRAY(state.ip);
 	}
 
 	lib_datetime_realtime_t rt_disc;
