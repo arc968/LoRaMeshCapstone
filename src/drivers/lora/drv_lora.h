@@ -101,7 +101,9 @@ void drv_lora_sendRawPacket_async(struct drv_lora_s * handle, uint8_t * buf, siz
 
 void drv_lora_recvPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet);
 
-void drv_lora_sendPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet);
+//void drv_lora_sendPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet);
+
+void drv_lora_setPayloadLengthReg(struct drv_lora_s * handle, uint8_t len);
 
 bool drv_lora_isSignalDetected(struct drv_lora_s * handle);
 bool drv_lora_isSignalSynchronized(struct drv_lora_s * handle);

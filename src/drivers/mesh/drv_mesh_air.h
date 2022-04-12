@@ -13,6 +13,8 @@ enum packet_type_e {
 
 #pragma scalar_storage_order big-endian
 struct packet_header_s {
+	uint8_t size0;
+	uint8_t size1;
 	uint8_t type;
 	uint8_t reserved;
 } __attribute__((packed, aligned(1)));

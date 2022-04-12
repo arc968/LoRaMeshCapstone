@@ -314,7 +314,12 @@ static void drv_mesh_worker_recv_finish(void * arg) {
 	}
 	
 	struct packet_s raw_packet = {0};
-	raw_packet.size = drv_lora_getRawPacket(&state.radio, raw_packet.raw);
+	//raw_packet.size = drv_lora_getRawPacket(&state.radio, raw_packet.raw);
+	raw_packet.raw[0] = drv_lora_readRegister(0x00);
+	raw_packet.size = raw_packet.raw[0];
+	for (uint32_t i=1; i<raw_packet.size; i++) {
+		raw_packet.raw[i] = drv_lora_readRegister(0x00);
+	}
 	
 	drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
 	state.radio_mutex = 0;
@@ -368,34 +373,53 @@ static void drv_mesh_worker_recv(void * arg) {
 	start = drv_timer_getMonotonicTime();
 	current = drv_timer_getMonotonicTime();
 	uint8_t reg_status = 0;
-	uint8_t headerPacketSize = 1;
-
-	estimateTimeOnAirInMsFromRadioCfg(&(appt->radio_cfg), 0);
+	
+	estimateTimeOnAirInMsFromRadioCfg(&(appt->radio_cfg), 2);
 
 	while ((current - start < PREAMBLE_MS + (appt->radio_cfg.toaEstimate - PREAMBLE_MS) + PADDING_MS) && !(reg_status) && current - start < 2*PACKET_TOA_MAX_GENERATE) {
-		reg_status = drv_lora_getStatusReg(&state.radio) & (0x1 << 3);
+		reg_status = drv_lora_getStatusReg(&state.radio) & (0x1 << 0);
 		//headerPacketSize = drv_lora_getHeaderPacketSize(&state.radio);
 		current = drv_timer_getMonotonicTime();
 	}
 
 	if (!(reg_status)) {
+		DEBUG_PRINT("\tINFO: No preamble detected in drv_mesh_worker_recv(), aborting receive.\n");
+		drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
+		state.radio_mutex = 0;
+		goto EXIT;
+	}
+
+	uint8_t readByteIndex = drv_lora_readRegister(0x25);
+	uint32_t tmp_count = 0;
+	start = drv_timer_getMonotonicTime();
+	current = drv_timer_getMonotonicTime();
+	while (current - start < appt->radio_cfg.toaEstimate - PREAMBLE_MS + PADDING_MS && readByteIndex < 1) {
+		readByteIndex = drv_lora_readRegister(0x25);
+		current = drv_timer_getMonotonicTime();
+		tmp_count++;
+	}
+	DEBUG_PRINT("\tDEBUG: Spun %u time(s) while waiting for header.\n", tmp_count);
+
+	if (readByteIndex == 0) {
 		DEBUG_PRINT("\tINFO: No header detected in drv_mesh_worker_recv(), aborting receive.\n");
 		drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
 		state.radio_mutex = 0;
 		goto EXIT;
 	}
 
-	uint32_t tmp_count = 0;
-	start = drv_timer_getMonotonicTime();
-	current = drv_timer_getMonotonicTime();
-	while (current - start < 10 && headerPacketSize == 1) {
-		headerPacketSize = drv_lora_getHeaderPacketSize(&state.radio);
-		current = drv_timer_getMonotonicTime();
-		tmp_count++;
+	uint8_t packetSize0 = drv_lora_readRegister(0x00);
+	uint8_t packetSize1 = drv_lora_readRegister(0x00);
+	drv_lora_writeRegister(0x0d, 0);
+
+	if (packetSize0 != packetSize1) {
+		DEBUG_PRINT("\tINFO: Header detected in drv_mesh_worker_recv(), but header is corrupt, aborting receive.\n");
+		drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
+		state.radio_mutex = 0;
+		goto EXIT;
 	}
-	DEBUG_PRINT("\tINFO: Spun %u time(s).\n", tmp_count);
-	if (headerPacketSize == 1) {
-		DEBUG_PRINT("\tINFO: Header detected in drv_mesh_worker_recv(), but packet size too small, aborting receive.\n");
+
+	if (packetSize0 < sizeof(struct packet_header_s)) {
+		DEBUG_PRINT("\tINFO: Header detected in drv_mesh_worker_recv(), but packet size is too small, aborting receive.\n");
 		drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
 		state.radio_mutex = 0;
 		goto EXIT;
@@ -403,7 +427,9 @@ static void drv_mesh_worker_recv(void * arg) {
 	
 	// uint8_t headerPacketSize = drv_lora_getHeaderPacketSize(&state.radio);
 
-	estimateTimeOnAirInMsFromRadioCfg(&(appt->radio_cfg), headerPacketSize);
+	drv_lora_writeRegister(0x22, packetSize0);
+
+	estimateTimeOnAirInMsFromRadioCfg(&(appt->radio_cfg), packetSize0);
 	
 	enum drv_sched_err_e err = drv_sched_once(drv_mesh_worker_recv_finish, NULL, DRV_SCHED_PRI__REALTIME, (appt->radio_cfg.toaEstimate - PREAMBLE_MS) + PADDING_MS);
 	if (err != DRV_SCHED_ERR__NONE) { //error checking

@@ -9,6 +9,8 @@ static void drv_mesh_buildPacket_disc(struct packet_s * raw_packet) {
 	raw_packet->size = sizeof(struct packet_type_disc_s);
 	raw_packet->once = true;
 	raw_packet->header.type = PACKET_TYPE__DISC;
+	raw_packet->header.size0 = raw_packet->size;
+	raw_packet->header.size1 = raw_packet->size;
 	struct packet_type_disc_s * packet = (struct packet_type_disc_s *)&(raw_packet->asDisc);
 	
 	lib_datetime_realtime_t curtime;
@@ -27,6 +29,8 @@ static void drv_mesh_buildPacket_auth(struct peer_s * peer, struct packet_s * ra
 	raw_packet->once = false;
 	raw_packet->counter = 0;
 	raw_packet->header.type = PACKET_TYPE__AUTH;
+	raw_packet->header.size0 = raw_packet->size;
+	raw_packet->header.size1 = raw_packet->size;
 	struct packet_type_auth_s * packet = (struct packet_type_auth_s *)&(raw_packet->asAuth);
 	
 	DEBUG_PRINT("\tGen key_once...\n");
@@ -97,6 +101,8 @@ static void drv_mesh_buildPacket_link(struct peer_s * peer, struct packet_s * ra
 	raw_packet->once = false;
 	raw_packet->counter = peer->counter_send++;
 	raw_packet->header.type = PACKET_TYPE__LINK;
+	raw_packet->header.size0 = raw_packet->size;
+	raw_packet->header.size1 = raw_packet->size;
 	struct packet_type_link_s * packet = (struct packet_type_link_s *)&(raw_packet->asLink);
 
 	packet->auth.index = LIB_BYTEORDER_HTON_U16(peer->index);
@@ -154,7 +160,7 @@ static void drv_mesh_worker_send(void * arg) {
 	}
 	
 	state.radio_mutex = 1;
-	
+
 	drv_lora_setMode(&state.radio, DRV_LORA_MODE__IDLE);
 	
 	setupRadioFromConfig(&state.radio, &(appt->radio_cfg));

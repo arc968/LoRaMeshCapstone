@@ -154,9 +154,11 @@ void drv_lora_setMode(struct drv_lora_s * handle, enum drv_lora_mode_e mode) {
 					// reset FIFO address
 					drv_lora_writeRegister(REG_FIFO_ADDR_PTR, 0);
 					// clear payload length
-					drv_lora_writeRegister(REG_PAYLOAD_LENGTH, 1);
-					// set explicit header mode
-					drv_lora_writeRegister(REG_MODEM_CONFIG_1, drv_lora_readRegister(REG_MODEM_CONFIG_1) & 0xfe);
+					drv_lora_writeRegister(REG_PAYLOAD_LENGTH, 255);
+					// set implicit header mode
+					drv_lora_writeRegister(REG_MODEM_CONFIG_1, drv_lora_readRegister(REG_MODEM_CONFIG_1) | 0x01);
+					// set symbol timeout
+					drv_lora_writeRegister(0x1F, 255);
 					// put in single RX mode
 					drv_lora_writeRegister(REG_OP_MODE, MODE_LONG_RANGE_MODE | MODE_RX_SINGLE);
 				}
@@ -352,11 +354,11 @@ void drv_lora_recvPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * 
 	
 }
 
-void drv_lora_sendPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet) {
+/* void drv_lora_sendPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * packet) {
 	
 	#ifdef HW_ARDUINO
 		//while (LoRa.beginPacket());
-		if (LoRa.beginPacket()) {
+		if (LoRa.beginPacket(1)) {
 			LoRa.write(packet->buf, packet->size);
 			LoRa.endPacket();
 		}
@@ -364,12 +366,12 @@ void drv_lora_sendPacket(struct drv_lora_s * handle, struct drv_lora_packet_s * 
 		
 	#endif //HW_ARDUINO
 	
-}
+} */
 
 void drv_lora_sendRawPacket_async(struct drv_lora_s * handle, uint8_t * buf, size_t size) {
 	#ifdef HW_ARDUINO
 		//while (LoRa.beginPacket());
-		if (LoRa.beginPacket()) {
+		if (LoRa.beginPacket(1)) {
 			LoRa.write(buf, size);
 			LoRa.endPacket(true);
 		}
@@ -405,8 +407,12 @@ uint8_t drv_lora_getStatusReg(struct drv_lora_s * handle) {
 	return drv_lora_readRegister(REG_MODEM_STATUS);
 }
 
-uint8_t drv_lora_getHeaderPacketSize(struct drv_lora_s * handle) {
+uint8_t drv_lora_getPayloadLengthReg(struct drv_lora_s * handle) {
 	return drv_lora_readRegister(REG_PAYLOAD_LENGTH);
+}
+
+void drv_lora_setPayloadLengthReg(struct drv_lora_s * handle, uint8_t len) {
+	drv_lora_writeRegister(REG_PAYLOAD_LENGTH, len);
 }
 
 bool drv_lora_isRecvTimeout(struct drv_lora_s * handle) {

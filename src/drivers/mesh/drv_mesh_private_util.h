@@ -233,19 +233,19 @@ static void setupRadioFromConfig(struct drv_lora_s * radio, struct radio_cfg_s *
 
 static void estimateTimeOnAirInMsFromRadioCfg(struct radio_cfg_s * cfg, uint8_t packet_size) {
 	const uint32_t CRC = 1;
-	const uint32_t IH = 0;
+	const uint32_t IH = 1;
 	const uint32_t DE = 0;
-	uint32_t Rs = cfg->bandwidth / (1 << cfg->spreadingFactor);
-	uint32_t num = 8*packet_size - 4*cfg->spreadingFactor + 28 + 16*CRC - 20*IH;
-	uint32_t den = 4*(cfg->spreadingFactor - 2*DE);
-	uint32_t n_payload = 8 + (max(((num/den) + 1)*(cfg->codingRate + 4), 0)); //instead of ceil, add 1
+	int32_t Rs = cfg->bandwidth / (1 << cfg->spreadingFactor);
+	int32_t num = 8*packet_size - 4*cfg->spreadingFactor + 28 + 16*CRC - 20*IH;
+	int32_t den = 4*(cfg->spreadingFactor - 2*DE);
+	int32_t n_payload = 8 + (max(((num/den) + 1)*(cfg->codingRate + 4), 0)); //instead of ceil, add 1
 	uint32_t t_payload = (n_payload * 1000) / Rs;
 
 	cfg->preambleSymbols = (uint16_t)((PREAMBLE_MS*Rs)/1000) + 4;
 	//uint32_t t_preamble = ((cfg->preambleSymbols + 5) * 1000) / Rs; //should be 4.25, rounding up to 5
 
 	cfg->toaEstimate = PREAMBLE_MS + t_payload;
-	if (packet_size != 0) {
+	if (packet_size <= 4) {
 		DEBUG_PRINT("\tPacket ToA estimate: %ums preamble (%u symbols) + %ums payload (%u symbols) = %ums packet (%hhu bytes)\n", PREAMBLE_MS, cfg->preambleSymbols, t_payload, n_payload, cfg->toaEstimate, packet_size);
 	}
 }
