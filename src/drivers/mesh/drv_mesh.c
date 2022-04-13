@@ -380,6 +380,10 @@ void drv_mesh_init(uint8_t key_psk[32], uint8_t key_dh_priv[32], void (*func_onR
 		DEBUG_PRINT_ARRAY(state.ip);
 }
 
+void drv_mesh_getIP(ipv4_t * ip) {
+	memcpy(ip, state.ip, sizeof(ipv4_t));
+}
+
 enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * packet) {
 
 	struct drv_mesh_stats_s stats;
