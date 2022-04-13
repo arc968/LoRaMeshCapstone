@@ -9,11 +9,14 @@
 static volatile lib_datetime_interval_t timestamp = 0;
 uint16_t sensordata = 0;
 
+uint8_t SIM_NODE_IP =       2;
+#define GATEWAY_NODE_SIM_IP 1
+
 #define SENSOR_PIN          A4
 #define INTERNAL_LED_PIN    6
 
 //NeoPixel
-#define BRIGHTNESS          50 // Set BRIGHTNESS to about 1/5 (max = 255)
+#define BRIGHTNESS          50 // Set BRIGHTNESS(max = 255)
 #define RING_LED_COUNT      12
 #define RING_LED_DATAIN_PIN 1
 #define CON_STRIP_COUNT     10
@@ -22,8 +25,9 @@ uint16_t sensordata = 0;
 #define CON3_STRIP_DATA_PIN 9
 
 //packet type defines
-#define RGBPAKCT            0x00
+#define RGBPACKET           0x00
 #define PREDEFCOLORPACKET   0x01
+#define GATEWAYPACKET       0x03
 
 
 Adafruit_NeoPixel ring(RING_LED_COUNT, RING_LED_DATAIN_PIN, NEO_GRB + NEO_KHZ800);
@@ -36,7 +40,6 @@ Adafruit_NeoPixel ring(RING_LED_COUNT, RING_LED_DATAIN_PIN, NEO_GRB + NEO_KHZ800
 void setup() {
 
   pinMode(INTERNAL_LED_PIN, OUTPUT);
-  //pinMode(CLOCK_INTERRUPT_PIN, INPUT_PULLUP);
   pinMode(SENSOR_PIN, INPUT);
   
   digitalWrite(INTERNAL_LED_PIN, LOW);
@@ -66,7 +69,8 @@ void setup() {
   //}
 
   if (Serial) {
-    Serial.print("Serial Ready\n");
+    SIM_NODE_IP = 1;
+    Serial.print("Serial Ready, Node IP is now the Gateway Node for Serial Coms\n");
   }
 
   ring.fill(ring.Color(0, 255, 0));
@@ -76,27 +80,84 @@ void setup() {
   
   drv_sched_init();
 
-  drv_sched_repeating(readSensorVal, NULL, DRV_SCHED_PRI__NORMAL, 0, 60000);
+  if (SIM_NODE_IP == 1 && Serial) { 
+    drv_sched_repeating(serialReadGateway, NULL, DRV_SCHED_PRI__NORMAL, 0, 1000);
+    drv_sched_repeating(checkIfSerial, NULL, DRV_SCHED_PRI__NORMAL, 0, 30000);
+  }
+  else {
+    drv_sched_repeating(readSensorVal, NULL, DRV_SCHED_PRI__NORMAL, 0, 60000);
+  }
 
-  drv_mesh_init(messageReceived);
+  drv_mesh_init(NULL, NULL, messageReceived);
   drv_sched_start();
   
 }
 
 void loop() {}
 
+void serialReadGateway(void *) {
+
+  if (Serial) {
+    uint8_t len = 0;
+    uint8_t buf[20];
+    while (Serial.available() && len < 20) {
+      buf[len] = Serial.read();
+      len++;
+    }
+  
+    struct drv_mesh_packet_s ledPacket = {
+        .ip = {10, 0, 0, buf[0]},
+        .port = 0,
+        .len = len,
+    };
+  
+    if (len == 4) {
+      ledPacket.buf[0] = RGBPACKET;
+      ledPacket.buf[1] = buf[1];
+      ledPacket.buf[2] = buf[2];
+      ledPacket.buf[3] = buf[3];
+  
+      drv_mesh_send(&ledpacket);
+    }
+    else if (len == 2) {
+      ledPacket.buf[0] = RGBPACKET;
+      ledPacket.buf[1] = buf[1];
+  
+      drv_mesh_send(&ledpacket);
+    }
+    else {
+      
+    }
+  }
+}
+
+void checkIfSerial(void *) {
+  
+  
+  
+}
+
 void messageReceived(struct drv_mesh_packet_s * receivedData) {
 
-  if (receivedData->len > 0) {
+  if (receivedData->len > 0 && receivedData->ip[3] == SIM_NODE_IP) {
     switch (receivedData->buf[0]) {
-      case RGBPAKCT:
+      case RGBPACKET:
         if (receivedData->len == 4) {
-          setLEDStripColor(&ring, receivedData->buf[0], receivedData->buf[1], receivedData->buf[2]);
+          setLEDStripColor(&ring, receivedData->buf[1], receivedData->buf[2], receivedData->buf[3]);
         }
         break;
       case PREDEFCOLORPACKET:
         if (receivedData->len == 2) {
-          setLEDPreDefColor(&ring, (char) receivedData->buf[0]);
+          setLEDPreDefColor(&ring, (char) receivedData->buf[1]);
+        }
+        break;
+      case GATEWAYPACKET:
+        if (SIM_NODE_IP == GATEWAY_NODE_SIM_IP && Serial) {
+          uint16_t data = LIB_BYTEORDER_NTOH_U16(*(uint16_t *)&(receivedData->buf[2]));
+          Serial.print("NODE: 10.0.0.");
+          Serial.print(receivedData->buf[1]);
+          Serial.print("  Sensor Data: ");
+          Serial.println(data);
         }
         break;
       default:
@@ -110,10 +171,14 @@ void readSensorVal(void*) {
 
   sensordata = analogRead(SENSOR_PIN);
   struct drv_mesh_packet_s sensorPacket = {
-  .ip = {10, 0, 0, 0},
-  .len = 0x01,
+    .ip = {10, 0, 0, GATEWAY_NODE_SIM_IP},
+    .port = 0,
+    .len = 0x03,
   };
-  *((uint16_t *)&(sensorPacket.buf[0])) = LIB_BYTEORDER_HTON_U16(sensordata);
+
+  sensorPacket.buf[0] = GATEWAYPACKET;
+  sensorPacket.buf[1] = SIM_NODE_IP;
+  *((uint16_t *)&(sensorPacket.buf[2])) = LIB_BYTEORDER_HTON_U16(sensordata);
   drv_mesh_send(&sensorPacket);
   
 }
