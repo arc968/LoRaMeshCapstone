@@ -69,16 +69,20 @@ void onRecv(struct drv_mesh_packet_s *) {
 
 void checkSerial(void * arg __attribute__((unused))) {
 	//Serial.print("checkSerial()\n");
-	uint8_t buf[256];
-	uint32_t index = 0;
-	while (Serial.available() > 0 && index < sizeof(buf)-1) {
-		buf[index++] = Serial.read();
+	struct drv_mesh_packet_s packet;
+	memset(&packet,0,sizeof(packet));
+
+	ipv4_t ip = {8, 8, 8, 8};
+	memcpy(packet.ip, ip, sizeof(ipv4_t));
+	packet.port = 0;
+	packet.len = 0;
+	while (Serial.available() > 0 && packet.len < sizeof(packet.buf)-1) {
+		packet.buf[packet.len++] = Serial.read();
 	}
-	buf[index++] = '\0';
-	if (index > 1) {
+	packet.buf[packet.len++] = '\0';
+	if (packet.len > 1) {
 		Serial.print("Message found, sending...\n");
-		ipv4_t ip = {8, 8, 8, 8};
-		enum drv_mesh_error_e err = drv_mesh_send(ip, 25565, buf, index);
+		enum drv_mesh_error_e err = drv_mesh_send(&packet);
 	}
 }
 
@@ -113,7 +117,7 @@ void setup() {
 	//drv_sched_repeating(sevenOff, NULL, DRV_SCHED_PRI__NORMAL, 1000, 2000);
 	//drv_sched_once(eightOn, NULL, DRV_SCHED_PRI__NORMAL, 0);
 
-	drv_mesh_init(onRecv);
+	drv_mesh_init(NULL, NULL, onRecv);
 	drv_sched_start();
 }
 

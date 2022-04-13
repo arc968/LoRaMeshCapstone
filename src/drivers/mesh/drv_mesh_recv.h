@@ -57,6 +57,8 @@ static void drv_mesh_parsePacket_disc(struct packet_s * raw_packet) {
 		
 		peer->last_packet_timestamp = 0; //packet->body.timestamp;
 
+		//peer->rb_packets = {0};???
+
 		if (!RB_SPACE(peer->rb_packets)) {
 			DEBUG_PRINT("\tWARNING: Failed to save new peer, no empty slots in peer packet queue available\n");
 			return;

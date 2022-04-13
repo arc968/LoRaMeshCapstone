@@ -8,7 +8,7 @@ extern "C" {
 
 #include <stdint.h>
 
-#define DRV_MESH__MESSAGE_SIZE_MAX 128
+extern const uint8_t DRV_MESH__MAX_MESSAGE_SIZE;
 
 enum drv_mesh_error_e {
 	DRV_MESH_ERR__NONE = 0,
@@ -23,7 +23,7 @@ struct drv_mesh_packet_s {
 	ipv4_t ip;
 	uint16_t port;
 	uint8_t len;
-	uint8_t buf[DRV_MESH__MESSAGE_SIZE_MAX];
+	uint8_t buf[255];
 };
 
 struct drv_mesh_stats_s {
@@ -45,14 +45,13 @@ struct drv_mesh_stats_s {
 	uint32_t peer_count;
 };
 
-void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *));
+void drv_mesh_init(uint8_t key_psk[32], uint8_t key_dh_priv[32], void (*func_onRecv_ptr)(struct drv_mesh_packet_s *));
 
-enum drv_mesh_error_e drv_mesh_send(ipv4_t ip, uint16_t port,
-	uint8_t * buf, uint8_t len);
+enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * packet);
 
 void drv_mesh_getStats(struct drv_mesh_stats_s *);
 
-//uint8_t drv_mesh_getMaxMessageSize(void);
+void drv_mesh_getIP(ipv4_t * ip);
 
 #if defined (__cplusplus)
 }

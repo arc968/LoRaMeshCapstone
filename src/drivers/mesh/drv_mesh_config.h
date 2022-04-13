@@ -52,6 +52,9 @@ extern "C" {
 
 #define DRV_MESH__PACKET_SIZE_MAX 255
 #define DRV_MESH__PAYLOAD_SIZE_MAX 192
+#define DRV_MESH__MESSAGE_SIZE_MAX 128
+
+const uint8_t DRV_MESH__MAX_MESSAGE_SIZE = DRV_MESH__MESSAGE_SIZE_MAX;
 
 static enum drv_lora_bandwidth_e drv_lora_bandwidth_e_arr[] = {
 	DRV_LORA_BW__500kHz,

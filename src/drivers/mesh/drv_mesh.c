@@ -297,12 +297,14 @@ static void drv_mesh_start(void * arg __attribute__((unused))) {
 	}
 }
 
+static void fn_stub(struct drv_mesh_packet_s * packet) {
+	return;
+}
+
 //add runonce guard
-void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *)) {
+void drv_mesh_init(uint8_t key_psk[32], uint8_t key_dh_priv[32], void (*func_onRecv_ptr)(struct drv_mesh_packet_s *)) {
 	DEBUG_PRINT_TIMESTAMP(); DEBUG_PRINT_FUNCTION();
 	//initialize datastructures
-		state.func_onRecv_ptr = func_onRecv_ptr;
-
 		state.head_route_empty = &(state.routes[0]);
 		for (int i=0; i<BUFFER_ROUTES_SIZE; i++) {
 			if (i == BUFFER_ROUTES_SIZE-1) {
@@ -354,7 +356,22 @@ void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *)) {
 		drv_rand_seedFromLoRa(&state.radio);
 		DEBUG_PRINT_TIMESTAMP(); DEBUG_PRINT("DONE SEEDING RNG.\n");
 		//state.uid = drv_rand_getU64();
-		drv_rand_fillBuf(state.key_dh_priv, sizeof(state.key_dh_priv));
+	//set variables
+		if (func_onRecv_ptr != NULL) {
+			state.func_onRecv_ptr = func_onRecv_ptr;
+		} else {
+			state.func_onRecv_ptr = fn_stub;
+		}
+		if (key_psk != NULL) {
+			memcpy(state.psk, key_psk, sizeof(state.psk));
+		} else {
+			crypto_wipe(state.psk, sizeof(state.psk));
+		}
+		if (key_dh_priv != NULL) {
+			memcpy(state.key_dh_priv, key_dh_priv, sizeof(state.key_dh_priv));
+		} else {
+			drv_rand_fillBuf(state.key_dh_priv, sizeof(state.key_dh_priv));
+		}
 		crypto_x25519_public_key(state.key_dh_pub, state.key_dh_priv);
 		//DEBUG_PRINT("UID: [%llu]\n", state.uid);
 		//DEBUG_PRINT("UID: [%llX]\n", state.uid);
@@ -363,7 +380,7 @@ void drv_mesh_init(void (*func_onRecv_ptr)(struct drv_mesh_packet_s *)) {
 		DEBUG_PRINT_ARRAY(state.ip);
 }
 
-enum drv_mesh_error_e drv_mesh_send(ipv4_t ip, uint16_t port, uint8_t * buf, uint8_t len) {
+enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * packet) {
 
 	struct drv_mesh_stats_s stats;
 	drv_mesh_getStats(&stats);
@@ -378,7 +395,7 @@ enum drv_mesh_error_e drv_mesh_send(ipv4_t ip, uint16_t port, uint8_t * buf, uin
 		return DRV_MESH_ERR__NO_ROUTE;
 	} */
 
-	if (len > DRV_MESH__MESSAGE_SIZE_MAX) {
+	if (packet->len > DRV_MESH__MESSAGE_SIZE_MAX) {
 		DEBUG_PRINT("\tWARNING: Failed to send mesh packet, payload too large\n");
 		return DRV_MESH_ERR__MESSAGE_TOO_LARGE;
 	}
@@ -396,13 +413,13 @@ enum drv_mesh_error_e drv_mesh_send(ipv4_t ip, uint16_t port, uint8_t * buf, uin
 
 	struct payload_type_data_s * payload = (struct payload_type_data_s *)&(raw_packet->asLink.payload[0]);
 	payload->header.type = PAYLOAD_TYPE__DATA;
-	memcpy(payload->ip_dst, &ip, sizeof(ipv4_t));
-	payload->port_dst = LIB_BYTEORDER_HTON_U16(port);
-	memcpy(payload->data, buf, len);
+	memcpy(payload->ip_dst, packet->ip, sizeof(ipv4_t));
+	payload->port_dst = LIB_BYTEORDER_HTON_U16(packet->port);
+	memcpy(payload->data, packet->buf, packet->len);
 
 	*RB_PUT(state.rb_outboundPackets) = raw_packet;
 
-	DEBUG_PRINT("\tINFO: Sending serial message (%hhu bytes) in payload (%hhu bytes) in packet (%hhu bytes) \n", len, sizeof(struct payload_type_data_s) + len, sizeof(struct packet_type_link_s) + sizeof(struct payload_type_data_s) + len);
+	DEBUG_PRINT("\tINFO: Sending serial message (%hhu bytes) in payload (%hhu bytes) in packet (%hhu bytes) \n", packet->len, sizeof(struct payload_type_data_s) + packet->len, sizeof(struct packet_type_link_s) + sizeof(struct payload_type_data_s) + packet->len);
 
 	struct peer_s * peer = state.head_peer_ready;
 	for (; peer != NULL; peer = peer->next) {
@@ -413,7 +430,7 @@ enum drv_mesh_error_e drv_mesh_send(ipv4_t ip, uint16_t port, uint8_t * buf, uin
 					DEBUG_PRINT("\tWARNING: Failed to send mesh packet, no empty packets available\n");
 					break; //rest will fail anyway
 				}
-				drv_mesh_buildPacket_link(peer, tmp_packet, (uint8_t *)payload, sizeof(struct payload_type_data_s) + len);
+				drv_mesh_buildPacket_link(peer, tmp_packet, (uint8_t *)payload, sizeof(struct payload_type_data_s) + packet->len);
 				*RB_PUT(peer->rb_packets) = tmp_packet;
 			}
 		}
