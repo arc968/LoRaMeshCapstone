@@ -33,18 +33,19 @@ static struct route_s * popEmptyRoute(void) {
 	return route;
 }
 
-static void insertEmptyRoute(struct route_s * route) {
+/* static void insertEmptyRoute(struct route_s * route) {
 	route->next = state.head_route_empty;
 	state.head_route_empty = route;
-}
+} */
 
 static uint32_t getBucketIndex(ipv4_t ip_src) {
 	uint32_t tmp;
-	halfsiphash(&ip_src, sizeof(ipv4_t), state.key_hashtable, (uint8_t *)&tmp, sizeof(uint32_t));
-	return lib_misc_fastrange32(LIB_BYTEORDER_NTOH_U32(tmp), HASHMAP_ROUTES_BUCKET_COUNT);
+	halfsiphash(ip_src, sizeof(ipv4_t), state.key_hashtable, (uint8_t *)&tmp, sizeof(uint32_t));
+	return lib_misc_fastrange32(tmp, HASHMAP_ROUTES_BUCKET_COUNT);
 }
 
 static struct route_s * deleteOldestRoute(void) { //should only be called if all routes are in use
+	DEBUG_PRINT_FUNCTION();
 	struct route_s * route = &(state.routes[0]);
 	for (uint32_t i=0; i<BUFFER_ROUTES_SIZE; i++) {
 		struct route_s * tmp_route = &(state.routes[i]);
@@ -66,17 +67,23 @@ static struct route_s * deleteOldestRoute(void) { //should only be called if all
 }
 
 static struct route_s * findRoute(ipv4_t ip_src, lib_datetime_realtime_t realtime) {
+	DEBUG_PRINT_FUNCTION();
 	if (ip_src[0] != 10) {
 		if (realtime != 0) state.route_gateway.last_usage = realtime;
-		return &(state.route_gateway);
+		if (state.route_gateway.count != 0) {
+			return &(state.route_gateway);
+		} else {
+			return NULL;
+		}
 	}
 	struct route_s * route = state.hm_route_buckets[getBucketIndex(ip_src)];
-	while (route != NULL && route->ip_src != ip_src) route = route->next;
+	while (route != NULL && memcmp(route->ip_src, ip_src, sizeof(ipv4_t))) route = route->next;
 	if (route != NULL && realtime != 0) route->last_usage = realtime;
 	return route;
 }
 
 static void insertRoute(ipv4_t ip_src, uint8_t ttl, uint16_t index_peer, lib_datetime_realtime_t realtime) {
+	DEBUG_PRINT_FUNCTION();
 	struct route_s * route = findRoute(ip_src, realtime);
 	if (route == NULL) {
 		route = popEmptyRoute();
@@ -84,7 +91,20 @@ static void insertRoute(ipv4_t ip_src, uint8_t ttl, uint16_t index_peer, lib_dat
 			route = deleteOldestRoute();
 		}
 	}
+	memcpy(route->ip_src, ip_src, sizeof(ipv4_t));
 	route->last_usage = realtime;
+	bool peerAlreadyInList = false;
+	for (int i=0; i<ROUTE_PEER_COUNT; i++) {
+		if (index_peer == route->peers[i].index_peer) {
+			peerAlreadyInList = true;
+			for (int ii=i; ii<ROUTE_PEER_COUNT-1; ii++) {
+				route->peers[ii].ttl = route->peers[ii+1].ttl;
+				route->peers[ii].index_peer = route->peers[ii+1].index_peer;
+			}
+			break;
+		}
+	}
+	if (!peerAlreadyInList && route->count < ROUTE_PEER_COUNT) route->count++;
 	for (int i=0; i<ROUTE_PEER_COUNT; i++) {
 		if (ttl <= route->peers[i].ttl) {
 			for (int ii=ROUTE_PEER_COUNT-1; ii>i; ii--) {
@@ -96,37 +116,15 @@ static void insertRoute(ipv4_t ip_src, uint8_t ttl, uint16_t index_peer, lib_dat
 			break;
 		}
 	}
-}
-
-static struct peer_s * popEmptyPeer(void) {
-	struct peer_s * peer = state.head_peer_empty;
-	if (peer != NULL) {
-		state.head_peer_empty = peer->next;
-		peer->next = NULL;
-	}
-	return peer;
-}
-
-static void insertEmptyPeer(struct peer_s * peer) {
-	peer->next = state.head_peer_empty;
-	state.head_peer_empty = peer;
-}
-
-static void removeReadyPeer(struct peer_s * peer) {
-	if (state.head_peer_ready == peer) {
-		state.head_peer_ready = NULL;
+	uint32_t hm_index = getBucketIndex(ip_src);
+	struct route_s * tmp = state.hm_route_buckets[hm_index];
+	if (tmp == NULL) {
+		state.hm_route_buckets[hm_index] = route;
 	} else {
-		struct peer_s * prev_peer = state.head_peer_ready;
-		while (prev_peer->next != peer) prev_peer = prev_peer->next;
-		prev_peer->next = peer->next;
-		peer->next = NULL;
+		while (tmp->next != NULL && memcmp(tmp->ip_src, ip_src, sizeof(ipv4_t))) tmp = tmp->next;
+		tmp->next = route;
 	}
-}
-
-static struct peer_s * getPeerByPubDhKey(uint8_t key_dh_pub[32]) {
-	struct peer_s * peer = state.head_peer_ready;
-	while (peer != NULL && crypto_verify32(peer->key_dh_pub, key_dh_pub)) peer = peer->next;
-	return peer;
+	route->next = NULL;
 }
 
 static void insertReadyPeer(struct peer_s * peer) {
@@ -146,6 +144,42 @@ static struct packet_s * popEmptyPacket(void) {
 static void insertEmptyPacket(struct packet_s * packet) {
 	packet->next = state.head_packet_empty;
 	state.head_packet_empty = packet;
+}
+
+static struct peer_s * popEmptyPeer(void) {
+	struct peer_s * peer = state.head_peer_empty;
+	if (peer != NULL) {
+		state.head_peer_empty = peer->next;
+		peer->next = NULL;
+	}
+	return peer;
+}
+
+static void insertEmptyPeer(struct peer_s * peer) {
+	uint16_t count = RB_COUNT(peer->rb_packets);
+	for (uint16_t i=0; i<count; i++) {
+		struct packet_s * packet = *RB_GET(peer->rb_packets);
+		insertEmptyPacket(packet);
+	}
+	peer->next = state.head_peer_empty;
+	state.head_peer_empty = peer;
+}
+
+/* static void removeReadyPeer(struct peer_s * peer) {
+	if (state.head_peer_ready == peer) {
+		state.head_peer_ready = NULL;
+	} else {
+		struct peer_s * prev_peer = state.head_peer_ready;
+		while (prev_peer->next != peer) prev_peer = prev_peer->next;
+		prev_peer->next = peer->next;
+		peer->next = NULL;
+	}
+} */
+
+static struct peer_s * getPeerByPubDhKey(uint8_t key_dh_pub[32]) {
+	struct peer_s * peer = state.head_peer_ready;
+	while (peer != NULL && crypto_verify32(peer->key_dh_pub, key_dh_pub)) peer = peer->next;
+	return peer;
 }
 
 static struct appointment_s * popEmptyAppt(void) {
@@ -266,8 +300,48 @@ static void setRadioCfgAtTimeFromSeed(struct radio_cfg_s * cfg, lib_datetime_rea
 		seed = LIB_BYTEORDER_NTOH_U32(lib_misc_XORshiftLFSR32(LIB_BYTEORDER_HTON_U32(seed)));
 		cfg->codingRate = drv_lora_codingRate_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_codingRate_e_arr)/sizeof(drv_lora_codingRate_e_arr[0]))];
 		estimateTimeOnAirInMsFromRadioCfg(cfg, packet_size);
-		DEBUG_PRINT("\t\tradio cfg seed: %u\n", seed);
+		//DEBUG_PRINT("\t\tradio cfg seed: %u\n", seed);
 	} while (cfg->toaEstimate > PACKET_TOA_MAX_GENERATE);
+}
+
+//this is kinda garbage
+static uint32_t getPeerIndexFromPtr(struct peer_s * peer) {
+	return ((uint8_t *)(peer) - (uint8_t *)&(state.peers[0])) / sizeof(struct peer_s);
+}
+
+static bool checkRecentPayload(struct payload_s * payload, size_t size) {
+	DEBUG_PRINT_FUNCTION();
+	DEBUG_PRINT_BUF(payload, size);
+	uint8_t hash[sizeof(state.rb_recentPayloads.buf[0].hash)];
+	crypto_blake2b_general(hash, sizeof(hash), NULL, 0, (uint8_t *)(payload) + sizeof(struct payload_header_s), size - sizeof(struct payload_header_s));
+	DEBUG_PRINT_BUF(hash, sizeof(hash));
+
+	uint16_t count = RB_COUNT(state.rb_recentPayloads);
+	bool found = false;
+	for (uint16_t i=0; i<count; i++) {
+		__typeof__(state.rb_recentPayloads.buf[0]) * tmp = RB_GET(state.rb_recentPayloads);
+		if (!memcmp(tmp->hash, hash, sizeof(hash))) { //timing attack blah blah
+			found = true;
+			DEBUG_PRINT("\tMATCH\n");
+		}
+		DEBUG_PRINT_BUF(tmp->hash, sizeof(tmp->hash));
+		__typeof__(state.rb_recentPayloads.buf[0]) * tmp1 = RB_PUT(state.rb_recentPayloads);
+		memcpy(tmp1, tmp, sizeof(state.rb_recentPayloads.buf[0]));
+	}
+	return found;
+}
+
+static void insertRecentPayload(struct payload_s * payload, size_t size) {
+	DEBUG_PRINT_FUNCTION();
+	if (!RB_SPACE(state.rb_recentPayloads)) {
+		RB_GET(state.rb_recentPayloads);
+	}
+	DEBUG_PRINT_BUF(payload, size);
+	__typeof__(state.rb_recentPayloads.buf[0]) * entry = RB_PUT(state.rb_recentPayloads);
+	entry->ttl = payload->header.ttl;
+	crypto_blake2b_general(entry->hash, sizeof(entry->hash), NULL, 0, (uint8_t *)payload + sizeof(struct payload_header_s), size - sizeof(struct payload_header_s));
+	DEBUG_PRINT_BUF((uint8_t *)payload + sizeof(struct payload_header_s), size - sizeof(struct payload_header_s));
+	DEBUG_PRINT_BUF(entry->hash, sizeof(entry->hash));
 }
 
 #if defined (__cplusplus)

@@ -49,7 +49,7 @@ static void drv_mesh_buildPacket_auth(struct peer_s * peer, struct packet_s * ra
 		crypto_x25519_public_key(packet->lock.key_ephemeral_pub, peer->key_ephemeral_priv);
 		
 		DEBUG_PRINT("\tCalc index...\n");
-		packet->lock.index = ((uint8_t *)(peer) - (uint8_t *)&(state.peers[0])) / sizeof(struct peer_s);
+		packet->lock.index = getPeerIndexFromPtr(peer);
 		DEBUG_PRINT("\tDone (index: %hu).\n", packet->lock.index);
 		
 		memcpy(packet->lock.key_dh_pub, state.key_dh_pub, sizeof(state.key_dh_pub));
@@ -105,9 +105,9 @@ static void drv_mesh_buildPacket_link(struct peer_s * peer, struct packet_s * ra
 	raw_packet->header.size1 = raw_packet->size;
 	struct packet_type_link_s * packet = (struct packet_type_link_s *)&(raw_packet->asLink);
 
-	packet->auth.index = LIB_BYTEORDER_HTON_U16(peer->index);
-	packet->auth.counter = LIB_BYTEORDER_HTON_U32(raw_packet->counter);
-	packet->lock.ack = LIB_BYTEORDER_HTON_U32(peer->counter_ack);
+	packet->auth.index = peer->index;
+	packet->auth.counter = raw_packet->counter;
+	packet->lock.ack = peer->counter_ack;
 
 	memcpy(&(packet->payload[0]), payload_buf, payload_size);
 	

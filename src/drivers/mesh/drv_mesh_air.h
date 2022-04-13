@@ -92,12 +92,6 @@ enum payload_type_e {
 #pragma scalar_storage_order big-endian
 struct payload_header_s {
 	uint8_t type;
-} __attribute__((packed, aligned(1)));
-#pragma scalar_storage_order default
-
-#pragma scalar_storage_order big-endian
-struct payload_type_data_s {
-	struct payload_header_s header;
 	//dynamic, "public"
 	uint8_t ttl; //increments on each hop
 	//static, "public"
@@ -105,9 +99,17 @@ struct payload_type_data_s {
 	ipv4_t ip_dst;
 	port_t port_src;
 	port_t port_dst;
-	uint32_t num_seq;
-	uint32_t num_ack;
+} __attribute__((packed, aligned(1)));
+#pragma scalar_storage_order default
+
+#pragma scalar_storage_order big-endian
+struct payload_type_data_s {
+	struct payload_header_s header;
 	//"private"
+	struct {
+		uint32_t num_seq;
+		uint32_t num_ack;
+	} auth;
 	uint8_t data[];
 } __attribute__((packed, aligned(1))) const payload_type_data_s_default = {
 	.header.type = PAYLOAD_TYPE__DATA,

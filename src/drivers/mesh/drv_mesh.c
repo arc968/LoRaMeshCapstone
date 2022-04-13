@@ -4,19 +4,6 @@
 	#warning "HW_GPS and/or HW_LORA is undefined. Linking to drv_mesh.c will fail."
 #else
 
-/*
-#if defined __has_attribute
-	#if !(__has_attribute(packed))
-		#error "'__attribute__((packed))' is unavailable."
-	#endif
-	#if !(__has_attribute(aligned))
-		#error "'__attribute__((aligned))' is unavailable."
-	#endif
-#else
-	#error "'__has_attribute()' is unavailable."
-#endif
-*/
-
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -50,20 +37,6 @@
 #include "drv_mesh_route.h"
 #include "drv_mesh_recv.h"
 
-//small issue, starts backing off on boot not after initialization
-//also needs to change bandwidth based on time, not seed
-/* static struct appointment_s * getNextGlobalDiscoveryChannelAppointment(lib_datetime_realtime_t rt) {
-	DEBUG_PRINT("\t"); DEBUG_PRINT_FUNCTION();
-
-	
-	//DEBUG_PRINT("\tbandwidth:%lu, frequency:%llu, spreadingFactor:%lu, codingRate:%lu\n", appt->radio_cfg.bandwidth, appt->radio_cfg.frequency, appt->radio_cfg.spreadingFactor, appt->radio_cfg.codingRate); 
-	
-	//DEBUG_PRINT("\ttmp:%lu, tmp2:%lu, tmp3:%lu\n", tmp, tmp2, tmp3); 
-	//DEBUG_PRINT("post:\nmin:%u\nsec:%u\nms:%u\n",dt.min,dt.sec,dt.ms);
-	//DEBUG_PRINT("year:%u\nmonth:%u\nday:%u\nhour:%u\nmin:%u\nsec:%u\nms:%u\n",dt.year,dt.month,dt.day,dt.hour,dt.min,dt.sec,dt.ms);
-	return appt;
-} */
-
 void drv_mesh_getStats(struct drv_mesh_stats_s * stats) {
 	memcpy(stats, &(state.stats), sizeof(struct drv_mesh_stats_s));
 	stats->peer_count = 0;
@@ -88,6 +61,8 @@ static void printPeerStats(struct peer_s * peer) {
 	DEBUG_PRINT("[status=%s,last_packet_timestamp=%llu]\n", peer_status_string_arr[peer->status], peer->last_packet_timestamp);
 }
 
+//small issue, starts backing off on boot not after initialization
+//also needs to change bandwidth based on time, not seed
 static void drv_mesh_worker_scheduler(void * arg) {
 	DEBUG_PRINT_REALTIME(); DEBUG_PRINT_FUNCTION();
 
@@ -313,7 +288,6 @@ void drv_mesh_init(uint8_t key_psk[32], uint8_t key_dh_priv[32], void (*func_onR
 				state.routes[i].next = &(state.routes[i+1]);
 			}
 		}
-	
 		state.head_appt_empty = &(state.appointments[0]);
 		for (int i=0; i<BUFFER_APPOINTMENTS_SIZE; i++) {
 			if (i == BUFFER_APPOINTMENTS_SIZE-1) {
@@ -322,7 +296,6 @@ void drv_mesh_init(uint8_t key_psk[32], uint8_t key_dh_priv[32], void (*func_onR
 				state.appointments[i].next = &(state.appointments[i+1]);
 			}
 		}
-		
 		state.head_peer_empty = &(state.peers[0]);
 		for (int i=0; i<BUFFER_PEERS_SIZE; i++) {
 			if (i == BUFFER_PEERS_SIZE-1) {
@@ -331,7 +304,6 @@ void drv_mesh_init(uint8_t key_psk[32], uint8_t key_dh_priv[32], void (*func_onR
 				state.peers[i].next = &(state.peers[i+1]);
 			}
 		}
-		
 		state.head_packet_empty = &(state.packets[0]);
 		for (int i=0; i<BUFFER_PACKETS_SIZE; i++) {
 			if (i == BUFFER_PACKETS_SIZE-1) {
@@ -343,10 +315,9 @@ void drv_mesh_init(uint8_t key_psk[32], uint8_t key_dh_priv[32], void (*func_onR
 	//initialize scheduler
 		drv_sched_init();
 		drv_sched_onAbsoluteAvailable(drv_mesh_start, NULL);
-	//initialize GPS 
-		drv_gps_init(NULL);
-	//configure GPS for timekeeping mode as appropriate
-	
+	//initialize GPS
+		//configure GPS for timekeeping mode as appropriate
+			drv_gps_init(NULL);
 	//initialize LoRa radio
 		drv_lora_init(&state.radio, getCenterFrequency(0, DRV_LORA_BW__125kHz)); //TESTING
 	//configure LoRa radio
@@ -355,7 +326,6 @@ void drv_mesh_init(uint8_t key_psk[32], uint8_t key_dh_priv[32], void (*func_onR
 		DEBUG_PRINT_TIMESTAMP(); DEBUG_PRINT("SEEDING RNG...\n");
 		drv_rand_seedFromLoRa(&state.radio);
 		DEBUG_PRINT_TIMESTAMP(); DEBUG_PRINT("DONE SEEDING RNG.\n");
-		//state.uid = drv_rand_getU64();
 	//set variables
 		if (func_onRecv_ptr != NULL) {
 			state.func_onRecv_ptr = func_onRecv_ptr;
@@ -373,10 +343,13 @@ void drv_mesh_init(uint8_t key_psk[32], uint8_t key_dh_priv[32], void (*func_onR
 			drv_rand_fillBuf(state.key_dh_priv, sizeof(state.key_dh_priv));
 		}
 		crypto_x25519_public_key(state.key_dh_pub, state.key_dh_priv);
-		//DEBUG_PRINT("UID: [%llu]\n", state.uid);
-		//DEBUG_PRINT("UID: [%llX]\n", state.uid);
-		drv_rand_fillBuf(state.ip, sizeof(state.ip));
-		state.ip[0] = 10;
+
+		#ifdef GATEWAY
+			memset(state.ip, 8, sizeof(ipv4_t));
+		#else
+			drv_rand_fillBuf(state.ip, sizeof(state.ip));
+			state.ip[0] = 10;
+		#endif
 		DEBUG_PRINT_ARRAY(state.ip);
 }
 
@@ -417,15 +390,26 @@ enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * packet) {
 
 	struct payload_type_data_s * payload = (struct payload_type_data_s *)&(raw_packet->asLink.payload[0]);
 	payload->header.type = PAYLOAD_TYPE__DATA;
-	memcpy(payload->ip_dst, packet->ip, sizeof(ipv4_t));
-	payload->port_dst = LIB_BYTEORDER_HTON_U16(packet->port);
+	payload->header.ttl = 0;
+	memcpy(payload->header.ip_src, state.ip, sizeof(ipv4_t));
+	payload->header.port_src = LIB_BYTEORDER_HTON_U16(0);
+	memcpy(payload->header.ip_dst, packet->ip, sizeof(ipv4_t));
+	payload->header.port_dst = LIB_BYTEORDER_HTON_U16(packet->port);
 	memcpy(payload->data, packet->buf, packet->len);
+
+	payload->auth.num_seq = 0;
+	payload->auth.num_ack = 0;
 
 	*RB_PUT(state.rb_outboundPackets) = raw_packet;
 
 	DEBUG_PRINT("\tINFO: Sending serial message (%hhu bytes) in payload (%hhu bytes) in packet (%hhu bytes) \n", packet->len, sizeof(struct payload_type_data_s) + packet->len, sizeof(struct packet_type_link_s) + sizeof(struct payload_type_data_s) + packet->len);
 
-	struct peer_s * peer = state.head_peer_ready;
+	lib_datetime_realtime_t rt;
+	drv_timer_getRealtime(&rt);
+	insertRecentPayload((struct payload_s *)payload, sizeof(struct payload_type_data_s) + packet->len);
+	drv_mesh_routePayload((struct payload_s *)payload, sizeof(struct payload_type_data_s) + packet->len, rt);
+
+	/* struct peer_s * peer = state.head_peer_ready;
 	for (; peer != NULL; peer = peer->next) {
 		if (peer->status == PEER_ACQUAINTANCE) {
 			if (RB_SPACE(peer->rb_packets)) {
@@ -438,7 +422,7 @@ enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * packet) {
 				*RB_PUT(peer->rb_packets) = tmp_packet;
 			}
 		}
-	}
+	} */
 
 	return DRV_MESH_ERR__NONE;
 }

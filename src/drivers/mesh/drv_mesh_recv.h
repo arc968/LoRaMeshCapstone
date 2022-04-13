@@ -57,8 +57,6 @@ static void drv_mesh_parsePacket_disc(struct packet_s * raw_packet) {
 		
 		peer->last_packet_timestamp = 0; //packet->body.timestamp;
 
-		//peer->rb_packets = {0};???
-
 		if (!RB_SPACE(peer->rb_packets)) {
 			DEBUG_PRINT("\tWARNING: Failed to save new peer, no empty slots in peer packet queue available\n");
 			return;
@@ -290,7 +288,7 @@ static void drv_mesh_parsePacket_link(struct packet_s * raw_packet) {
 			drv_mesh_buildPacket_link(peer, packet_tmp, NULL, 0);
 			packet_tmp->once = true;
 		}
-		drv_mesh_parsePayload(raw_packet, (struct payload_s *)&(packet->payload[0]));
+		drv_mesh_parsePayload(peer, raw_packet, (struct payload_s *)&(packet->payload[0]));
 	} else {
 		DEBUG_PRINT("\tINFO: Link packet has no payload.\n");
 	}
@@ -378,7 +376,7 @@ static void drv_mesh_worker_recv(void * arg) {
 	
 	estimateTimeOnAirInMsFromRadioCfg(&(appt->radio_cfg), 2);
 
-	while ((current - start < PREAMBLE_MS + (appt->radio_cfg.toaEstimate - PREAMBLE_MS) + PADDING_MS) && !(reg_status) && current - start < 2*PACKET_TOA_MAX_GENERATE) {
+	while (((current - start) < (PREAMBLE_MS + (appt->radio_cfg.toaEstimate - PREAMBLE_MS)) + PADDING_MS) && !(reg_status) && ((current - start) < (2*PACKET_TOA_MAX_GENERATE))) {
 		reg_status = drv_lora_getStatusReg(&state.radio) & (0x1 << 0);
 		//headerPacketSize = drv_lora_getHeaderPacketSize(&state.radio);
 		current = drv_timer_getMonotonicTime();
@@ -395,7 +393,7 @@ static void drv_mesh_worker_recv(void * arg) {
 	uint32_t tmp_count = 0;
 	start = drv_timer_getMonotonicTime();
 	current = drv_timer_getMonotonicTime();
-	while (current - start < appt->radio_cfg.toaEstimate - PREAMBLE_MS + PADDING_MS && readByteIndex < 1) {
+	while (((current - start) < ((appt->radio_cfg.toaEstimate - PREAMBLE_MS) + PADDING_MS)) && (readByteIndex < 1)) {
 		readByteIndex = drv_lora_readRegister(0x25);
 		current = drv_timer_getMonotonicTime();
 		tmp_count++;

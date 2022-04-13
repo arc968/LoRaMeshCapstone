@@ -106,6 +106,7 @@ struct route_s {
 	struct route_s * next;
 	ipv4_t ip_src;
 	lib_datetime_realtime_t last_usage;
+	uint8_t count;
 	struct {
 		uint8_t ttl;
 		uint16_t index_peer;
@@ -114,11 +115,8 @@ struct route_s {
 
 static struct state_s {
 	ipv4_t ip;
-	//peer_uid_t uid;
 	uint8_t key_dh_pub[32];
 	uint8_t key_dh_priv[32];
-	//uint8_t pubkey[32];
-	//uint8_t privkey[32];
 	uint8_t psk[32];
 	uint8_t key_hashtable[8];
 
@@ -133,8 +131,8 @@ static struct state_s {
 		struct {
 			uint8_t hash[4];
 			uint8_t ttl;
-		} buf[BUFFER_RECENT_PACKETS_SIZE];
-	} rb_recentPackets;
+		} buf[BUFFER_RECENT_PAYLOADS_SIZE];
+	} rb_recentPayloads;
 	
 	struct route_s route_gateway;
 	struct route_s * head_route_empty;
