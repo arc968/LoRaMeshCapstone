@@ -46,9 +46,13 @@ void hal_interrupt_disable(void) {
 }
 
 bool hal_interrupt_isEnabled(void) {
-	
-	return globalinterruptsenabled;
-	
+	#if defined(HW_MKRWAN1300_H)
+		uint32_t result;
+		__ASM volatile ("MRS %0, cpsr" : "=r" (result) );
+		return (result & (0x1 << 7)) >> 7;
+	#else
+		
+	#endif
 }
 
 void hal_interrupt_attachPin(pin_t pin, void (*isr)(void), enum hal_interrupt_mode_e mode) {
