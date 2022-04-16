@@ -55,8 +55,6 @@ bool hal_interrupt_isEnabled(void) {
 	#else
 		#error "Hardware not yet implemented"
 	#endif
-		
-	#endif
 }
 
 void hal_interrupt_attachPin(pin_t pin, void (*isr)(void), enum hal_interrupt_mode_e mode) {
