@@ -1,8 +1,6 @@
 #define HAL_LIB
 #include "hal_interrupt.h"
 
-volatile uint8_t globalinterruptsenabled = 1;
-
 void hal_interrupt_enable(void) {
 	#if defined(HW_ARDUINO)
 		__DSB();
@@ -19,8 +17,6 @@ void hal_interrupt_enable(void) {
 	#else
 		#error "Hardware not yet implemented"
 	#endif
-	
-	globalinterruptsenabled = 1;
 	
 }
 
@@ -41,15 +37,27 @@ void hal_interrupt_disable(void) {
 		#error "Hardware not yet implemented"
 	#endif
 	
-	globalinterruptsenabled = 0;
-	
 }
 
-/* bool hal_interrupt_isEnabled(void) {
-	
-	return globalinterruptsenabled;
-	
-} */
+bool hal_interrupt_isEnabled(void) {
+	#if defined(HW_MKRWAN1300_H)
+		uint32_t result;
+		__ASM volatile ("MRS %0, cpsr" : "=r" (result) );
+		return (result & (0x1 << 7)) >> 7;
+	#elif defined(HW_RAK4260_H)
+		uint32_t result;
+		__ASM volatile ("MRS %0, cpsr" : "=r" (result) );
+		return (result & (0x1 << 7)) >> 7;
+	#elif defined(HW_RAK4600_H)
+			
+	#elif defined(HW_RAK11300_H)
+		
+	#else
+		#error "Hardware not yet implemented"
+	#endif
+		
+	#endif
+}
 
 void hal_interrupt_attachPin(pin_t pin, void (*isr)(void), enum hal_interrupt_mode_e mode) {
 	#if defined(HW_ARDUINO)
