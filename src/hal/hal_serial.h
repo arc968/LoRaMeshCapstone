@@ -24,30 +24,41 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 
-int  snprintf_(char* buffer, size_t count, const char* format, ...);
-#define DEBUG_PRINT_FUNCTION() {char tbuf[256]; snprintf_(tbuf, sizeof(tbuf), "%s()\n",__func__); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}
+#ifdef DEBUG_MESH
+	int  snprintf_(char* buffer, size_t count, const char* format, ...);
+	#define DEBUG_PRINT_FUNCTION() {char tbuf[256]; snprintf_(tbuf, sizeof(tbuf), "%s()\n",__func__); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}
 
-#define DEBUG_PRINT(...) {char tbuf[256]; snprintf_(tbuf, sizeof(tbuf), __VA_ARGS__); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}
+	#define DEBUG_PRINT(...) {char tbuf[256]; snprintf_(tbuf, sizeof(tbuf), __VA_ARGS__); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}
 
-#define DEBUG_PRINT_TIMESTAMP() {char tbuf[256]; snprintf_(tbuf, sizeof(tbuf), "[%lu] ", (uint32_t)drv_timer_getMonotonicTime()); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}
+	#define DEBUG_PRINT_TIMESTAMP() {char tbuf[256]; snprintf_(tbuf, sizeof(tbuf), "[%lu] ", (uint32_t)drv_timer_getMonotonicTime()); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}
 
-#define DEBUG_PRINT_REALTIME() {char tbuf[256]; lib_datetime_realtime_t trt; drv_timer_getRealtime(&trt); snprintf_(tbuf, sizeof(tbuf), "[rt:%lu] ", (uint32_t)trt); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}\
+	#define DEBUG_PRINT_REALTIME() {char tbuf[256]; lib_datetime_realtime_t trt; drv_timer_getRealtime(&trt); snprintf_(tbuf, sizeof(tbuf), "[rt:%lu] ", (uint32_t)trt); hal_serial_write(hal_serial0, (uint8_t *)&(tbuf[0]), strlen(tbuf));}\
 
-#define DEBUG_PRINT_BUF(tarr,tsize) { DEBUG_PRINT(#tarr" [%hhu]: [", tsize); \
-		for (uint32_t i=0; i<tsize; i++) DEBUG_PRINT(((i+1==tsize) ? "%hhu" : "%hhu,"), ((uint8_t *)(tarr))[i]); \
-		DEBUG_PRINT("]\n"); }
+	#define DEBUG_PRINT_BUF(tarr,tsize) { DEBUG_PRINT(#tarr" [%hhu]: [", tsize); \
+			for (uint32_t i=0; i<tsize; i++) DEBUG_PRINT(((i+1==tsize) ? "%hhu" : "%hhu,"), ((uint8_t *)(tarr))[i]); \
+			DEBUG_PRINT("]\n"); }
 
-#define DEBUG_PRINT_BUF_HEX(tarr,tsize) { DEBUG_PRINT(#tarr" [%hhX]: [",tsize); \
-		for (uint32_t i=0; i<tsize; i++) DEBUG_PRINT(((i+1==tsize) ? "%hhX" : "%hhX,"), ((uint8_t *)(tarr))[i]); \
-		DEBUG_PRINT("]\n"); }
+	#define DEBUG_PRINT_BUF_HEX(tarr,tsize) { DEBUG_PRINT(#tarr" [%hhX]: [",tsize); \
+			for (uint32_t i=0; i<tsize; i++) DEBUG_PRINT(((i+1==tsize) ? "%hhX" : "%hhX,"), ((uint8_t *)(tarr))[i]); \
+			DEBUG_PRINT("]\n"); }
 
-#define DEBUG_PRINT_ARRAY(tarr) { DEBUG_PRINT(#tarr" [%hhu]: [", sizeof(tarr)); \
-		for (uint32_t i=0; i<sizeof(tarr); i++) DEBUG_PRINT(((i+1==sizeof(tarr)) ? "%hhu" : "%hhu,"), (tarr)[i]); \
-		DEBUG_PRINT("]\n"); }
+	#define DEBUG_PRINT_ARRAY(tarr) { DEBUG_PRINT(#tarr" [%hhu]: [", sizeof(tarr)); \
+			for (uint32_t i=0; i<sizeof(tarr); i++) DEBUG_PRINT(((i+1==sizeof(tarr)) ? "%hhu" : "%hhu,"), (tarr)[i]); \
+			DEBUG_PRINT("]\n"); }
 
-#define DEBUG_PRINT_ARRAY_HEX(tarr) { DEBUG_PRINT(#tarr" [%hhX]: [", sizeof(tarr)); \
-		for (uint32_t i=0; i<sizeof(tarr); i++) DEBUG_PRINT(((i+1==sizeof(tarr)) ? "%hhX" : "%hhX,"), (tarr)[i]); \
-		DEBUG_PRINT("]\n"); }
+	#define DEBUG_PRINT_ARRAY_HEX(tarr) { DEBUG_PRINT(#tarr" [%hhX]: [", sizeof(tarr)); \
+			for (uint32_t i=0; i<sizeof(tarr); i++) DEBUG_PRINT(((i+1==sizeof(tarr)) ? "%hhX" : "%hhX,"), (tarr)[i]); \
+			DEBUG_PRINT("]\n"); }
+#else 
+	#define DEBUG_PRINT_FUNCTION() 
+	#define DEBUG_PRINT(...) 
+	#define DEBUG_PRINT_TIMESTAMP() 
+	#define DEBUG_PRINT_REALTIME() 
+	#define DEBUG_PRINT_BUF(tarr,tsize) 
+	#define DEBUG_PRINT_BUF_HEX(tarr,tsize) 
+	#define DEBUG_PRINT_ARRAY(tarr) 
+	#define DEBUG_PRINT_ARRAY_HEX(tarr) 
+#endif
 
 extern void * const hal_serial0;
 extern void * const hal_serial1;

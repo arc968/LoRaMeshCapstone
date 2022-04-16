@@ -94,9 +94,13 @@ static void insertRoute(ipv4_t ip_src, uint8_t ttl, uint16_t index_peer, lib_dat
 	memcpy(route->ip_src, ip_src, sizeof(ipv4_t));
 	route->last_usage = realtime;
 	bool peerAlreadyInList = false;
+	//if peer already in list, remove it
 	for (int i=0; i<ROUTE_PEER_COUNT; i++) {
 		if (index_peer == route->peers[i].index_peer) {
 			peerAlreadyInList = true;
+			if (route->peers[i].ttl < ttl) {
+				ttl = route->peers[i].ttl; //use the lower of the two TTLs
+			}
 			for (int ii=i; ii<ROUTE_PEER_COUNT-1; ii++) {
 				route->peers[ii].ttl = route->peers[ii+1].ttl;
 				route->peers[ii].index_peer = route->peers[ii+1].index_peer;
@@ -104,6 +108,7 @@ static void insertRoute(ipv4_t ip_src, uint8_t ttl, uint16_t index_peer, lib_dat
 			break;
 		}
 	}
+	//add peer back to list, keep list sorted
 	if (!peerAlreadyInList && route->count < ROUTE_PEER_COUNT) route->count++;
 	for (int i=0; i<ROUTE_PEER_COUNT; i++) {
 		if (ttl <= route->peers[i].ttl) {

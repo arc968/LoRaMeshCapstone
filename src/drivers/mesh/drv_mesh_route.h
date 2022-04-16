@@ -33,6 +33,7 @@ static void queuePacketToAllPeers(uint8_t * payload, uint8_t payloadSize) {
 	}
 }
 
+//don't send back to peer that delivered message
 static void drv_mesh_routePayload(struct payload_s * payload, uint8_t payloadSize, lib_datetime_realtime_t realtime) {
 	struct route_s * route = findRoute(payload->header.ip_dst, realtime);
 	if (route == NULL) {
@@ -56,15 +57,17 @@ static void drv_mesh_parsePayload_data(struct peer_s * peer, struct packet_s * r
 	insertRoute(payload->header.ip_src, payload->header.ttl, getPeerIndexFromPtr(peer), rt);
 
 	DEBUG_PRINT("\tDEBUG: route inserted.\n");
-
-	bool recent = checkRecentPayload(raw_payload, payloadSize);
-	DEBUG_PRINT("\tDEBUG: recent payload checked.\n");
-	if (recent) {
-		DEBUG_PRINT("\tINFO: Payload seen recently, dropping...\n");
-		return;
-	} else {
-		insertRecentPayload(raw_payload, payloadSize);
-		DEBUG_PRINT("\tDEBUG: recent payload inserted.\n");
+	
+	if (msgSize > 0) { //NEEDS TO NOT DROP EMPTY (ACK) PAYLOADS
+		bool recent = checkRecentPayload(raw_payload, payloadSize);
+		DEBUG_PRINT("\tDEBUG: recent payload checked.\n");
+		if (recent) {
+			DEBUG_PRINT("\tINFO: Payload seen recently, dropping...\n");
+			return;
+		} else {
+			insertRecentPayload(raw_payload, payloadSize);
+			DEBUG_PRINT("\tDEBUG: recent payload inserted.\n");
+		}
 	}
 
 	DEBUG_PRINT("\tINFO: Payload TTL: %hhu.\n", payload->header.ttl);

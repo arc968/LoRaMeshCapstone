@@ -45,11 +45,11 @@ void hal_interrupt_disable(void) {
 	
 }
 
-bool hal_interrupt_isEnabled(void) {
+/* bool hal_interrupt_isEnabled(void) {
 	
 	return globalinterruptsenabled;
 	
-}
+} */
 
 void hal_interrupt_attachPin(pin_t pin, void (*isr)(void), enum hal_interrupt_mode_e mode) {
 	#if defined(HW_ARDUINO)
