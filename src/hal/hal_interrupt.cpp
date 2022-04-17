@@ -41,9 +41,10 @@ void hal_interrupt_disable(void) {
 
 bool hal_interrupt_isEnabled(void) {
 	#if defined(HW_MKRWAN1300_H)
-		uint32_t result;
-		__ASM volatile ("MRS %0, cpsr" : "=r" (result) );
-		return (result & (0x1 << 7)) >> 7;
+		//uint32_t result;
+		//__ASM volatile ("MRS %0, cpsr" : "=r" (result) );
+		//return (result & (0x1 << 7)) >> 7;
+		return false;
 	#elif defined(HW_RAK4260_H)
 		uint32_t result;
 		__ASM volatile ("MRS %0, cpsr" : "=r" (result) );

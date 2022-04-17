@@ -58,12 +58,12 @@ static void drv_mesh_parsePayload_data(struct peer_s * peer, struct packet_s * r
 
 	DEBUG_PRINT("\tDEBUG: route inserted.\n");
 	
+	bool recent = false;
 	if (msgSize > 0) { //NEEDS TO NOT DROP EMPTY (ACK) PAYLOADS
-		bool recent = checkRecentPayload(raw_payload, payloadSize);
+		recent = checkRecentPayload(raw_payload, payloadSize);
 		DEBUG_PRINT("\tDEBUG: recent payload checked.\n");
 		if (recent) {
 			DEBUG_PRINT("\tINFO: Payload seen recently, dropping...\n");
-			return;
 		} else {
 			insertRecentPayload(raw_payload, payloadSize);
 			DEBUG_PRINT("\tDEBUG: recent payload inserted.\n");
@@ -77,27 +77,16 @@ static void drv_mesh_parsePayload_data(struct peer_s * peer, struct packet_s * r
 	}
 
 	if (memcmp(payload->header.ip_dst, state.ip, sizeof(ipv4_t)) != 0) {
-		DEBUG_PRINT("\tINFO: Payload destined elsewhere, relaying...\n");
-		payload->header.ttl++;
-		drv_mesh_routePayload(raw_payload, payloadSize, rt);
+		if (!recent) {
+			DEBUG_PRINT("\tINFO: Payload destined elsewhere, relaying...\n");
+			payload->header.ttl++;
+			drv_mesh_routePayload(raw_payload, payloadSize, rt);
+		}
 	} else {
 		DEBUG_PRINT("\tINFO: Payload destined for this node.\n");
-		struct drv_mesh_packet_s packet;
-		crypto_wipe(&packet, sizeof(packet));
-		memcpy(packet.ip, payload->header.ip_src, sizeof(ipv4_t));
-		packet.port = payload->header.port_src;
-		packet.len = msgSize;
-		if (packet.len > DRV_MESH__MESSAGE_SIZE_MAX) {
-			DEBUG_PRINT("\tWARNING: Message is too large (%hhu bytes), dropping.\n", packet.len);
-			return;
-		}
 
-		if (msgSize > 0) { //queue ACK
-			DEBUG_PRINT("\tINFO: Message received (%hhu bytes), running callback...\n", packet.len);
-			memcpy(packet.buf, payload->data, msgSize);
-			if (state.func_onRecv_ptr != NULL) {
-				state.func_onRecv_ptr(&packet);
-			}
+		if (msgSize > 0) { //queue direct ACK
+			DEBUG_PRINT("\tINFO: Payload received (seq: %u) (%hhu bytes), queuing ACK...\n", payload->auth.num_seq, payloadSize);
 			struct payload_s tmp_payload;
 			tmp_payload.header.type = PAYLOAD_TYPE__DATA;
 			tmp_payload.header.ttl = 0;
@@ -107,7 +96,38 @@ static void drv_mesh_parsePayload_data(struct peer_s * peer, struct packet_s * r
 			tmp_payload.header.port_dst = payload->header.port_src;
 			tmp_payload.asData.auth.num_seq = 0;
 			tmp_payload.asData.auth.num_ack = payload->auth.num_seq;
-			drv_mesh_routePayload(&tmp_payload, sizeof(struct payload_type_data_s), rt);
+			//drv_mesh_routePayload(&tmp_payload, sizeof(struct payload_type_data_s), rt);
+			queuePacketToPeer(peer, (uint8_t *)&tmp_payload, sizeof(struct payload_type_data_s));
+		}
+
+		if (!recent) {
+			DEBUG_PRINT("\tINFO: Message received (seq: %u) (%hhu bytes), running callback...\n", payload->auth.num_seq, msgSize);
+			struct drv_mesh_packet_s packet;
+			crypto_wipe(&packet, sizeof(packet));
+			packet.len = msgSize;
+			if (packet.len > DRV_MESH__MESSAGE_SIZE_MAX) {
+				DEBUG_PRINT("\tWARNING: Message is too large (%hhu bytes), dropping.\n", packet.len);
+				return;
+			}
+			memcpy(packet.ip, payload->header.ip_src, sizeof(ipv4_t));
+			packet.port = payload->header.port_src;
+			memcpy(packet.buf, payload->data, msgSize);
+			if (state.func_onRecv_ptr != NULL) {
+				state.func_onRecv_ptr(&packet);
+			}
+		}
+
+		{ //handle ACK portion
+			uint16_t count = RB_COUNT(state.rb_outboundPackets);
+			for (uint16_t i=0; i<count; i++) {
+				struct packet_s * packet_tmp = *RB_GET(state.rb_outboundPackets);
+				if (packet_tmp->counter == payload->auth.num_ack) {
+					DEBUG_PRINT("\tINFO: Message (%u) acknowledged.\n", packet_tmp->counter);
+					insertEmptyPacket(packet_tmp);
+				} else {
+					*RB_PUT(state.rb_outboundPackets) = packet_tmp;
+				}
+			}
 		}
 	}
 }

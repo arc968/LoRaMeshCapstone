@@ -152,6 +152,7 @@ static struct state_s {
 		uint16_t tail;
 		struct packet_s * buf[BUFFER_OUTBOUND_PACKETS_SIZE];
 	} rb_outboundPackets;
+	uint32_t counter_outbound;
 
 	struct appointment_s * head_appt_empty;
 	struct appointment_s appointments[BUFFER_APPOINTMENTS_SIZE];
