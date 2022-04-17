@@ -122,11 +122,14 @@ void serialReadGateway(void *) {
       }
 
       if (len == 0) {
-        buf[0] = sbuf[0] - '0';
+        uint8_t temp = 0;
+        temp = temp + ((sbuf[i] -  '0') * 10);
+        temp = temp + (sbuf[i+1] - '0');
+        buf[0] = temp;
         len++;
+        i++;
       }
       else if ((sbuf[i] < '0' || sbuf[i] > '9')) {
-        printf("char\n");
         buf[1] = sbuf[i];
         len++;
         break;
@@ -153,9 +156,7 @@ void serialReadGateway(void *) {
         .port = 0,
         .len = len,
     };
-
-    Serial.write(buf, len);
-  
+      
     if (len == 4) {
       ledPacket.buf[0] = RGBPACKET;
       ledPacket.buf[1] = buf[1];
