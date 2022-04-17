@@ -28,9 +28,9 @@ uint16_t sensordata = 0;
 
 Adafruit_NeoPixel ring(RING_LED_COUNT, RING_LED_DATAIN_PIN, NEO_GRB + NEO_KHZ800);
 
-//Adafruit_NeoPixel con1(CON_STRIP_COUNT, CON1_STRIP_DATA_PIN, NEO_GRBW + NEO_KHZ800);
-//Adafruit_NeoPixel con2(CON_STRIP_COUNT, CON2_STRIP_DATA_PIN, NEO_GRBW + NEO_KHZ800);
-//Adafruit_NeoPixel con3(CON_STRIP_COUNT, CON3_STRIP_DATA_PIN, NEO_GRBW + NEO_KHZ800);
+//Adafruit_NeoPixel con1(CON_STRIP_COUNT, CON1_STRIP_DATA_PIN, NEO_GRB + NEO_KHZ800);
+//Adafruit_NeoPixel con2(CON_STRIP_COUNT, CON2_STRIP_DATA_PIN, NEO_GRB + NEO_KHZ800);
+//Adafruit_NeoPixel con3(CON_STRIP_COUNT, CON3_STRIP_DATA_PIN, NEO_GRB + NEO_KHZ800);
 
 
 void setup() {
@@ -66,24 +66,71 @@ void setup() {
   //}
 
   if (Serial) {
-    Serial.print("Serial Ready\n");
+    SIM_NODE_IP = 1;
+    Serial.print("Serial Ready, Node IP is now the Gateway Node for Serial Coms\n");
+    ring.fill(ring.Color(0, 0, 255));
   }
-
-  ring.fill(ring.Color(0, 255, 0));
+  else {
+    ring.fill(ring.Color(0, 255, 0));
+  }
+  
   ring.show();
 
   readSensorVal(NULL);
   
   drv_sched_init();
 
-  drv_sched_repeating(readSensorVal, NULL, DRV_SCHED_PRI__NORMAL, 0, 60000);
-
+  if (SIM_NODE_IP == 1 && Serial) { 
+    drv_sched_repeating(serialReadGateway, NULL, DRV_SCHED_PRI__NORMAL, 0, 1000);
+  }
+  else {
+    drv_sched_repeating(readSensorVal, NULL, DRV_SCHED_PRI__NORMAL, 0, 60000);
+  }
+  
   drv_mesh_init(messageReceived);
   drv_sched_start();
   
 }
 
 void loop() {}
+
+void serialReadGateway(void *) {
+
+  if (Serial) {
+    uint8_t len = 0;
+    uint8_t buf[20];
+    while (Serial.available() && len < 20) {
+      buf[len] = Serial.read();
+      len++;
+    }
+  
+    struct drv_mesh_packet_s ledPacket = {
+        .ip = {10, 0, 0, buf[0]},
+        .port = 0,
+        .len = len,
+    };
+
+    Serial.write(buf, len);
+  
+    if (len == 4) {
+      ledPacket.buf[0] = RGBPACKET;
+      ledPacket.buf[1] = buf[1];
+      ledPacket.buf[2] = buf[2];
+      ledPacket.buf[3] = buf[3];
+  
+      drv_mesh_send(&ledPacket);
+    }
+    else if (len == 2) {
+      ledPacket.buf[0] = RGBPACKET;
+      ledPacket.buf[1] = buf[1];
+  
+      drv_mesh_send(&ledPacket);
+    }
+    else {
+      
+    }
+  }
+}
 
 void messageReceived(struct drv_mesh_packet_s * receivedData) {
 
