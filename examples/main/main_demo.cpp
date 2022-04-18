@@ -73,13 +73,15 @@ void serialReadGateway(void * arg) {
       break;
     }
 
-    if (len == 0) {
-      uint8_t temp = 0;
-      temp = temp + ((sbuf[i] -  '0') * 10);
-      temp = temp + (sbuf[i+1] - '0');
-      buf[0] = temp;
-      len++;
-      i++;
+    if (len <= 2 && i + 2 < slen) {
+        uint8_t temp = 0;
+        temp =((sbuf[i] -  '0') * 100);
+        temp = temp + (sbuf[i+1] - '0') * 10;
+        temp = temp + (sbuf[i+2] - '0');
+
+        buf[len] = temp;
+        len++;
+        i=i+2;
     } else if (sbuf[i] < '0' || sbuf[i] > '9') {
       buf[1] = sbuf[i];
       len++;
@@ -99,6 +101,8 @@ void serialReadGateway(void * arg) {
     }
     
   }
+  
+  len = len - 2;
   
   struct drv_mesh_packet_s ledPacket = {
       .ip = {10, 0, 0, buf[0]},
