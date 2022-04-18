@@ -23,7 +23,7 @@ uint16_t sensordata = 0;
 #define GATEWAY_PULL_PIN    5
 
 //NeoPixel
-#define BRIGHTNESS          50 // Set BRIGHTNESS(max = 255)
+#define BRIGHTNESS          25 // Set BRIGHTNESS(max = 255)
 #define RING_LED_COUNT      12
 #define RING_LED_DATAIN_PIN 1
 #define CON_STRIP_COUNT     10
@@ -54,12 +54,14 @@ void serialReadGateway(void * arg) {
 
   uint8_t slen = 0;
   uint8_t sbuf[50];
+  memset(sbuf, 0, sizeof(sbuf));
   while (Serial.available() && slen < 50) {
     sbuf[slen] = Serial.read();
     slen++;
   }
   
-  uint8_t buf[5];
+  uint8_t buf[64];
+  memset(buf, 0, sizeof(buf));
   uint8_t len = 0;
   
   for (uint8_t i = 0; i < slen; i++) {
@@ -83,7 +85,7 @@ void serialReadGateway(void * arg) {
         len++;
         i=i+2;
     } else if (sbuf[i] < '0' || sbuf[i] > '9') {
-      buf[1] = sbuf[i];
+      buf[len] = sbuf[i];
       len++;
       break;
     } else if (i + 2 < slen) {
@@ -105,21 +107,21 @@ void serialReadGateway(void * arg) {
   len = len - 2;
   
   struct drv_mesh_packet_s ledPacket = {
-      .ip = {10, 0, 0, buf[0]},
+      .ip = {10, buf[0], buf[1], buf[2]},
       .port = 0,
       .len = len,
   };
     
   if (len == 4) {
     ledPacket.buf[0] = RGBPACKET;
-    ledPacket.buf[1] = buf[1];
-    ledPacket.buf[2] = buf[2];
-    ledPacket.buf[3] = buf[3];
+    ledPacket.buf[1] = buf[3];
+    ledPacket.buf[2] = buf[4];
+    ledPacket.buf[3] = buf[5];
 
     drv_mesh_send(&ledPacket);
   } else if (len == 2) {
     ledPacket.buf[0] = RGBPACKET;
-    ledPacket.buf[1] = buf[1];
+    ledPacket.buf[1] = buf[3];
 
     drv_mesh_send(&ledPacket);
   } else {

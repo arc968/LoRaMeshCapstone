@@ -61,6 +61,9 @@ static void printStats(struct drv_mesh_stats_s * stats) {
 	DEBUG_PRINT("\t broadcasts_recv: %lu\n", stats->broadcasts_recv);
 
 	DEBUG_PRINT("\t peer_count: %lu\n", stats->peer_count);
+	DEBUG_PRINT("\t peer_count_passerby: %lu\n", stats->peer_count_passerby);
+	DEBUG_PRINT("\t peer_count_stranger: %lu\n", stats->peer_count_stranger);
+	DEBUG_PRINT("\t peer_count_acquaintance: %lu\n", stats->peer_count_acquaintance);
 }
 
 static void printPeerStats(struct peer_s * peer) {
@@ -113,7 +116,7 @@ static void drv_mesh_worker_scheduler(void * arg) {
 			uint32_t tmp = 0; //lib_misc_fastrange32(seed, DISCOVERY_INTERVAL_MILLIS);
 			appt->realtime = rt_disc + tmp;
 			lib_datetime_interval_t curTime = drv_timer_getMonotonicTime();
-			uint32_t tmp2 = (uint32_t)constrainU64(map(curTime, 0, LIB_DATETIME__MS_IN_DAY/24, 8, 20), 8, 20); // Ends at sending 1/n times
+			uint32_t tmp2 = (uint32_t)constrainU64(map(curTime, 0, LIB_DATETIME__MS_IN_DAY/24, DISC_FRAC_START, DISC_FRAC_END), DISC_FRAC_START, DISC_FRAC_END); // Ends at sending 1/n times
 			uint32_t tmp3 = lib_misc_fastrange32(drv_rand_getU32(), tmp2);
 			
 			//appt->peer = NULL;
@@ -160,7 +163,7 @@ static void drv_mesh_worker_scheduler(void * arg) {
 			struct payload_type_data_s * payload = (struct payload_type_data_s *)&(packet->asLink.payload[0]);
 			lib_datetime_realtime_t rt;
 			drv_timer_getRealtime(&rt);	
-			drv_mesh_routePayload((struct payload_s *)payload, packet->size, rt);
+			drv_mesh_routePayload((struct payload_s *)payload, packet->size, rt, NULL);
 			*RB_PUT(state.rb_outboundPackets) = packet;
 		}
 	}
@@ -403,6 +406,11 @@ enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * packet) {
 	if (packet->len > DRV_MESH__MESSAGE_SIZE_MAX) {
 		DEBUG_PRINT("\tWARNING: Failed to send mesh packet, payload too large\n");
 		return DRV_MESH_ERR__MESSAGE_TOO_LARGE;
+	}
+
+	if (packet->len == 0) {
+		DEBUG_PRINT("\tWARNING: Failed to send mesh packet, payload too small\n");
+		return DRV_MESH_ERR__MESSAGE_TOO_SMALL;
 	}
 
 	if (!RB_SPACE(state.rb_outboundPackets)) {

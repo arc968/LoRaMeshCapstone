@@ -303,23 +303,23 @@ static void drv_mesh_parsePacket_link(struct packet_s * raw_packet) {
 	}
 	
 	if (raw_packet->size - sizeof(struct packet_type_link_s) > 0) {
-		{ //queue ACK
-			if (!RB_SPACE(peer->rb_packets)) {
-				DEBUG_PRINT("\tWARNING: Failed to create peer ACK, no empty slots in peer packet queue available\n");
-				return;
-			}
+		// { //queue ACK
+		// 	if (!RB_SPACE(peer->rb_packets)) {
+		// 		DEBUG_PRINT("\tWARNING: Failed to create peer ACK, no empty slots in peer packet queue available\n");
+		// 		return;
+		// 	}
 
-			struct packet_s * packet_tmp = popEmptyPacket();
-			if (packet_tmp == NULL) {
-				DEBUG_PRINT("\tWARNING: Failed to create peer ACK, no empty packets available\n");
-				return;
-			}
+		// 	struct packet_s * packet_tmp = popEmptyPacket();
+		// 	if (packet_tmp == NULL) {
+		// 		DEBUG_PRINT("\tWARNING: Failed to create peer ACK, no empty packets available\n");
+		// 		return;
+		// 	}
 			
-			*RB_PUT(peer->rb_packets) = packet_tmp;
+		// 	*RB_PUT(peer->rb_packets) = packet_tmp;
 
-			drv_mesh_buildPacket_link(peer, packet_tmp, NULL, 0);
-			packet_tmp->once = true;
-		}
+		// 	drv_mesh_buildPacket_link(peer, packet_tmp, NULL, 0);
+		// 	packet_tmp->once = true;
+		// }
 		drv_mesh_parsePayload(peer, raw_packet, (struct payload_s *)&(packet->payload[0]));
 	} else {
 		DEBUG_PRINT("\tINFO: Link packet has no payload.\n");

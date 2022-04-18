@@ -16,10 +16,10 @@ static void queuePacketToPeer(struct peer_s * peer, uint8_t * payload, uint8_t p
 	}
 }
 
-static void queuePacketToAllPeers(uint8_t * payload, uint8_t payloadSize) {
+static void queuePacketToAllPeers(uint8_t * payload, uint8_t payloadSize, struct peer_s * relayPeer) {
 	struct peer_s * tmp_peer = state.head_peer_ready;
 	for (; tmp_peer != NULL; tmp_peer = tmp_peer->next) {
-		if (tmp_peer->status == PEER_ACQUAINTANCE) {
+		if (tmp_peer->status == PEER_ACQUAINTANCE && tmp_peer != relayPeer) {
 			if (RB_SPACE(tmp_peer->rb_packets) > BUFFER_PER_PEER_PACKETS_MIN_SPACE) {
 				struct packet_s * tmp_packet = popEmptyPacket();
 				if (tmp_packet == NULL) {
@@ -34,11 +34,11 @@ static void queuePacketToAllPeers(uint8_t * payload, uint8_t payloadSize) {
 }
 
 //don't send back to peer that delivered message
-static void drv_mesh_routePayload(struct payload_s * payload, uint8_t payloadSize, lib_datetime_realtime_t realtime) {
+static void drv_mesh_routePayload(struct payload_s * payload, uint8_t payloadSize, lib_datetime_realtime_t realtime, struct peer_s * relayPeer) {
 	struct route_s * route = findRoute(payload->header.ip_dst, realtime);
 	if (route == NULL) {
 		DEBUG_PRINT("\tINFO: No route found, flooding...\n");
-		queuePacketToAllPeers((uint8_t *)payload, payloadSize);
+		queuePacketToAllPeers((uint8_t *)payload, payloadSize, relayPeer);
 	} else {
 		DEBUG_PRINT("\tINFO: Route found.\n"); //only sends to a single peer for now
 		queuePacketToPeer(&(state.peers[route->peers[0].index_peer]), (uint8_t *)payload, payloadSize);
@@ -80,10 +80,22 @@ static void drv_mesh_parsePayload_data(struct peer_s * peer, struct packet_s * r
 		if (!recent) {
 			DEBUG_PRINT("\tINFO: Payload destined elsewhere, relaying...\n");
 			payload->header.ttl++;
-			drv_mesh_routePayload(raw_payload, payloadSize, rt);
+			drv_mesh_routePayload(raw_payload, payloadSize, rt, peer);
 		}
 	} else {
 		DEBUG_PRINT("\tINFO: Payload destined for this node.\n");
+
+		{ //dequeue packets based on ACK
+			uint16_t count = RB_COUNT(state.rb_outboundPackets);
+			for (uint16_t i=0; i<count; i++) {
+				struct packet_s * packet_tmp = *RB_GET(state.rb_outboundPackets);
+				if (packet_tmp->counter == payload->auth.num_ack) {
+					insertEmptyPacket(packet_tmp);
+				} else {
+					*RB_PUT(state.rb_outboundPackets) = packet_tmp;
+				}
+			}
+		} ??? //something is wrong with payload ACK
 
 		if (msgSize > 0) { //queue direct ACK
 			DEBUG_PRINT("\tINFO: Payload received (seq: %u) (%hhu bytes), queuing ACK...\n", payload->auth.num_seq, payloadSize);
@@ -100,7 +112,7 @@ static void drv_mesh_parsePayload_data(struct peer_s * peer, struct packet_s * r
 			queuePacketToPeer(peer, (uint8_t *)&tmp_payload, sizeof(struct payload_type_data_s));
 		}
 
-		if (!recent) {
+		if (!recent && msgSize > 0) {
 			DEBUG_PRINT("\tINFO: Message received (seq: %u) (%hhu bytes), running callback...\n", payload->auth.num_seq, msgSize);
 			struct drv_mesh_packet_s packet;
 			crypto_wipe(&packet, sizeof(packet));

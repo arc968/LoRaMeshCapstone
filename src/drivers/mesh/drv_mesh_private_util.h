@@ -82,6 +82,7 @@ static struct route_s * findRoute(ipv4_t ip_src, lib_datetime_realtime_t realtim
 	return route;
 }
 
+//Doesn't properly handle the gateway being returned
 static void insertRoute(ipv4_t ip_src, uint8_t ttl, uint16_t index_peer, lib_datetime_realtime_t realtime) {
 	DEBUG_PRINT_FUNCTION();
 	struct route_s * route = findRoute(ip_src, realtime);
@@ -125,11 +126,16 @@ static void insertRoute(ipv4_t ip_src, uint8_t ttl, uint16_t index_peer, lib_dat
 	struct route_s * tmp = state.hm_route_buckets[hm_index];
 	if (tmp == NULL) {
 		state.hm_route_buckets[hm_index] = route;
+		route->next = NULL;
 	} else {
 		while (tmp->next != NULL && memcmp(tmp->ip_src, ip_src, sizeof(ipv4_t))) tmp = tmp->next;
-		tmp->next = route;
+		if (memcmp(tmp->ip_src, ip_src, sizeof(ipv4_t)) == 0) {
+			//do nothing, already in hashmap 
+		} else {
+			route->next = NULL;
+			tmp->next = route;
+		}
 	}
-	route->next = NULL;
 }
 
 static void insertReadyPeer(struct peer_s * peer) {
