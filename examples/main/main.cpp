@@ -5,11 +5,11 @@
 
 
 //demo only inlcudes
-#include <MKRWAN.h>
+//#include <MKRWAN.h>
 #include <Adafruit_NeoPixel.h>
 #include <stdint.h>
 
-LoRaModem modem; //for demo IP generation
+//LoRaModem modem; //for demo IP generation
 
 static volatile lib_datetime_interval_t timestamp = 0;
 uint16_t sensordata = 0;
@@ -39,6 +39,14 @@ uint16_t sensordata = 0;
 uint8_t isGateway = 0;
 
 Adafruit_NeoPixel ring(RING_LED_COUNT, RING_LED_DATAIN_PIN, NEO_GRB + NEO_KHZ800);
+
+void blinkOn(void * arg __attribute__((unused))) {
+	digitalWrite(LED_BUILTIN, HIGH);
+}
+
+void blinkOff(void * arg __attribute__((unused))) {
+	digitalWrite(LED_BUILTIN, LOW);
+}
 
 void loop() {}
 
@@ -232,20 +240,26 @@ void messageReceived(struct drv_mesh_packet_s * receivedData) {
   
 }
 
+uint8_t TESTING_DEMO_ISGATEWAY_FLAG_THING = 0;
+
 void setup() {
+  //modem.begin(US915);
   uint8_t prikey[32];
   memset(prikey, 0, sizeof(prikey));
-  String eui = modem.deviceEUI();
-  memcpy(prikey, eui.c_str(), eui.length());
+  //String eui = modem.deviceEUI();
+  //memcpy(prikey, eui.c_str(), eui.length());
 
   pinMode(INTERNAL_LED_PIN, OUTPUT);
   pinMode(SENSOR_PIN, INPUT);
+
+  pinMode(LED_BUILTIN, OUTPUT);
 
   pinMode(GATEWAY_SENSE_PIN, INPUT_PULLUP);
   pinMode(GATEWAY_PULL_PIN, OUTPUT);
   digitalWrite(GATEWAY_PULL_PIN, LOW);
   if (!digitalRead(GATEWAY_SENSE_PIN)) {
     isGateway = 1;
+    TESTING_DEMO_ISGATEWAY_FLAG_THING = 1;
   }
   
   digitalWrite(INTERNAL_LED_PIN, LOW);
@@ -255,9 +269,9 @@ void setup() {
   ring.show();            
   ring.setBrightness(BRIGHTNESS);
   
-  //while (!Serial) {
+  while (!Serial) {
     Serial.begin(115200);
-  //}
+  }
 
   if (isGateway) {
     if (Serial) Serial.print("Serial Ready, Node IP is now the Gateway Node for Serial Coms\n");
@@ -269,8 +283,6 @@ void setup() {
   
   ring.show();
 
-  readSensorVal(NULL);
-  
   drv_sched_init();
 
   if (isGateway) { 
@@ -279,7 +291,10 @@ void setup() {
   else {
     drv_sched_repeating(readSensorVal, NULL, DRV_SCHED_PRI__NORMAL, 0, 60000);
   }
-  
+
+  drv_sched_repeating(blinkOn, NULL, DRV_SCHED_PRI__NORMAL, 0, 2000);
+	drv_sched_repeating(blinkOff, NULL, DRV_SCHED_PRI__NORMAL, 1000, 2000);
+
   drv_mesh_init(NULL, prikey, messageReceived);
   drv_sched_start();
   

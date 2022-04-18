@@ -276,6 +276,8 @@ static void fn_stub(struct drv_mesh_packet_s * packet) {
 	return;
 }
 
+extern uint8_t TESTING_DEMO_ISGATEWAY_FLAG_THING;
+
 //add runonce guard
 void drv_mesh_init(uint8_t key_psk[32], uint8_t key_dh_priv[32], void (*func_onRecv_ptr)(struct drv_mesh_packet_s *)) {
 	DEBUG_PRINT_TIMESTAMP(); DEBUG_PRINT_FUNCTION();
@@ -344,11 +346,10 @@ void drv_mesh_init(uint8_t key_psk[32], uint8_t key_dh_priv[32], void (*func_onR
 		}
 		crypto_x25519_public_key(state.key_dh_pub, state.key_dh_priv);
 
-		#ifdef GATEWAY
+		if (TESTING_DEMO_ISGATEWAY_FLAG_THING) {
 			//memset(state.ip, 8, sizeof(ipv4_t));
 			memcpy(state.ip, GATEWAY_IP, sizeof(ipv4_t));
-		#else
-			//drv_rand_fillBuf(state.ip, sizeof(state.ip));
+		} else {			//drv_rand_fillBuf(state.ip, sizeof(state.ip));
 			
 			// state.ip[0] = 10;
 			// state.ip[1] = 0;
@@ -357,7 +358,7 @@ void drv_mesh_init(uint8_t key_psk[32], uint8_t key_dh_priv[32], void (*func_onR
 
 			crypto_blake2b_general(state.ip, sizeof(ipv4_t), NULL, 0, state.key_dh_priv, sizeof(state.key_dh_priv));
 			state.ip[0] = 10;
-		#endif
+		}
 		DEBUG_PRINT_ARRAY(state.ip);
 }
 
