@@ -154,40 +154,48 @@ static void drv_mesh_parsePacket_auth(struct packet_s * raw_packet) {
 		
 		if (peer->status == PEER_PASSERBY) {
 			peer->status = PEER_STRANGER;
+		}
+		{ // derive key_data_send/key_data_recv
+			uint8_t key_tmp[32];
+			uint8_t key_shared_tmp[32];
+			uint8_t key_send_tmp[32];
+			uint8_t key_recv_tmp[32];
 			
-			{ // derive key_data_send/key_data_recv
-				uint8_t key_tmp[32];
-				uint8_t key_shared_tmp[32];
-				
-				crypto_x25519(key_tmp, state.key_dh_priv, peer->key_dh_pub);
-				crypto_blake2b_general(key_shared_tmp, sizeof(key_shared_tmp), state.psk, sizeof(state.psk), key_tmp, sizeof(key_tmp));
-				
-				crypto_x25519(key_tmp, peer->key_ephemeral_priv, packet->lock.key_ephemeral_pub);
-				crypto_blake2b_general(key_shared_tmp, sizeof(key_shared_tmp), key_shared_tmp, sizeof(key_shared_tmp), key_tmp, sizeof(key_tmp));
-				
-				{ // key_data_send
-					crypto_x25519(key_tmp, peer->key_ephemeral_priv, peer->key_dh_pub);
-					crypto_blake2b_general(peer->key_send, sizeof(peer->key_send), key_shared_tmp, sizeof(key_shared_tmp), key_tmp, sizeof(key_tmp));
-				}
-				{ // key_data_recv
-					crypto_x25519(key_tmp, state.key_dh_priv, packet->lock.key_ephemeral_pub);
-					crypto_blake2b_general(peer->key_recv, sizeof(peer->key_recv), key_shared_tmp, sizeof(key_shared_tmp), key_tmp, sizeof(key_tmp));
-				}
-				
-				crypto_wipe(key_tmp, sizeof(key_tmp));
-				crypto_wipe(key_shared_tmp, sizeof(key_shared_tmp));
-				
+			crypto_x25519(key_tmp, state.key_dh_priv, peer->key_dh_pub);
+			crypto_blake2b_general(key_shared_tmp, sizeof(key_shared_tmp), state.psk, sizeof(state.psk), key_tmp, sizeof(key_tmp));
+			
+			crypto_x25519(key_tmp, peer->key_ephemeral_priv, packet->lock.key_ephemeral_pub);
+			crypto_blake2b_general(key_shared_tmp, sizeof(key_shared_tmp), key_shared_tmp, sizeof(key_shared_tmp), key_tmp, sizeof(key_tmp));
+			
+			{ // key_data_send
+				crypto_x25519(key_tmp, peer->key_ephemeral_priv, peer->key_dh_pub);
+				crypto_blake2b_general(key_send_tmp, sizeof(key_send_tmp), key_shared_tmp, sizeof(key_shared_tmp), key_tmp, sizeof(key_tmp));
+			}
+			{ // key_data_recv
+				crypto_x25519(key_tmp, state.key_dh_priv, packet->lock.key_ephemeral_pub);
+				crypto_blake2b_general(key_recv_tmp, sizeof(key_recv_tmp), key_shared_tmp, sizeof(key_shared_tmp), key_tmp, sizeof(key_tmp));
+			}
+
+			if (crypto_verify32(key_send_tmp, peer->key_send) || crypto_verify32(key_recv_tmp, peer->key_recv)) {
+				DEBUG_PRINT("\tINFO: Rekeying peer...\n");
+				memcpy(peer->key_send, key_send_tmp, sizeof(peer->key_send));
+				memcpy(peer->key_recv, key_recv_tmp, sizeof(peer->key_recv));
 				peer->counter_send = 0;
 				peer->counter_recv = 0;
 				peer->counter_ack = 0;
-
-				DEBUG_PRINT("\tkey_send [%hhu]: [", sizeof(peer->key_send));
-				for (uint32_t i=0; i<sizeof(peer->key_send); i++) DEBUG_PRINT(((i+1==sizeof(peer->key_send)) ? "%hhu" : "%hhu,"), (peer->key_send)[i]);
-				DEBUG_PRINT("]\n");
-				DEBUG_PRINT("\tkey_recv [%hhu]: [", sizeof(peer->key_recv));
-				for (uint32_t i=0; i<sizeof(peer->key_recv); i++) DEBUG_PRINT(((i+1==sizeof(peer->key_recv)) ? "%hhu" : "%hhu,"), (peer->key_recv)[i]);
-				DEBUG_PRINT("]\n");
 			}
+			
+			crypto_wipe(key_tmp, sizeof(key_tmp));
+			crypto_wipe(key_shared_tmp, sizeof(key_shared_tmp));
+			crypto_wipe(key_send_tmp, sizeof(key_send_tmp));
+			crypto_wipe(key_recv_tmp, sizeof(key_recv_tmp));
+
+			DEBUG_PRINT("\tkey_send [%hhu]: [", sizeof(peer->key_send));
+			for (uint32_t i=0; i<sizeof(peer->key_send); i++) DEBUG_PRINT(((i+1==sizeof(peer->key_send)) ? "%hhu" : "%hhu,"), (peer->key_send)[i]);
+			DEBUG_PRINT("]\n");
+			DEBUG_PRINT("\tkey_recv [%hhu]: [", sizeof(peer->key_recv));
+			for (uint32_t i=0; i<sizeof(peer->key_recv); i++) DEBUG_PRINT(((i+1==sizeof(peer->key_recv)) ? "%hhu" : "%hhu,"), (peer->key_recv)[i]);
+			DEBUG_PRINT("]\n");
 		}
 		
 		{ //queue ACK

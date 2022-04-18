@@ -2,6 +2,10 @@
 #include "LoRaMeshCapstone.h"
 #include "lib/byteorder/lib_byteorder.h"
 
+#include <MKRWAN.h>
+
+LoRaModem modem;
+
 //demo only inlcudes
 #include <Adafruit_NeoPixel.h>
 #include <stdint.h>
@@ -33,6 +37,10 @@ uint8_t SIM_NODE_IP =       2;
 Adafruit_NeoPixel ring(RING_LED_COUNT, RING_LED_DATAIN_PIN, NEO_GRB + NEO_KHZ800);
 
 void setup() {
+  uint8_t prikey[32];
+  memset(prikey, 0, sizeof(prikey));
+  String eui = modem.deviceEUI();
+  memcpy(prikey, eui.c_str(), eui.length());
 
   pinMode(INTERNAL_LED_PIN, OUTPUT);
   pinMode(SENSOR_PIN, INPUT);
@@ -70,7 +78,7 @@ void setup() {
     drv_sched_repeating(readSensorVal, NULL, DRV_SCHED_PRI__NORMAL, 0, 60000);
   }
   
-  drv_mesh_init(NULL, NULL, messageReceived);
+  drv_mesh_init(NULL, prikey, messageReceived);
   drv_sched_start();
   
 }
