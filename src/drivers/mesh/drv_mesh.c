@@ -349,10 +349,14 @@ void drv_mesh_init(uint8_t key_psk[32], uint8_t key_dh_priv[32], void (*func_onR
 			memcpy(state.ip, GATEWAY_IP, sizeof(ipv4_t));
 		#else
 			//drv_rand_fillBuf(state.ip, sizeof(state.ip));
+			
+			// state.ip[0] = 10;
+			// state.ip[1] = 0;
+			// state.ip[2] = 0;
+			// state.ip[3] = DEMO_IP;
+
+			crypto_blake2b_general(state.ip, sizeof(ipv4_t), NULL, 0 state.key_dh_priv, sizeof(state.key_dh_priv));
 			state.ip[0] = 10;
-			state.ip[1] = 0;
-			state.ip[2] = 0;
-			state.ip[3] = DEMO_IP;
 		#endif
 		DEBUG_PRINT_ARRAY(state.ip);
 }
