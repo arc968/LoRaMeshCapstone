@@ -1,6 +1,7 @@
 //LoRa Mesh library includes
 #include "LoRaMeshCapstone.h"
 #include "lib/byteorder/lib_byteorder.h"
+#include "deps/monocypher/monocypher.h"
 
 #include <MKRWAN.h>
 
@@ -13,11 +14,13 @@ LoRaModem modem;
 static volatile lib_datetime_interval_t timestamp = 0;
 uint16_t sensordata = 0;
 
-uint8_t SIM_NODE_IP =       2;
 #define GATEWAY_NODE_SIM_IP 1
 
 #define SENSOR_PIN          A4
 #define INTERNAL_LED_PIN    6
+
+#define GATEWAY_SENSE_PIN   4
+#define GATEWAY_PULL_PIN    5
 
 //NeoPixel
 #define BRIGHTNESS          50 // Set BRIGHTNESS(max = 255)
@@ -33,6 +36,7 @@ uint8_t SIM_NODE_IP =       2;
 #define PREDEFCOLORPACKET   0x01
 #define GATEWAYPACKET       0x03
 
+uint8_t isGateway = 0;
 
 Adafruit_NeoPixel ring(RING_LED_COUNT, RING_LED_DATAIN_PIN, NEO_GRB + NEO_KHZ800);
 
@@ -44,6 +48,13 @@ void setup() {
 
   pinMode(INTERNAL_LED_PIN, OUTPUT);
   pinMode(SENSOR_PIN, INPUT);
+
+  pinMode(GATEWAY_SENSE_PIN, INPUT_PULLUP);
+  pinMode(GATEWAY_PULL_PIN, OUTPUT);
+  digitalWrite(GATEWAY_PULL_PIN, LOW);
+  if (!digitalRead(GATEWAY_SENSE_PIN)) {
+    isGateway = 1;
+  }
   
   digitalWrite(INTERNAL_LED_PIN, LOW);
 
@@ -56,8 +67,8 @@ void setup() {
     Serial.begin(115200);
   //}
 
-  if (Serial) {
-    SIM_NODE_IP = 1;
+  if (isGateway) {
+    //SIM_NODE_IP = 1;
     Serial.print("Serial Ready, Node IP is now the Gateway Node for Serial Coms\n");
     ring.fill(ring.Color(0, 0, 255));
   }
@@ -71,7 +82,7 @@ void setup() {
   
   drv_sched_init();
 
-  if (SIM_NODE_IP == 1 && Serial) { 
+  if (isGateway) { 
     drv_sched_repeating(serialReadGateway, NULL, DRV_SCHED_PRI__NORMAL, 0, 1000);
   }
   else {
@@ -166,32 +177,30 @@ void serialReadGateway(void *) {
 }
 
 void messageReceived(struct drv_mesh_packet_s * receivedData) {
-
-  if (receivedData->len > 0 && SIM_NODE_IP == receivedData->ip[3]) {
-    switch (receivedData->buf[0]) {
-      case RGBPACKET:
-        if (receivedData->len == 4) {
-          setLEDStripColor(&ring, receivedData->buf[1], receivedData->buf[2], receivedData->buf[3]);
-        }
-        break;
-      case PREDEFCOLORPACKET:
-        if (receivedData->len == 2) {
-          setLEDPreDefColor(&ring, (char) receivedData->buf[1]);
-        }
-        break;
-      case GATEWAYPACKET:
-        if (SIM_NODE_IP == GATEWAY_NODE_SIM_IP && Serial && receivedData->len == 4) {
-          uint16_t data = LIB_BYTEORDER_NTOH_U16(*(uint16_t *)&(receivedData->buf[2]));
-          Serial.print("NODE: 10.0.0.");
-          Serial.print(receivedData->buf[1]);
-          Serial.print("  Sent Sensor Data: ");
-          Serial.println(data);
-        }
-        break;
-      default:
-        break;
-    }
-  }
+  switch (receivedData->buf[0]) {
+    case RGBPACKET:
+      if (receivedData->len == 4) {
+        setLEDStripColor(&ring, receivedData->buf[1], receivedData->buf[2], receivedData->buf[3]);
+      }
+      break;
+    case PREDEFCOLORPACKET:
+     if (receivedData->len == 2) {
+        setLEDPreDefColor(&ring, (char) receivedData->buf[1]);
+      }
+      break;
+    case GATEWAYPACKET:
+      if (isGateway && receivedData->len == 4) {
+        char tmp[128] = {0};
+        uint16_t data = LIB_BYTEORDER_NTOH_U16(*(uint16_t *)&(receivedData->buf[2]));
+        sprintf (tmp, "NODE: %hhu.%hhu.%hhu.%hhu", receivedData->ip[0], receivedData->ip[1], receivedData->ip[2], receivedData->ip[3]);
+        Serial.print(String(tmp));
+        Serial.print("  Sent Sensor Data: ");
+        Serial.println(data);
+      }
+      break;
+    default:
+      break;
+  } 
   
 }
 
@@ -204,7 +213,7 @@ void readSensorVal(void*) {
   .len = 0x04,
   };
   sensorPacket.buf[0] = GATEWAYPACKET;
-  sensorPacket.buf[1] = SIM_NODE_IP;
+  //sensorPacket.buf[1] = SIM_NODE_IP;
   *((uint16_t *)&(sensorPacket.buf[2])) = LIB_BYTEORDER_HTON_U16(sensordata);
   drv_mesh_send(&sensorPacket);
   
