@@ -68,7 +68,7 @@ static struct route_s * deleteOldestRoute(void) { //should only be called if all
 
 static struct route_s * findRoute(ipv4_t ip_src, lib_datetime_realtime_t realtime) {
 	DEBUG_PRINT_FUNCTION();
-	if (ip_src[0] != 10) {
+	if (ip_src[0] != 10 || (memcmp(ip_src, GATEWAY_IP, sizeof(ipv4_t)) == 0)) {
 		if (realtime != 0) state.route_gateway.last_usage = realtime;
 		if (state.route_gateway.count != 0) {
 			return &(state.route_gateway);

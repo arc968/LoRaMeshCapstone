@@ -345,7 +345,8 @@ void drv_mesh_init(uint8_t key_psk[32], uint8_t key_dh_priv[32], void (*func_onR
 		crypto_x25519_public_key(state.key_dh_pub, state.key_dh_priv);
 
 		#ifdef GATEWAY
-			memset(state.ip, 8, sizeof(ipv4_t));
+			//memset(state.ip, 8, sizeof(ipv4_t));
+			memcpy(state.ip, GATEWAY_IP, sizeof(ipv4_t));
 		#else
 			drv_rand_fillBuf(state.ip, sizeof(state.ip));
 			state.ip[0] = 10;

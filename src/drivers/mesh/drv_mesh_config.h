@@ -58,6 +58,8 @@ extern "C" {
 
 const uint8_t DRV_MESH__MAX_MESSAGE_SIZE = DRV_MESH__MESSAGE_SIZE_MAX;
 
+const ipv4_t GATEWAY_IP = {10, 0, 0, 1};
+
 static enum drv_lora_bandwidth_e drv_lora_bandwidth_e_arr[] = {
 	DRV_LORA_BW__500kHz,
 	DRV_LORA_BW__250kHz,
