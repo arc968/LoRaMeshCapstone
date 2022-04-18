@@ -32,11 +32,6 @@ uint8_t SIM_NODE_IP =       2;
 
 Adafruit_NeoPixel ring(RING_LED_COUNT, RING_LED_DATAIN_PIN, NEO_GRB + NEO_KHZ800);
 
-//Adafruit_NeoPixel con1(CON_STRIP_COUNT, CON1_STRIP_DATA_PIN, NEO_GRB + NEO_KHZ800);
-//Adafruit_NeoPixel con2(CON_STRIP_COUNT, CON2_STRIP_DATA_PIN, NEO_GRB + NEO_KHZ800);
-//Adafruit_NeoPixel con3(CON_STRIP_COUNT, CON3_STRIP_DATA_PIN, NEO_GRB + NEO_KHZ800);
-
-
 void setup() {
 
   pinMode(INTERNAL_LED_PIN, OUTPUT);
@@ -48,21 +43,6 @@ void setup() {
   ring.fill(ring.Color(255, 0, 0));
   ring.show();            
   ring.setBrightness(BRIGHTNESS);
-
-  /*con1.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
-  con1.fill(con1.Color(255, 0, 0));
-  con1.show();            
-  con1.setBrightness(BRIGHTNESS);
-
-  con2.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
-  con1.fill(con2.Color(255, 0, 0));
-  con2.show();            
-  con2.setBrightness(BRIGHTNESS);
-
-  con3.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
-  con1.fill(con3.Color(255, 0, 0));
-  con3.show();            
-  con3.setBrightness(BRIGHTNESS);*/
   
   //while (!Serial) {
     Serial.begin(115200);
@@ -129,7 +109,7 @@ void serialReadGateway(void *) {
         len++;
         i++;
       }
-      else if ((sbuf[i] < '0' || sbuf[i] > '9')) {
+      else if (sbuf[i] < '0' || sbuf[i] > '9') {
         buf[1] = sbuf[i];
         len++;
         break;

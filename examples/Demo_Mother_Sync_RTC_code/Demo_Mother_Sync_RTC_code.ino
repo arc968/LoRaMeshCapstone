@@ -6,15 +6,13 @@ bool alarmtrig = false;
 RTCZero rtcMasterClock;
 RTC_DS3231 rtcSlaveClock;
 
-// the pin that is connected to SQW
-#define CLOCK_INTERRUPT_PIN 0
-#define LED_PIN LED_BUILTIN
+#define CLOCK_INTERRUPT_PIN 0 // the pin that is connected to SQW
+#define LED_WRITE_INDICATOR 4
 
 void setup() {
-  // put your setup code here, to run once:
-
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, LOW);
+  
+  pinMode(LED_WRITE_INDICATOR, OUTPUT);
+  digitalWrite(LED_WRITE_INDICATOR, LOW);
 
   // Making it so, that the alarm will trigger an interrupt
   pinMode(CLOCK_INTERRUPT_PIN, INPUT_PULLUP);
@@ -59,8 +57,11 @@ void loop() {
       rtcSlaveClock.setAlarm1(alarm1, DS3231_A1_Second);
       DateTime alarm2 = DateTime(0,0,0,0,0,0);
       rtcSlaveClock.setAlarm2(alarm2, DS3231_A2_PerMinute);
-      //digitalWrite(LED_PIN, HIGH);
+      digitalWrite(LED_WRITE_INDICATOR, HIGH);
       Serial.println("SLAVE SET");
+    }
+    else {
+      digitalWrite(LED_WRITE_INDICATOR, LOW);
     }
     rtcMasterClock.setAlarmTime(current.hour(), current.minute(), current.second() + 2);
     rtcMasterClock.setAlarmDate(current.day(), current.month(), current.year());
@@ -68,10 +69,6 @@ void loop() {
     alarmtrig = false;
     Serial.println("RTC ALARM");
   }
-
-  //delay(10);
-
-  //digitalWrite(LED_PIN, LOW);
 
 }
 
