@@ -86,6 +86,8 @@ void checkSerial(void * arg __attribute__((unused))) {
 	}
 }
 
+uint8_t TESTING_DEMO_ISGATEWAY_FLAG_THING = 0;
+
 void setup() {
 	// put your setup code here, to run once:
 	pinMode(LED_BUILTIN, OUTPUT);

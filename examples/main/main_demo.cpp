@@ -50,83 +50,76 @@ void blinkOff(void * arg __attribute__((unused))) {
 
 void loop() {}
 
-void serialReadGateway(void *) {
+void serialReadGateway(void * arg) {
 
-  if (Serial) {
-    uint8_t slen = 0;
-    uint8_t sbuf[50];
-    while (Serial.available() && slen < 50) {
-      sbuf[slen] = Serial.read();
-      slen++;
-    }
-    
-    uint8_t buf[5];
-    uint8_t len = 0;
-    
-    for (uint8_t i = 0; i < slen; i++) {
-      
-      if (sbuf[i] == ',') {
-        i++;
-        continue;
-      }
-
-      if (sbuf[i] == '\n') {
-        break;
-      }
-
-      if (len == 0) {
-        uint8_t temp = 0;
-        temp = temp + ((sbuf[i] -  '0') * 10);
-        temp = temp + (sbuf[i+1] - '0');
-        buf[0] = temp;
-        len++;
-        i++;
-      }
-      else if (sbuf[i] < '0' || sbuf[i] > '9') {
-        buf[1] = sbuf[i];
-        len++;
-        break;
-      }
-      else if (i + 2 < slen) {
-        uint8_t temp = 0;
-        
-        temp = (sbuf[i] - '0') * 100;
-        temp = temp + ((sbuf[i+1] -  '0') * 10);
-        temp = temp + (sbuf[i+2] - '0');
-        
-        buf[len] = temp;
-        len++;
-        i = i+2;
-      }
-      else {
-        break;
-      }
-      
-    }
-    
-    struct drv_mesh_packet_s ledPacket = {
-        .ip = {10, 0, 0, buf[0]},
-        .port = 0,
-        .len = len,
-    };
-      
-    if (len == 4) {
-      ledPacket.buf[0] = RGBPACKET;
-      ledPacket.buf[1] = buf[1];
-      ledPacket.buf[2] = buf[2];
-      ledPacket.buf[3] = buf[3];
+  uint8_t slen = 0;
+  uint8_t sbuf[50];
+  while (Serial.available() && slen < 50) {
+    sbuf[slen] = Serial.read();
+    slen++;
+  }
   
-      drv_mesh_send(&ledPacket);
-    }
-    else if (len == 2) {
-      ledPacket.buf[0] = RGBPACKET;
-      ledPacket.buf[1] = buf[1];
+  uint8_t buf[5];
+  uint8_t len = 0;
   
-      drv_mesh_send(&ledPacket);
+  for (uint8_t i = 0; i < slen; i++) {
+    
+    if (sbuf[i] == ',') {
+      i++;
+      continue;
     }
-    else {
+
+    if (sbuf[i] == '\n') {
+      break;
+    }
+
+    if (len == 0) {
+      uint8_t temp = 0;
+      temp = temp + ((sbuf[i] -  '0') * 10);
+      temp = temp + (sbuf[i+1] - '0');
+      buf[0] = temp;
+      len++;
+      i++;
+    } else if (sbuf[i] < '0' || sbuf[i] > '9') {
+      buf[1] = sbuf[i];
+      len++;
+      break;
+    } else if (i + 2 < slen) {
+      uint8_t temp = 0;
       
+      temp = (sbuf[i] - '0') * 100;
+      temp = temp + ((sbuf[i+1] -  '0') * 10);
+      temp = temp + (sbuf[i+2] - '0');
+      
+      buf[len] = temp;
+      len++;
+      i = i+2;
+    } else {
+      break;
     }
+    
+  }
+  
+  struct drv_mesh_packet_s ledPacket = {
+      .ip = {10, 0, 0, buf[0]},
+      .port = 0,
+      .len = len,
+  };
+    
+  if (len == 4) {
+    ledPacket.buf[0] = RGBPACKET;
+    ledPacket.buf[1] = buf[1];
+    ledPacket.buf[2] = buf[2];
+    ledPacket.buf[3] = buf[3];
+
+    drv_mesh_send(&ledPacket);
+  } else if (len == 2) {
+    ledPacket.buf[0] = RGBPACKET;
+    ledPacket.buf[1] = buf[1];
+
+    drv_mesh_send(&ledPacket);
+  } else {
+    
   }
 }
 
@@ -137,7 +130,7 @@ void setLEDStripColor(Adafruit_NeoPixel *strip, uint8_t red, uint8_t green, uint
   
 }
 
-void readSensorVal(void*) {
+void readSensorVal(void * arg) {
 
   sensordata = analogRead(SENSOR_PIN);
   struct drv_mesh_packet_s sensorPacket = {
@@ -269,12 +262,13 @@ void setup() {
   ring.show();            
   ring.setBrightness(BRIGHTNESS);
   
-  while (!Serial) {
-    Serial.begin(115200);
-  }
+  while (!Serial);
+  Serial.begin(115200);
+  Serial.print("Ready\n");
+  delay(1500);
 
   if (isGateway) {
-    if (Serial) Serial.print("Serial Ready, Node IP is now the Gateway Node for Serial Coms\n");
+    Serial.print("Serial Ready, Node IP is now the Gateway Node for Serial Coms\n");
     ring.fill(ring.Color(0, 0, 255));
   }
   else {
@@ -284,6 +278,7 @@ void setup() {
   ring.show();
 
   drv_sched_init();
+  drv_mesh_init(NULL, prikey, messageReceived);
 
   if (isGateway) { 
     drv_sched_repeating(serialReadGateway, NULL, DRV_SCHED_PRI__NORMAL, 0, 1000);
@@ -294,8 +289,6 @@ void setup() {
 
   drv_sched_repeating(blinkOn, NULL, DRV_SCHED_PRI__NORMAL, 0, 2000);
 	drv_sched_repeating(blinkOff, NULL, DRV_SCHED_PRI__NORMAL, 1000, 2000);
-
-  drv_mesh_init(NULL, prikey, messageReceived);
+ 
   drv_sched_start();
-  
 }

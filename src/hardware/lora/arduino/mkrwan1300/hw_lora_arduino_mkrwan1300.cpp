@@ -88,7 +88,9 @@ extern "C" {
 void drv_lora_init(struct drv_lora_s * handle, uint64_t freq) {
 	
 	#ifdef HW_ARDUINO
-		while (!LoRa.begin(freq));
+		//while (!
+		LoRa.begin(freq);
+		//);
 		//LoRa.enableCrc();
 	#else
 		
