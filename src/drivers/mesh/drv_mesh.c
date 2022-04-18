@@ -355,7 +355,7 @@ void drv_mesh_init(uint8_t key_psk[32], uint8_t key_dh_priv[32], void (*func_onR
 			// state.ip[2] = 0;
 			// state.ip[3] = DEMO_IP;
 
-			crypto_blake2b_general(state.ip, sizeof(ipv4_t), NULL, 0 state.key_dh_priv, sizeof(state.key_dh_priv));
+			crypto_blake2b_general(state.ip, sizeof(ipv4_t), NULL, 0, state.key_dh_priv, sizeof(state.key_dh_priv));
 			state.ip[0] = 10;
 		#endif
 		DEBUG_PRINT_ARRAY(state.ip);
