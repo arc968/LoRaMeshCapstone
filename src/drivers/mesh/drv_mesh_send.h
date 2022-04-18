@@ -98,7 +98,7 @@ static void drv_mesh_buildPacket_auth(struct peer_s * peer, struct packet_s * ra
 static void drv_mesh_buildPacket_link(struct peer_s * peer, struct packet_s * raw_packet, uint8_t * payload_buf, uint8_t payload_size) {
 	DEBUG_PRINT("\tBuilding link packet ...\n");
 	raw_packet->size = sizeof(struct packet_type_link_s) + payload_size;
-	raw_packet->once = false;
+	raw_packet->once = true;
 	raw_packet->counter = peer->counter_send++;
 	raw_packet->header.type = PACKET_TYPE__LINK;
 	raw_packet->header.size0 = raw_packet->size;

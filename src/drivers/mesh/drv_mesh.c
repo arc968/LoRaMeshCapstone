@@ -40,9 +40,15 @@
 void drv_mesh_getStats(struct drv_mesh_stats_s * stats) {
 	memcpy(stats, &(state.stats), sizeof(struct drv_mesh_stats_s));
 	stats->peer_count = 0;
+	stats->peer_count_passerby = 0;
+	stats->peer_count_stranger = 0;
+	stats->peer_count_acquaintance = 0;
 	struct peer_s * peer = state.head_peer_ready;
 	while (peer != NULL) {
 		stats->peer_count++;
+		if (peer->status == PEER_PASSERBY) stats->peer_count_passerby++;
+		if (peer->status == PEER_STRANGER) stats->peer_count_stranger++;
+		if (peer->status == PEER_ACQUAINTANCE) stats->peer_count_acquaintance++;
 		peer = peer->next;
 	}
 }
@@ -148,6 +154,17 @@ static void drv_mesh_worker_scheduler(void * arg) {
 		}
 	}
 	
+	{ //queue outbound packet
+		if (RB_COUNT(state.rb_outboundPackets)) {
+			struct packet_s * packet = *RB_GET(state.rb_outboundPackets);
+			struct payload_type_data_s * payload = (struct payload_type_data_s *)&(packet->asLink.payload[0]);
+			lib_datetime_realtime_t rt;
+			drv_timer_getRealtime(&rt);	
+			drv_mesh_routePayload((struct payload_s *)payload, packet->size, rt);
+			*RB_PUT(state.rb_outboundPackets) = packet;
+		}
+	}
+
 	{ //schedule per-peer receive periods
 		struct peer_s * peer = state.head_peer_ready;
 		for (; peer != NULL; peer = peer->next) {
@@ -358,6 +375,8 @@ void drv_mesh_init(uint8_t key_psk[32], uint8_t key_dh_priv[32], void (*func_onR
 
 			crypto_blake2b_general(state.ip, sizeof(ipv4_t), NULL, 0, state.key_dh_priv, sizeof(state.key_dh_priv));
 			state.ip[0] = 10;
+			state.ip[1] = 0;
+			state.ip[2] = 0;
 		}
 		DEBUG_PRINT_ARRAY(state.ip);
 }
@@ -370,7 +389,7 @@ enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * packet) {
 
 	struct drv_mesh_stats_s stats;
 	drv_mesh_getStats(&stats);
-	if (stats.peer_count == 0) {
+	if (stats.peer_count_acquaintance == 0) {
 		DEBUG_PRINT("\tWARNING: Failed to send mesh packet, no peers available\n");
 		return DRV_MESH_ERR__NO_PEERS;
 	}
@@ -412,14 +431,16 @@ enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * packet) {
 	payload->auth.num_ack = 0;
 
 	raw_packet->counter = payload->auth.num_seq;
+	raw_packet->size = sizeof(struct payload_type_data_s) + packet->len;
 	*RB_PUT(state.rb_outboundPackets) = raw_packet;
 
 	DEBUG_PRINT("\tINFO: Sending serial message (seq: %u) (%hhu bytes) in payload (%hhu bytes) in packet (%hhu bytes) \n", payload->auth.num_seq, packet->len, sizeof(struct payload_type_data_s) + packet->len, sizeof(struct packet_type_link_s) + sizeof(struct payload_type_data_s) + packet->len);
 
-	lib_datetime_realtime_t rt;
-	drv_timer_getRealtime(&rt);
-	insertRecentPayload((struct payload_s *)payload, sizeof(struct payload_type_data_s) + packet->len);
-	drv_mesh_routePayload((struct payload_s *)payload, sizeof(struct payload_type_data_s) + packet->len, rt);
+	insertRecentPayload((struct payload_s *)payload, raw_packet->size);
+
+	//lib_datetime_realtime_t rt;
+	//drv_timer_getRealtime(&rt);	
+	//drv_mesh_routePayload((struct payload_s *)payload, sizeof(struct payload_type_data_s) + packet->len, rt);
 
 	/* struct peer_s * peer = state.head_peer_ready;
 	for (; peer != NULL; peer = peer->next) {

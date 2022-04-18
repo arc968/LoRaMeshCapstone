@@ -43,6 +43,9 @@ struct drv_mesh_stats_s {
 	lib_datetime_realtime_t last_packet_link_recv;
 
 	uint32_t peer_count;
+	uint32_t peer_count_passerby;
+	uint32_t peer_count_stranger;
+	uint32_t peer_count_acquaintance;
 };
 
 void drv_mesh_init(uint8_t key_psk[32], uint8_t key_dh_priv[32], void (*func_onRecv_ptr)(struct drv_mesh_packet_s *));

@@ -5,11 +5,11 @@
 
 
 //demo only inlcudes
-//#include <MKRWAN.h>
+#include <MKRWAN.h>
 #include <Adafruit_NeoPixel.h>
 #include <stdint.h>
 
-//LoRaModem modem; //for demo IP generation
+LoRaModem modem; //for demo IP generation
 
 static volatile lib_datetime_interval_t timestamp = 0;
 uint16_t sensordata = 0;
@@ -140,6 +140,9 @@ void readSensorVal(void * arg) {
   };
   sensorPacket.buf[0] = GATEWAYPACKET;
   *((uint16_t *)&(sensorPacket.buf[1])) = LIB_BYTEORDER_HTON_U16(sensordata);
+  Serial.print("Sending sensor data: ");
+  Serial.print(sensordata);
+  Serial.print("\n");
   drv_mesh_send(&sensorPacket);
   
 }
@@ -218,12 +221,12 @@ void messageReceived(struct drv_mesh_packet_s * receivedData) {
       }
       break;
     case GATEWAYPACKET:
-      if (isGateway && receivedData->len == 4) {
+      if (isGateway && receivedData->len == 3) {
         char tmp[128] = {0};
         uint16_t data = LIB_BYTEORDER_NTOH_U16(*(uint16_t *)&(receivedData->buf[1]));
-        sprintf (tmp, "NODE: %hhu.%hhu.%hhu.%hhu", receivedData->ip[0], receivedData->ip[1], receivedData->ip[2], receivedData->ip[3]);
+        sprintf (tmp, "NODE: %u.%u.%u.%u", receivedData->ip[0], receivedData->ip[1], receivedData->ip[2], receivedData->ip[3]);
         Serial.print(String(tmp));
-        Serial.print("  Sent Sensor Data: ");
+        Serial.print("  Received Sensor Data: ");
         Serial.println(data);
       }
       break;
@@ -236,11 +239,11 @@ void messageReceived(struct drv_mesh_packet_s * receivedData) {
 uint8_t TESTING_DEMO_ISGATEWAY_FLAG_THING = 0;
 
 void setup() {
-  //modem.begin(US915);
+  modem.begin(US915);
   uint8_t prikey[32];
   memset(prikey, 0, sizeof(prikey));
-  //String eui = modem.deviceEUI();
-  //memcpy(prikey, eui.c_str(), eui.length());
+  String eui = modem.deviceEUI();
+  memcpy(prikey, eui.c_str(), eui.length());
 
   pinMode(INTERNAL_LED_PIN, OUTPUT);
   pinMode(SENSOR_PIN, INPUT);
@@ -262,7 +265,7 @@ void setup() {
   ring.show();            
   ring.setBrightness(BRIGHTNESS);
   
-  while (!Serial);
+  //while (!Serial);
   Serial.begin(115200);
   Serial.print("Ready\n");
   delay(1500);

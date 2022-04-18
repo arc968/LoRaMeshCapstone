@@ -20,7 +20,7 @@ static void queuePacketToAllPeers(uint8_t * payload, uint8_t payloadSize) {
 	struct peer_s * tmp_peer = state.head_peer_ready;
 	for (; tmp_peer != NULL; tmp_peer = tmp_peer->next) {
 		if (tmp_peer->status == PEER_ACQUAINTANCE) {
-			if (RB_SPACE(tmp_peer->rb_packets)) {
+			if (RB_SPACE(tmp_peer->rb_packets) > BUFFER_PER_PEER_PACKETS_MIN_SPACE) {
 				struct packet_s * tmp_packet = popEmptyPacket();
 				if (tmp_packet == NULL) {
 					DEBUG_PRINT("\tWARNING: Failed to queue packet, no empty packets available\n");

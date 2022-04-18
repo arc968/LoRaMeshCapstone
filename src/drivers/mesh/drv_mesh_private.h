@@ -54,10 +54,10 @@ struct peer_s {
 	uint32_t counter_ack;
 
 	uint8_t key_send[32];
-	union {
+	//union {
 		uint8_t key_recv[32];
 		uint8_t key_ephemeral_priv[32]; // of this peer
-	};
+	//};
 
 	lib_datetime_realtime_t last_packet_timestamp;
 	

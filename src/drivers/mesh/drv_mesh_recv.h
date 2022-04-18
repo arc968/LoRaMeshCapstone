@@ -178,11 +178,35 @@ static void drv_mesh_parsePacket_auth(struct packet_s * raw_packet) {
 
 			if (crypto_verify32(key_send_tmp, peer->key_send) || crypto_verify32(key_recv_tmp, peer->key_recv)) {
 				DEBUG_PRINT("\tINFO: Rekeying peer...\n");
+				peer->status = PEER_STRANGER;
 				memcpy(peer->key_send, key_send_tmp, sizeof(peer->key_send));
 				memcpy(peer->key_recv, key_recv_tmp, sizeof(peer->key_recv));
 				peer->counter_send = 0;
 				peer->counter_recv = 0;
 				peer->counter_ack = 0;
+				for (uint16_t i=0; i<RB_COUNT(peer->rb_packets); i++) {
+					struct packet_s * tpack = *RB_GET(peer->rb_packets); 
+					insertEmptyPacket(tpack);
+				}
+				crypto_wipe(&(peer->rb_packets), sizeof(peer->rb_packets));
+
+				//drv_rand_fillBuf(peer->key_ephemeral_priv, sizeof(peer->key_ephemeral_priv));
+		
+				peer->last_packet_timestamp = 0; //packet->body.timestamp;
+
+				struct packet_s * packet_tmp = popEmptyPacket();
+				if (packet_tmp == NULL) {
+					DEBUG_PRINT("\tWARNING: Failed to rekey peer, no empty packets available\n");
+					crypto_wipe(key_tmp, sizeof(key_tmp));
+					crypto_wipe(key_shared_tmp, sizeof(key_shared_tmp));
+					crypto_wipe(key_send_tmp, sizeof(key_send_tmp));
+					crypto_wipe(key_recv_tmp, sizeof(key_recv_tmp));
+					return;
+				}
+
+				drv_mesh_buildPacket_auth(peer, packet_tmp);
+		
+				*RB_PUT(peer->rb_packets) = packet_tmp;
 			}
 			
 			crypto_wipe(key_tmp, sizeof(key_tmp));
