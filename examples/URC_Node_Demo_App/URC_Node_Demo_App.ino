@@ -3,13 +3,13 @@
 #include "lib/byteorder/lib_byteorder.h"
 #include "deps/monocypher/monocypher.h"
 
-#include <MKRWAN.h>
-
-LoRaModem modem;
 
 //demo only inlcudes
+#include <MKRWAN.h>
 #include <Adafruit_NeoPixel.h>
 #include <stdint.h>
+
+LoRaModem modem; //for demo IP generation
 
 static volatile lib_datetime_interval_t timestamp = 0;
 uint16_t sensordata = 0;
@@ -68,8 +68,7 @@ void setup() {
   //}
 
   if (isGateway) {
-    //SIM_NODE_IP = 1;
-    Serial.print("Serial Ready, Node IP is now the Gateway Node for Serial Coms\n");
+    if (Serial) Serial.print("Serial Ready, Node IP is now the Gateway Node for Serial Coms\n");
     ring.fill(ring.Color(0, 0, 255));
   }
   else {
@@ -191,7 +190,7 @@ void messageReceived(struct drv_mesh_packet_s * receivedData) {
     case GATEWAYPACKET:
       if (isGateway && receivedData->len == 4) {
         char tmp[128] = {0};
-        uint16_t data = LIB_BYTEORDER_NTOH_U16(*(uint16_t *)&(receivedData->buf[2]));
+        uint16_t data = LIB_BYTEORDER_NTOH_U16(*(uint16_t *)&(receivedData->buf[1]));
         sprintf (tmp, "NODE: %hhu.%hhu.%hhu.%hhu", receivedData->ip[0], receivedData->ip[1], receivedData->ip[2], receivedData->ip[3]);
         Serial.print(String(tmp));
         Serial.print("  Sent Sensor Data: ");
@@ -210,11 +209,10 @@ void readSensorVal(void*) {
   struct drv_mesh_packet_s sensorPacket = {
   .ip = {10, 0, 0, GATEWAY_NODE_SIM_IP},
   .port = 0,
-  .len = 0x04,
+  .len = 0x03,
   };
   sensorPacket.buf[0] = GATEWAYPACKET;
-  //sensorPacket.buf[1] = SIM_NODE_IP;
-  *((uint16_t *)&(sensorPacket.buf[2])) = LIB_BYTEORDER_HTON_U16(sensordata);
+  *((uint16_t *)&(sensorPacket.buf[1])) = LIB_BYTEORDER_HTON_U16(sensordata);
   drv_mesh_send(&sensorPacket);
   
 }
