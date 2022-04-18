@@ -369,18 +369,21 @@ static void drv_mesh_worker_recv(void * arg) {
 	DEBUG_PRINT("\tINFO: Listening for packet...\n");
 	
 	//hal_timer_delay(PREAMBLE_MS + PADDING_MS);
-	lib_datetime_interval_t start, current;
-	start = drv_timer_getMonotonicTime();
-	current = drv_timer_getMonotonicTime();
+	lib_datetime_interval_t start = drv_timer_getMonotonicTime();
+	lib_datetime_interval_t current = drv_timer_getMonotonicTime();
 	uint8_t reg_status = 0;
 	
 	estimateTimeOnAirInMsFromRadioCfg(&(appt->radio_cfg), 2);
 
+	uint32_t tmp_count1 = 0;
 	while (((current - start) < (PREAMBLE_MS + (appt->radio_cfg.toaEstimate - PREAMBLE_MS)) + PADDING_MS) && !(reg_status) && ((current - start) < (2*PACKET_TOA_MAX_GENERATE))) {
 		reg_status = drv_lora_getStatusReg(&state.radio) & (0x1 << 0);
 		//headerPacketSize = drv_lora_getHeaderPacketSize(&state.radio);
 		current = drv_timer_getMonotonicTime();
+		tmp_count1++;
+		//DEBUG_PRINT("\tDEBUG: Waiting for preamble (%llu - %llu = %llu) [%hhu].\n", current, start, current - start, reg_status);
 	}
+	DEBUG_PRINT("\tDEBUG: Spun %u time(s) while waiting for preamble.\n", tmp_count1);
 
 	if (!(reg_status)) {
 		DEBUG_PRINT("\tINFO: No preamble detected in drv_mesh_worker_recv(), aborting receive.\n");

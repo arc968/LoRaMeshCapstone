@@ -348,8 +348,11 @@ void drv_mesh_init(uint8_t key_psk[32], uint8_t key_dh_priv[32], void (*func_onR
 			//memset(state.ip, 8, sizeof(ipv4_t));
 			memcpy(state.ip, GATEWAY_IP, sizeof(ipv4_t));
 		#else
-			drv_rand_fillBuf(state.ip, sizeof(state.ip));
+			//drv_rand_fillBuf(state.ip, sizeof(state.ip));
 			state.ip[0] = 10;
+			state.ip[1] = 0;
+			state.ip[2] = 0;
+			state.ip[3] = DEMO_IP;
 		#endif
 		DEBUG_PRINT_ARRAY(state.ip);
 }
@@ -398,12 +401,15 @@ enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * packet) {
 	payload->header.port_dst = LIB_BYTEORDER_HTON_U16(packet->port);
 	memcpy(payload->data, packet->buf, packet->len);
 
-	payload->auth.num_seq = 0;
+	//TODO can only send unique payload once
+	//???
+	payload->auth.num_seq = state.counter_outbound++;
 	payload->auth.num_ack = 0;
 
+	raw_packet->counter = payload->auth.num_seq;
 	*RB_PUT(state.rb_outboundPackets) = raw_packet;
 
-	DEBUG_PRINT("\tINFO: Sending serial message (%hhu bytes) in payload (%hhu bytes) in packet (%hhu bytes) \n", packet->len, sizeof(struct payload_type_data_s) + packet->len, sizeof(struct packet_type_link_s) + sizeof(struct payload_type_data_s) + packet->len);
+	DEBUG_PRINT("\tINFO: Sending serial message (seq: %u) (%hhu bytes) in payload (%hhu bytes) in packet (%hhu bytes) \n", payload->auth.num_seq, packet->len, sizeof(struct payload_type_data_s) + packet->len, sizeof(struct packet_type_link_s) + sizeof(struct payload_type_data_s) + packet->len);
 
 	lib_datetime_realtime_t rt;
 	drv_timer_getRealtime(&rt);

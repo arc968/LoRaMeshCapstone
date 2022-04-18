@@ -32,9 +32,9 @@ uint8_t SIM_NODE_IP =       2;
 
 Adafruit_NeoPixel ring(RING_LED_COUNT, RING_LED_DATAIN_PIN, NEO_GRB + NEO_KHZ800);
 
-//Adafruit_NeoPixel con1(CON_STRIP_COUNT, CON1_STRIP_DATA_PIN, NEO_GRBW + NEO_KHZ800);
-//Adafruit_NeoPixel con2(CON_STRIP_COUNT, CON2_STRIP_DATA_PIN, NEO_GRBW + NEO_KHZ800);
-//Adafruit_NeoPixel con3(CON_STRIP_COUNT, CON3_STRIP_DATA_PIN, NEO_GRBW + NEO_KHZ800);
+//Adafruit_NeoPixel con1(CON_STRIP_COUNT, CON1_STRIP_DATA_PIN, NEO_GRB + NEO_KHZ800);
+//Adafruit_NeoPixel con2(CON_STRIP_COUNT, CON2_STRIP_DATA_PIN, NEO_GRB + NEO_KHZ800);
+//Adafruit_NeoPixel con3(CON_STRIP_COUNT, CON3_STRIP_DATA_PIN, NEO_GRB + NEO_KHZ800);
 
 
 void setup() {
@@ -71,9 +71,12 @@ void setup() {
   if (Serial) {
     SIM_NODE_IP = 1;
     Serial.print("Serial Ready, Node IP is now the Gateway Node for Serial Coms\n");
+    ring.fill(ring.Color(0, 0, 255));
   }
-
-  ring.fill(ring.Color(0, 255, 0));
+  else {
+    ring.fill(ring.Color(0, 255, 0));
+  }
+  
   ring.show();
 
   readSensorVal(NULL);
@@ -82,12 +85,11 @@ void setup() {
 
   if (SIM_NODE_IP == 1 && Serial) { 
     drv_sched_repeating(serialReadGateway, NULL, DRV_SCHED_PRI__NORMAL, 0, 1000);
-    drv_sched_repeating(checkIfSerial, NULL, DRV_SCHED_PRI__NORMAL, 0, 30000);
   }
   else {
     drv_sched_repeating(readSensorVal, NULL, DRV_SCHED_PRI__NORMAL, 0, 60000);
   }
-
+  
   drv_mesh_init(NULL, NULL, messageReceived);
   drv_sched_start();
   
@@ -98,32 +100,76 @@ void loop() {}
 void serialReadGateway(void *) {
 
   if (Serial) {
-    uint8_t len = 0;
-    uint8_t buf[20];
-    while (Serial.available() && len < 20) {
-      buf[len] = Serial.read();
-      len++;
+    uint8_t slen = 0;
+    uint8_t sbuf[50];
+    while (Serial.available() && slen < 50) {
+      sbuf[slen] = Serial.read();
+      slen++;
     }
-  
+    
+    uint8_t buf[5];
+    uint8_t len = 0;
+    
+    for (uint8_t i = 0; i < slen; i++) {
+      
+      if (sbuf[i] == ',') {
+        i++;
+        continue;
+      }
+
+      if (sbuf[i] == '\n') {
+        break;
+      }
+
+      if (len == 0) {
+        uint8_t temp = 0;
+        temp = temp + ((sbuf[i] -  '0') * 10);
+        temp = temp + (sbuf[i+1] - '0');
+        buf[0] = temp;
+        len++;
+        i++;
+      }
+      else if ((sbuf[i] < '0' || sbuf[i] > '9')) {
+        buf[1] = sbuf[i];
+        len++;
+        break;
+      }
+      else if (i + 2 < slen) {
+        uint8_t temp = 0;
+        
+        temp = (sbuf[i] - '0') * 100;
+        temp = temp + ((sbuf[i+1] -  '0') * 10);
+        temp = temp + (sbuf[i+2] - '0');
+        
+        buf[len] = temp;
+        len++;
+        i = i+2;
+      }
+      else {
+        break;
+      }
+      
+    }
+    
     struct drv_mesh_packet_s ledPacket = {
         .ip = {10, 0, 0, buf[0]},
         .port = 0,
         .len = len,
     };
-  
+      
     if (len == 4) {
       ledPacket.buf[0] = RGBPACKET;
       ledPacket.buf[1] = buf[1];
       ledPacket.buf[2] = buf[2];
       ledPacket.buf[3] = buf[3];
   
-      drv_mesh_send(&ledpacket);
+      drv_mesh_send(&ledPacket);
     }
     else if (len == 2) {
       ledPacket.buf[0] = RGBPACKET;
       ledPacket.buf[1] = buf[1];
   
-      drv_mesh_send(&ledpacket);
+      drv_mesh_send(&ledPacket);
     }
     else {
       
@@ -131,15 +177,9 @@ void serialReadGateway(void *) {
   }
 }
 
-void checkIfSerial(void *) {
-  
-  
-  
-}
-
 void messageReceived(struct drv_mesh_packet_s * receivedData) {
 
-  if (receivedData->len > 0 && receivedData->ip[3] == SIM_NODE_IP) {
+  if (receivedData->len > 0 && SIM_NODE_IP == receivedData->ip[3]) {
     switch (receivedData->buf[0]) {
       case RGBPACKET:
         if (receivedData->len == 4) {
@@ -152,11 +192,11 @@ void messageReceived(struct drv_mesh_packet_s * receivedData) {
         }
         break;
       case GATEWAYPACKET:
-        if (SIM_NODE_IP == GATEWAY_NODE_SIM_IP && Serial) {
+        if (SIM_NODE_IP == GATEWAY_NODE_SIM_IP && Serial && receivedData->len == 4) {
           uint16_t data = LIB_BYTEORDER_NTOH_U16(*(uint16_t *)&(receivedData->buf[2]));
           Serial.print("NODE: 10.0.0.");
           Serial.print(receivedData->buf[1]);
-          Serial.print("  Sensor Data: ");
+          Serial.print("  Sent Sensor Data: ");
           Serial.println(data);
         }
         break;
@@ -171,11 +211,10 @@ void readSensorVal(void*) {
 
   sensordata = analogRead(SENSOR_PIN);
   struct drv_mesh_packet_s sensorPacket = {
-    .ip = {10, 0, 0, GATEWAY_NODE_SIM_IP},
-    .port = 0,
-    .len = 0x03,
+  .ip = {10, 0, 0, GATEWAY_NODE_SIM_IP},
+  .port = 0,
+  .len = 0x04,
   };
-
   sensorPacket.buf[0] = GATEWAYPACKET;
   sensorPacket.buf[1] = SIM_NODE_IP;
   *((uint16_t *)&(sensorPacket.buf[2])) = LIB_BYTEORDER_HTON_U16(sensordata);

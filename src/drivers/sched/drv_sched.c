@@ -146,14 +146,15 @@ static void worker_onAbsoluteAvailable(void) {
 
 //TODO: not yet done
 static enum drv_sched_err_e schedule(void (*func_ptr)(void*), void * func_arg, enum job_type_e type, enum drv_sched_pri_e priority, lib_datetime_interval_t delay_or_timeOfDay, lib_datetime_interval_t interval_ms) {
-	bool interruptsEnabled = hal_interrupt_isEnabled();
+	//bool interruptsEnabled = hal_interrupt_isEnabled();
 	hal_interrupt_disable();
 	
 	lib_datetime_interval_t currentTime = drv_timer_getMonotonicTime();
 	//lib_datetime_time_t curTime; drv_timer_getAbsoluteTime(&curTime);
 	struct job_s * job = popEmptyJob();
 	if (job == NULL) {
-		if (interruptsEnabled) hal_interrupt_enable();
+		//if (interruptsEnabled) 
+		hal_interrupt_enable();
 		DEBUG_PRINT("\tWARNING: Failed to schedule job, no job slots remaining.\n");
 		return DRV_SCHED_ERR__NO_JOB_SLOTS; //failed to schedule, no job slots remaining
 	}
@@ -177,7 +178,8 @@ static enum drv_sched_err_e schedule(void (*func_ptr)(void*), void * func_arg, e
 		insertEmptyJob(job);
 	}
 	
-	if (interruptsEnabled) hal_interrupt_enable();
+	//if (interruptsEnabled) 
+	hal_interrupt_enable();
 	
 	return DRV_SCHED_ERR__NONE;
 }
@@ -210,11 +212,12 @@ enum drv_sched_err_e drv_sched_repeating_at(void (*func_ptr)(void*), void * func
 
 enum drv_sched_err_e drv_sched_onAbsoluteAvailable(void (*func_ptr)(void*), void * func_arg) {
 	lib_datetime_interval_t currentTime = drv_timer_getMonotonicTime();
-	bool interruptsEnabled = hal_interrupt_isEnabled();
+	//bool interruptsEnabled = hal_interrupt_isEnabled();
 	hal_interrupt_disable();
 	struct job_s * job = popEmptyJob();
 	if (job == NULL) {
-		if (interruptsEnabled) hal_interrupt_enable();
+		//if (interruptsEnabled) 
+		hal_interrupt_enable();
 		return DRV_SCHED_ERR__NO_JOB_SLOTS;
 	}
 	job->func_ptr = func_ptr;
@@ -223,17 +226,16 @@ enum drv_sched_err_e drv_sched_onAbsoluteAvailable(void (*func_ptr)(void*), void
 	job->priority = DRV_SCHED_PRI__IDLE;
 	job->time = currentTime;
 	insertOnAbsoluteAvailableJob(job);
-	if (interruptsEnabled) hal_interrupt_enable();
+	//if (interruptsEnabled) 
+	hal_interrupt_enable();
 	return DRV_SCHED_ERR__NONE;
 }
 
-static enum power_state_e {
+/* static enum power_state_e {
 	STATE_AWAKE,
 	STATE_SLEEP,
-} powerState = STATE_AWAKE;
+} powerState = STATE_AWAKE; */
 
-
-static uint16_t num = 0;
 /*
 Will attempt to sleep for as long as possible, only waking for scheduled jobs
 */
@@ -243,7 +245,7 @@ __attribute__((noreturn))
 void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle edge cases well, such as GPS time going back slightly. Also priority does nothing.
 	while (1) {
 		{ //schedule relative jobs
-			bool interruptsEnabled = hal_interrupt_isEnabled();
+			//bool interruptsEnabled = hal_interrupt_isEnabled();
 			hal_interrupt_disable();
 			lib_datetime_interval_t curTime = drv_timer_getMonotonicTime();
 			struct job_s * job = state.head_ready;
@@ -252,7 +254,8 @@ void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle e
 				job->next = NULL;
 				
 				if (job->func_ptr != NULL) {
-					if (interruptsEnabled) hal_interrupt_enable();
+					//if (interruptsEnabled) 
+					hal_interrupt_enable();
 					__DSB();
 					(*(job->func_ptr))(job->func_arg); //run job
 					__DSB();
@@ -269,11 +272,12 @@ void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle e
 					insertEmptyJob(job);
 				}
 			}
-			if (interruptsEnabled) hal_interrupt_enable();
+			//if (interruptsEnabled) 
+			hal_interrupt_enable();
 		}
 		
 		{ //schedule absolute jobs
-			bool interruptsEnabled = hal_interrupt_isEnabled();
+			//bool interruptsEnabled = hal_interrupt_isEnabled();
 			hal_interrupt_disable();
 			lib_datetime_realtime_t curTime;
 			if (drv_timer_getRealtime(&curTime) == DRV_TIMER_ERR__NONE) { //if absolute time is available
@@ -322,7 +326,8 @@ void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle e
 					job->next = NULL;
 					
 					if (job->func_ptr != NULL) {
-						if (interruptsEnabled) hal_interrupt_enable();
+						//if (interruptsEnabled) 
+						hal_interrupt_enable();
 						__DSB();
 						(*(job->func_ptr))(job->func_arg); //run job
 						__DSB();
@@ -340,7 +345,8 @@ void drv_sched_start(void) { //TODO: needs work. It is ugly and doesn't handle e
 					//state.lastRunTime = curTime;
 				}
 			}
-			if (interruptsEnabled) hal_interrupt_enable();
+			//if (interruptsEnabled) 
+			hal_interrupt_enable();
 		}
 		hal_power_setMode(PWR_IDLE, NULL);
 		/*
