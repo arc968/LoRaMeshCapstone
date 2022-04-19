@@ -23,187 +23,114 @@ uint16_t sensordata = 0;
 #define GATEWAY_PULL_PIN    5
 
 //NeoPixel
-#define BRIGHTNESS          50 // Set BRIGHTNESS(max = 255)
+#define BRIGHTNESS          25 // Set BRIGHTNESS(max = 255)
 #define RING_LED_COUNT      12
 #define RING_LED_DATAIN_PIN 1
-#define CON_STRIP_COUNT     10
-#define CON1_STRIP_DATA_PIN 7
-#define CON2_STRIP_DATA_PIN 8
-#define CON3_STRIP_DATA_PIN 9
 
 //packet type defines
 #define RGBPACKET           0x00
 #define PREDEFCOLORPACKET   0x01
 #define GATEWAYPACKET       0x03
 
-uint8_t isGateway = 0;
+//uint8_t isGateway = 0;
 
-Adafruit_NeoPixel ring(RING_LED_COUNT, RING_LED_DATAIN_PIN, NEO_GRB + NEO_KHZ800);
+//Adafruit_NeoPixel ring(RING_LED_COUNT, RING_LED_DATAIN_PIN, NEO_GRB + NEO_KHZ800);
 
-void setup() {
-  uint8_t prikey[32];
-  memset(prikey, 0, sizeof(prikey));
-  String eui = modem.deviceEUI();
-  memcpy(prikey, eui.c_str(), eui.length());
-
-  pinMode(INTERNAL_LED_PIN, OUTPUT);
-  pinMode(SENSOR_PIN, INPUT);
-
-  pinMode(GATEWAY_SENSE_PIN, INPUT_PULLUP);
-  pinMode(GATEWAY_PULL_PIN, OUTPUT);
-  digitalWrite(GATEWAY_PULL_PIN, LOW);
-  if (!digitalRead(GATEWAY_SENSE_PIN)) {
-    isGateway = 1;
-  }
-  
-  digitalWrite(INTERNAL_LED_PIN, LOW);
-
-  ring.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
-  ring.fill(ring.Color(255, 0, 0));
-  ring.show();            
-  ring.setBrightness(BRIGHTNESS);
-  
-  //while (!Serial) {
-    Serial.begin(115200);
-  //}
-
-  if (isGateway) {
-    if (Serial) Serial.print("Serial Ready, Node IP is now the Gateway Node for Serial Coms\n");
-    ring.fill(ring.Color(0, 0, 255));
-  }
-  else {
-    ring.fill(ring.Color(0, 255, 0));
-  }
-  
-  ring.show();
-
-  readSensorVal(NULL);
-  
-  drv_sched_init();
-
-  if (isGateway) { 
-    drv_sched_repeating(serialReadGateway, NULL, DRV_SCHED_PRI__NORMAL, 0, 1000);
-  }
-  else {
-    drv_sched_repeating(readSensorVal, NULL, DRV_SCHED_PRI__NORMAL, 0, 60000);
-  }
-  
-  drv_mesh_init(NULL, prikey, messageReceived);
-  drv_sched_start();
-  
+void blinkOn(void * arg __attribute__((unused))) {
+  digitalWrite(LED_BUILTIN, HIGH);
 }
 
-void loop() {}
+void blinkOff(void * arg __attribute__((unused))) {
+  digitalWrite(LED_BUILTIN, LOW);
+}
 
-void serialReadGateway(void *) {
+void serialReadGateway(void * arg) {
 
-  if (Serial) {
-    uint8_t slen = 0;
-    uint8_t sbuf[50];
-    while (Serial.available() && slen < 50) {
-      sbuf[slen] = Serial.read();
-      slen++;
+  uint8_t slen = 0;
+  uint8_t sbuf[50];
+  memset(sbuf, 0, sizeof(sbuf));
+  while (Serial.available() && slen < 50) {
+    sbuf[slen] = Serial.read();
+    slen++;
+  }
+  
+  uint8_t buf[64];
+  memset(buf, 0, sizeof(buf));
+  uint8_t len = 0;
+  
+  for (uint8_t i = 0; i < slen; i++) {
+    
+    if (sbuf[i] == ',') {
+      i++;
+      continue;
     }
-    
-    uint8_t buf[5];
-    uint8_t len = 0;
-    
-    for (uint8_t i = 0; i < slen; i++) {
-      
-      if (sbuf[i] == ',') {
-        i++;
-        continue;
-      }
 
-      if (sbuf[i] == '\n') {
-        break;
-      }
+    if (sbuf[i] == '\n') {
+      break;
+    }
 
-      if (len == 0) {
+    if (len <= 2 && i + 2 < slen) {
         uint8_t temp = 0;
-        temp = temp + ((sbuf[i] -  '0') * 10);
-        temp = temp + (sbuf[i+1] - '0');
-        buf[0] = temp;
-        len++;
-        i++;
-      }
-      else if (sbuf[i] < '0' || sbuf[i] > '9') {
-        buf[1] = sbuf[i];
-        len++;
-        break;
-      }
-      else if (i + 2 < slen) {
-        uint8_t temp = 0;
-        
-        temp = (sbuf[i] - '0') * 100;
-        temp = temp + ((sbuf[i+1] -  '0') * 10);
+        temp =((sbuf[i] -  '0') * 100);
+        temp = temp + (sbuf[i+1] - '0') * 10;
         temp = temp + (sbuf[i+2] - '0');
-        
+
         buf[len] = temp;
         len++;
-        i = i+2;
-      }
-      else {
-        break;
-      }
+        i=i+2;
+    } else if (sbuf[i] < '0' || sbuf[i] > '9') {
+      buf[len] = sbuf[i];
+      len++;
+      break;
+    } else if (i + 2 < slen) {
+      uint8_t temp = 0;
       
+      temp = (sbuf[i] - '0') * 100;
+      temp = temp + ((sbuf[i+1] -  '0') * 10);
+      temp = temp + (sbuf[i+2] - '0');
+      
+      buf[len] = temp;
+      len++;
+      i = i+2;
+    } else {
+      break;
     }
     
-    struct drv_mesh_packet_s ledPacket = {
-        .ip = {10, 0, 0, buf[0]},
-        .port = 0,
-        .len = len,
-    };
-      
-    if (len == 4) {
-      ledPacket.buf[0] = RGBPACKET;
-      ledPacket.buf[1] = buf[1];
-      ledPacket.buf[2] = buf[2];
-      ledPacket.buf[3] = buf[3];
+  }
   
-      drv_mesh_send(&ledPacket);
-    }
-    else if (len == 2) {
-      ledPacket.buf[0] = RGBPACKET;
-      ledPacket.buf[1] = buf[1];
+  len = len - 2;
   
-      drv_mesh_send(&ledPacket);
-    }
-    else {
-      
-    }
+  struct drv_mesh_packet_s ledPacket = {
+      .ip = {10, buf[0], buf[1], buf[2]},
+      .port = 0,
+      .len = len,
+  };
+    
+  if (len == 4) {
+    ledPacket.buf[0] = RGBPACKET;
+    ledPacket.buf[1] = buf[3];
+    ledPacket.buf[2] = buf[4];
+    ledPacket.buf[3] = buf[5];
+
+    drv_mesh_send(&ledPacket);
+  } else if (len == 2) {
+    ledPacket.buf[0] = PREDEFCOLORPACKET;
+    ledPacket.buf[1] = buf[3];
+
+    drv_mesh_send(&ledPacket);
+  } else {
+    
   }
 }
 
-void messageReceived(struct drv_mesh_packet_s * receivedData) {
-  switch (receivedData->buf[0]) {
-    case RGBPACKET:
-      if (receivedData->len == 4) {
-        setLEDStripColor(&ring, receivedData->buf[1], receivedData->buf[2], receivedData->buf[3]);
-      }
-      break;
-    case PREDEFCOLORPACKET:
-     if (receivedData->len == 2) {
-        setLEDPreDefColor(&ring, (char) receivedData->buf[1]);
-      }
-      break;
-    case GATEWAYPACKET:
-      if (isGateway && receivedData->len == 4) {
-        char tmp[128] = {0};
-        uint16_t data = LIB_BYTEORDER_NTOH_U16(*(uint16_t *)&(receivedData->buf[1]));
-        sprintf (tmp, "NODE: %hhu.%hhu.%hhu.%hhu", receivedData->ip[0], receivedData->ip[1], receivedData->ip[2], receivedData->ip[3]);
-        Serial.print(String(tmp));
-        Serial.print("  Sent Sensor Data: ");
-        Serial.println(data);
-      }
-      break;
-    default:
-      break;
-  } 
-  
-}
+/*void setLEDStripColor(Adafruit_NeoPixel *strip, uint8_t red, uint8_t green, uint8_t blue) {
 
-void readSensorVal(void*) {
+  //strip->fill(strip->Color(red, green, blue));
+  //strip->show();
+  
+}*/
+
+void readSensorVal(void * arg) {
 
   sensordata = analogRead(SENSOR_PIN);
   struct drv_mesh_packet_s sensorPacket = {
@@ -213,13 +140,16 @@ void readSensorVal(void*) {
   };
   sensorPacket.buf[0] = GATEWAYPACKET;
   *((uint16_t *)&(sensorPacket.buf[1])) = LIB_BYTEORDER_HTON_U16(sensordata);
+  Serial.print("Sending sensor data: ");
+  Serial.print(sensordata);
+  Serial.print("\n");
   drv_mesh_send(&sensorPacket);
   
 }
 
 // Input a value 0 to 255 to get a color value.
 // The colours are a transition r - g - b - back to r.
-uint32_t Wheel(Adafruit_NeoPixel *strip, byte WheelPos) {
+/*uint32_t Wheel(Adafruit_NeoPixel *strip, byte WheelPos) {
   WheelPos = 255 - WheelPos;
   if(WheelPos < 85) {
     return strip->Color(255 - WheelPos * 3, 0, WheelPos * 3);
@@ -235,16 +165,9 @@ uint32_t Wheel(Adafruit_NeoPixel *strip, byte WheelPos) {
 void multiPixelColors(Adafruit_NeoPixel *strip) {
   for(uint16_t j=0; j<256*5; j++) {
     for(uint16_t i=0; i<strip->numPixels(); i++) {
-      strip->setPixelColor(i, Wheel(strip, (i+j) & 255));
+      strip->setPixelColor(i, drv_rand_getU8());
     }
   }
-}
-
-void setLEDStripColor(Adafruit_NeoPixel *strip, uint8_t red, uint8_t green, uint8_t blue) {
-
-  strip->fill(strip->Color(red, green, blue));
-  strip->show();
-  
 }
 
 void setLEDPreDefColor(Adafruit_NeoPixel *strip, char color) {
@@ -283,4 +206,124 @@ void setLEDPreDefColor(Adafruit_NeoPixel *strip, char color) {
       break;
   }
   ring.show();
+}*/
+
+void messageReceived(struct drv_mesh_packet_s * receivedData) {
+  switch (receivedData->buf[0]) {
+    case RGBPACKET:
+      if (receivedData->len == 4) {
+        //setLEDStripColor(&ring, receivedData->buf[1], receivedData->buf[2], receivedData->buf[3]);
+        Serial.println("RGBPACKET Received Properly");
+      }
+      else {
+        Serial.println("ERROR BAD RGBPACKET COMMAND RECEIVED");
+      }
+      break;
+    case PREDEFCOLORPACKET:
+     if (receivedData->len == 2) {
+        //setLEDPreDefColor(&ring, (char) receivedData->buf[1]);
+        Serial.println("PREDEFCOLORPACKET Received Properly");
+      }
+      else {
+        Serial.println("ERROR BAD PREDEFCOLORPACKET COMMAND RECEIVED");
+      }
+      break;
+    case GATEWAYPACKET:
+      if (/*isGateway && */receivedData->len == 3) {
+        char tmp[128] = {0};
+        uint16_t data = LIB_BYTEORDER_NTOH_U16(*(uint16_t *)&(receivedData->buf[1]));
+        sprintf (tmp, "NODE: %u.%u.%u.%u", receivedData->ip[0], receivedData->ip[1], receivedData->ip[2], receivedData->ip[3]);
+        Serial.print(String(tmp));
+        Serial.print("  Received Sensor Data: ");
+        Serial.println(data);
+      }
+      else {
+        Serial.println("ERROR BAD GATEWAY COMMAND RECEIVED");
+      }
+      break;
+    default:
+      break;
+  } 
+  
 }
+
+void ibugsend(void * arg) {
+
+  struct drv_mesh_packet_s sensorPacket = {
+  .ip = {10, 0, 0, GATEWAY_NODE_SIM_IP},
+  .port = 0,
+  .len = 0x03,
+  };
+  sensorPacket.buf[0] = GATEWAYPACKET;
+  *((uint16_t *)&(sensorPacket.buf[1])) = LIB_BYTEORDER_HTON_U16(0xFF00);
+  Serial.print("Sending sensor data: ");
+  Serial.print(0xFF00);
+  Serial.print("\n");
+  drv_mesh_send(&sensorPacket);
+
+}
+
+uint8_t TESTING_DEMO_ISGATEWAY_FLAG_THING = 0;
+
+void setup() {
+  modem.begin(US915);
+  uint8_t prikey[32];
+  memset(prikey, 0, sizeof(prikey));
+  String eui = modem.deviceEUI();
+  memcpy(prikey, eui.c_str(), eui.length());
+
+  //pinMode(INTERNAL_LED_PIN, OUTPUT);
+  //pinMode(SENSOR_PIN, INPUT);
+
+  //pinMode(LED_BUILTIN, OUTPUT);
+
+  /*pinMode(GATEWAY_SENSE_PIN, INPUT_PULLUP);
+  pinMode(GATEWAY_PULL_PIN, OUTPUT);
+  digitalWrite(GATEWAY_PULL_PIN, LOW);
+  if (!digitalRead(GATEWAY_SENSE_PIN)) {
+    isGateway = 1;
+    TESTING_DEMO_ISGATEWAY_FLAG_THING = 1;
+  }
+  
+  digitalWrite(INTERNAL_LED_PIN, LOW);*/
+
+  /*ring.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
+  ring.fill(ring.Color(255, 0, 0));
+  ring.show();            
+  ring.setBrightness(BRIGHTNESS);*/
+  
+  //while (!Serial);
+  Serial.begin(115200);
+  Serial.print("Ready\n");
+  delay(1500);
+
+  /*if (isGateway) {
+    Serial.print("Serial Ready, Node IP is now the Gateway Node for Serial Coms\n");
+    ring.fill(ring.Color(0, 0, 255));
+  }
+  else {
+    ring.fill(ring.Color(0, 255, 0));
+  }
+  
+  ring.show();
+
+  drv_sched_init();
+  drv_mesh_init(NULL, prikey, messageReceived);
+
+  if (isGateway) { 
+    drv_sched_repeating(serialReadGateway, NULL, DRV_SCHED_PRI__NORMAL, 0, 1000);
+  }
+  else {
+    drv_sched_repeating(readSensorVal, NULL, DRV_SCHED_PRI__NORMAL, 0, 5*60*1000);
+  }
+
+  drv_sched_repeating(blinkOn, NULL, DRV_SCHED_PRI__NORMAL, 0, 2000);
+  drv_sched_repeating(blinkOff, NULL, DRV_SCHED_PRI__NORMAL, 1000, 2000);*/
+
+  drv_sched_repeating(ibugsend, NULL, DRV_SCHED_PRI__NORMAL, 0, 5*60*1000);
+
+ 
+  drv_sched_start();
+}
+
+void loop() {}

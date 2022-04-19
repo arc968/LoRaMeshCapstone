@@ -46,9 +46,9 @@ bool hal_interrupt_isEnabled(void) {
 		//return (result & (0x1 << 7)) >> 7;
 		return false;
 	#elif defined(HW_RAK4260_H)
-		uint32_t result;
-		__ASM volatile ("MRS %0, cpsr" : "=r" (result) );
-		return (result & (0x1 << 7)) >> 7;
+		//uint32_t result;
+		//__ASM volatile ("MRS %0, cpsr" : "=r" (result) );
+		//return (result & (0x1 << 7)) >> 7;
 	#elif defined(HW_RAK4600_H)
 			
 	#elif defined(HW_RAK11300_H)
