@@ -84,6 +84,8 @@ static void drv_mesh_parsePayload_data(struct peer_s * peer, struct packet_s * r
 		}
 	} else {
 		DEBUG_PRINT("\tINFO: Payload destined for this node.\n");
+		
+		//memcpy(peer->ip, payload->header.ip_src, sizeof(ipv4_t));
 
 		{ //dequeue packets based on ACK
 			uint16_t count = RB_COUNT(state.rb_outboundPackets);
