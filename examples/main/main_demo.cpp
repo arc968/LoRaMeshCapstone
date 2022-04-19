@@ -120,7 +120,7 @@ void serialReadGateway(void * arg) {
 
     drv_mesh_send(&ledPacket);
   } else if (len == 2) {
-    ledPacket.buf[0] = RGBPACKET;
+    ledPacket.buf[0] = PREDEFCOLORPACKET;
     ledPacket.buf[1] = buf[3];
 
     drv_mesh_send(&ledPacket);
@@ -220,10 +220,16 @@ void messageReceived(struct drv_mesh_packet_s * receivedData) {
       if (receivedData->len == 4) {
         setLEDStripColor(&ring, receivedData->buf[1], receivedData->buf[2], receivedData->buf[3]);
       }
+      else {
+        Serial.println("ERROR BAD RGBPACKET COMMAND RECEIVED")
+      }
       break;
     case PREDEFCOLORPACKET:
      if (receivedData->len == 2) {
         setLEDPreDefColor(&ring, (char) receivedData->buf[1]);
+      }
+      else {
+        Serial.println("ERROR BAD PREDEFCOLORPACKET COMMAND RECEIVED")
       }
       break;
     case GATEWAYPACKET:
@@ -234,6 +240,9 @@ void messageReceived(struct drv_mesh_packet_s * receivedData) {
         Serial.print(String(tmp));
         Serial.print("  Received Sensor Data: ");
         Serial.println(data);
+      }
+      else {
+        Serial.println("ERROR BAD GATEWAY COMMAND RECEIVED")
       }
       break;
     default:

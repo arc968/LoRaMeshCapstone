@@ -95,7 +95,7 @@ static void drv_mesh_parsePayload_data(struct peer_s * peer, struct packet_s * r
 					*RB_PUT(state.rb_outboundPackets) = packet_tmp;
 				}
 			}
-		} ??? //something is wrong with payload ACK
+		} //something is wrong with payload ACK
 
 		if (msgSize > 0) { //queue direct ACK
 			DEBUG_PRINT("\tINFO: Payload received (seq: %u) (%hhu bytes), queuing ACK...\n", payload->auth.num_seq, payloadSize);
