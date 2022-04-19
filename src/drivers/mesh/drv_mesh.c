@@ -67,7 +67,8 @@ static void printStats(struct drv_mesh_stats_s * stats) {
 }
 
 static void printPeerStats(struct peer_s * peer) {
-	DEBUG_PRINT("[status=%s,ip=[%hhu.%hhu.%hhu.%hhu],last_packet_timestamp=%llu]\n", peer_status_string_arr[peer->status], peer->ip[0], peer->ip[1], peer->ip[2], peer->ip[3], peer->last_packet_timestamp);
+	DEBUG_PRINT("[status=%s,last_packet_timestamp=%llu]\n", peer_status_string_arr[peer->status], peer->last_packet_timestamp);
+	//DEBUG_PRINT("[status=%s,ip=[%hhu.%hhu.%hhu.%hhu],last_packet_timestamp=%llu]\n", peer_status_string_arr[peer->status], peer->ip[0], peer->ip[1], peer->ip[2], peer->ip[3], peer->last_packet_timestamp);
 }
 
 //small issue, starts backing off on boot not after initialization
@@ -445,7 +446,7 @@ enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * packet) {
 
 	//TODO can only send unique payload once
 	//???
-	payload->auth.num_seq = state.counter_outbound++;
+	payload->auth.num_seq = ++state.counter_outbound;
 	payload->auth.num_ack = 0;
 
 	raw_packet->counter = payload->auth.num_seq;

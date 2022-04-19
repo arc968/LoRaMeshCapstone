@@ -36,7 +36,7 @@ static void queuePacketToAllPeers(uint8_t * payload, uint8_t payloadSize, struct
 //don't send back to peer that delivered message
 static void drv_mesh_routePayload(struct payload_s * payload, uint8_t payloadSize, lib_datetime_realtime_t realtime, struct peer_s * relayPeer) {
 	struct route_s * route = findRoute(payload->header.ip_dst, realtime);
-	if (route == NULL) {
+	if (route == NULL || route->count == 0) {
 		DEBUG_PRINT("\tINFO: No route found, flooding...\n");
 		queuePacketToAllPeers((uint8_t *)payload, payloadSize, relayPeer);
 	} else {

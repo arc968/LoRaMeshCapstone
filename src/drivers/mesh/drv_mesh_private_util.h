@@ -71,11 +71,11 @@ static struct route_s * findRoute(ipv4_t ip_src, lib_datetime_realtime_t realtim
 	DEBUG_PRINT_FUNCTION();
 	if (ip_src[0] != 10 || (memcmp(ip_src, GATEWAY_IP, sizeof(ipv4_t)) == 0)) {
 		if (realtime != 0) state.route_gateway.last_usage = realtime;
-		if (state.route_gateway.count != 0) {
-			return &(state.route_gateway);
-		} else {
-			return NULL;
-		}
+		// if (state.route_gateway.count != 0) {
+		return &(state.route_gateway);
+		// } else {
+		// 	return NULL;
+		// }
 	}
 	struct route_s * route = state.hm_route_buckets[getBucketIndex(ip_src)];
 	while (route != NULL && memcmp(route->ip_src, ip_src, sizeof(ipv4_t))) route = route->next;
@@ -123,18 +123,20 @@ static void insertRoute(ipv4_t ip_src, uint8_t ttl, uint16_t index_peer, lib_dat
 			break;
 		}
 	}
-	uint32_t hm_index = getBucketIndex(ip_src);
-	struct route_s * tmp = state.hm_route_buckets[hm_index];
-	if (tmp == NULL) {
-		state.hm_route_buckets[hm_index] = route;
-		route->next = NULL;
-	} else {
-		while (tmp->next != NULL && memcmp(tmp->ip_src, ip_src, sizeof(ipv4_t))) tmp = tmp->next;
-		if (memcmp(tmp->ip_src, ip_src, sizeof(ipv4_t)) == 0) {
-			//do nothing, already in hashmap 
-		} else {
+	if (route != &(state.route_gateway)) {
+		uint32_t hm_index = getBucketIndex(ip_src);
+		struct route_s * tmp = state.hm_route_buckets[hm_index];
+		if (tmp == NULL) {
+			state.hm_route_buckets[hm_index] = route;
 			route->next = NULL;
-			tmp->next = route;
+		} else {
+			while (tmp->next != NULL && memcmp(tmp->ip_src, ip_src, sizeof(ipv4_t))) tmp = tmp->next;
+			if (memcmp(tmp->ip_src, ip_src, sizeof(ipv4_t)) == 0) {
+				//do nothing, already in hashmap 
+			} else {
+				route->next = NULL;
+				tmp->next = route;
+			}
 		}
 	}
 }
