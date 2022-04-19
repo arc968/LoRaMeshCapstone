@@ -91,11 +91,12 @@ static void drv_mesh_parsePayload_data(struct peer_s * peer, struct packet_s * r
 				struct packet_s * packet_tmp = *RB_GET(state.rb_outboundPackets);
 				if (packet_tmp->counter == payload->auth.num_ack) {
 					insertEmptyPacket(packet_tmp);
+					DEBUG_PRINT("Payload (%u) acknowledged.\n", packet_tmp->counter);
 				} else {
 					*RB_PUT(state.rb_outboundPackets) = packet_tmp;
 				}
 			}
-		} ??? //something is wrong with payload ACK
+		}
 
 		if (msgSize > 0) { //queue direct ACK
 			DEBUG_PRINT("\tINFO: Payload received (seq: %u) (%hhu bytes), queuing ACK...\n", payload->auth.num_seq, payloadSize);

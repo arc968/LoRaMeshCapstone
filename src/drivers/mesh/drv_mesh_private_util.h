@@ -44,6 +44,7 @@ static uint32_t getBucketIndex(ipv4_t ip_src) {
 	return lib_misc_fastrange32(tmp, HASHMAP_ROUTES_BUCKET_COUNT);
 }
 
+//TODO figure out why this hangs and why they reach this in the first place
 static struct route_s * deleteOldestRoute(void) { //should only be called if all routes are in use
 	DEBUG_PRINT_FUNCTION();
 	struct route_s * route = &(state.routes[0]);

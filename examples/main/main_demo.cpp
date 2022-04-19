@@ -120,7 +120,7 @@ void serialReadGateway(void * arg) {
 
     drv_mesh_send(&ledPacket);
   } else if (len == 2) {
-    ledPacket.buf[0] = RGBPACKET;
+    ledPacket.buf[0] = PREDEFCOLORPACKET;
     ledPacket.buf[1] = buf[3];
 
     drv_mesh_send(&ledPacket);
@@ -293,7 +293,7 @@ void setup() {
     drv_sched_repeating(serialReadGateway, NULL, DRV_SCHED_PRI__NORMAL, 0, 1000);
   }
   else {
-    drv_sched_repeating(readSensorVal, NULL, DRV_SCHED_PRI__NORMAL, 0, 60000);
+    //drv_sched_repeating(readSensorVal, NULL, DRV_SCHED_PRI__NORMAL, 0, 60000);
   }
 
   drv_sched_repeating(blinkOn, NULL, DRV_SCHED_PRI__NORMAL, 0, 2000);

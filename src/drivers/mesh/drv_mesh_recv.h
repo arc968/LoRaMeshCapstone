@@ -125,7 +125,7 @@ static void drv_mesh_parsePacket_auth(struct packet_s * raw_packet) {
 	crypto_wipe(key_once, sizeof(key_once));
 	
 	if (crypto_verify16(hmac_tmp, packet->hmac)) {
-		DEBUG_PRINT("\tWARNING: Discovery reply packet corrupt.\n");
+		DEBUG_PRINT("\tWARNING: Authentication packet corrupt.\n");
 		return;
 	}
 	
@@ -133,18 +133,18 @@ static void drv_mesh_parsePacket_auth(struct packet_s * raw_packet) {
 		/* lib_datetime_realtime_t curtime;
 		drv_timer_getRealtime(&curtime);
 		if (absI64((int64_t)(packet->body.timestamp) - (int64_t)(curtime)) > (60*1000)) {
-			DEBUG_PRINT("\tWARNING: Discovery reply packet timestamp out of range.\n");
+			DEBUG_PRINT("\tWARNING: Authentication packet timestamp out of range.\n");
 			return;
 		} */
 		
 		struct peer_s * peer = getPeerByPubDhKey(packet->lock.key_dh_pub);
 		if (peer == NULL) {
-			DEBUG_PRINT("\tWARNING: Discovery reply packet from unknown peer, dropping.\n");
+			DEBUG_PRINT("\tWARNING: Authentication packet from unknown peer, dropping.\n");
 			return;
 		}
 		
-		if (packet->lock.timestamp < peer->last_packet_timestamp) {
-			DEBUG_PRINT("\tWARNING: Discovery reply packet from known peer is too old, dropping.\n");
+		if (packet->lock.timestamp <= peer->last_packet_timestamp) {
+			DEBUG_PRINT("\tWARNING: Authentication packet from known peer is too old, dropping.\n");
 			return;
 		}
 		

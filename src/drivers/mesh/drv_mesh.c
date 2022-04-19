@@ -127,6 +127,17 @@ static void drv_mesh_worker_scheduler(void * arg) {
 			seed = LIB_BYTEORDER_NTOH_U32(seed);
 			
 			enum drv_sched_err_e err;
+
+			// TEMP DEBUG
+			hal_gpio_pinMode(7, INPUT_PULLUP);
+			if (hal_gpio_digitalRead(7)) {
+				tmp3 = 1;
+			} else {
+				tmp3 = 0;
+			}
+
+			// END TEMP DEBUG
+
 			if (tmp3) { //TESTING
 				DEBUG_PRINT("\tNext disc: RECV with odds: %lu/%lu\n", tmp2-1, tmp2);
 				//appt->type = APPT_RECV;
@@ -435,7 +446,7 @@ enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * packet) {
 
 	//TODO can only send unique payload once
 	//???
-	payload->auth.num_seq = state.counter_outbound++;
+	payload->auth.num_seq = ++state.counter_outbound;
 	payload->auth.num_ack = 0;
 
 	raw_packet->counter = payload->auth.num_seq;
