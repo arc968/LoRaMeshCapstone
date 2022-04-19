@@ -221,7 +221,7 @@ void messageReceived(struct drv_mesh_packet_s * receivedData) {
         setLEDStripColor(&ring, receivedData->buf[1], receivedData->buf[2], receivedData->buf[3]);
       }
       else {
-        Serial.println("ERROR BAD RGBPACKET COMMAND RECEIVED")
+        Serial.println("ERROR BAD RGBPACKET COMMAND RECEIVED");
       }
       break;
     case PREDEFCOLORPACKET:
@@ -229,7 +229,7 @@ void messageReceived(struct drv_mesh_packet_s * receivedData) {
         setLEDPreDefColor(&ring, (char) receivedData->buf[1]);
       }
       else {
-        Serial.println("ERROR BAD PREDEFCOLORPACKET COMMAND RECEIVED")
+        Serial.println("ERROR BAD PREDEFCOLORPACKET COMMAND RECEIVED");
       }
       break;
     case GATEWAYPACKET:
@@ -242,7 +242,7 @@ void messageReceived(struct drv_mesh_packet_s * receivedData) {
         Serial.println(data);
       }
       else {
-        Serial.println("ERROR BAD GATEWAY COMMAND RECEIVED")
+        Serial.println("ERROR BAD GATEWAY COMMAND RECEIVED");
       }
       break;
     default:
@@ -302,7 +302,7 @@ void setup() {
     drv_sched_repeating(serialReadGateway, NULL, DRV_SCHED_PRI__NORMAL, 0, 1000);
   }
   else {
-    //drv_sched_repeating(readSensorVal, NULL, DRV_SCHED_PRI__NORMAL, 0, 60000);
+    drv_sched_repeating(readSensorVal, NULL, DRV_SCHED_PRI__NORMAL, 0, 5*60*1000);
   }
 
   drv_sched_repeating(blinkOn, NULL, DRV_SCHED_PRI__NORMAL, 0, 2000);

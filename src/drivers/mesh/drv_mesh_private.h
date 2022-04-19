@@ -43,6 +43,7 @@ char * peer_status_string_arr[] = {
 struct peer_s {
 	struct peer_s * next;
 	enum peer_status_e status;
+	ipv4_t ip;
 	
 	uint8_t key_dh_pub[32];
 	uint8_t key_chan_send[8];

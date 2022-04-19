@@ -277,7 +277,7 @@ static void setupRadioFromConfig(struct drv_lora_s * radio, struct radio_cfg_s *
      _a > _b ? _a : _b; })
 #endif
 
-static void estimateTimeOnAirInMsFromRadioCfg(struct radio_cfg_s * cfg, uint8_t packet_size) {
+static void estimateTimeOnAirInMsFromRadioCfg(struct radio_cfg_s * cfg, uint8_t packet_size, uint32_t * toa, uint16_t  *preambleSymbols) {
 	const uint32_t CRC = 1;
 	const uint32_t IH = 1;
 	const uint32_t DE = 0;
@@ -287,12 +287,13 @@ static void estimateTimeOnAirInMsFromRadioCfg(struct radio_cfg_s * cfg, uint8_t 
 	int32_t n_payload = 8 + (max(((num/den) + 1)*(cfg->codingRate + 4), 0)); //instead of ceil, add 1
 	uint32_t t_payload = (n_payload * 1000) / Rs;
 
-	cfg->preambleSymbols = (uint16_t)((PREAMBLE_MS*Rs)/1000) + 4;
+	*preambleSymbols = (uint16_t)((PREAMBLE_MS*Rs)/1000) + 4;
 	//uint32_t t_preamble = ((cfg->preambleSymbols + 5) * 1000) / Rs; //should be 4.25, rounding up to 5
 
-	cfg->toaEstimate = PREAMBLE_MS + t_payload;
+	*toa = PREAMBLE_MS + t_payload;
+	
 	if (packet_size <= 4) {
-		DEBUG_PRINT("\tPacket ToA estimate: %ums preamble (%u symbols) + %ums payload (%u symbols) = %ums packet (%hhu bytes)\n", PREAMBLE_MS, cfg->preambleSymbols, t_payload, n_payload, cfg->toaEstimate, packet_size);
+		DEBUG_PRINT("\tPacket ToA estimate: %ums preamble (%u symbols) + %ums payload (%u symbols) = %ums packet (%hhu bytes)\n", PREAMBLE_MS, *preambleSymbols, t_payload, n_payload, *toa, packet_size);
 	}
 }
 
@@ -301,7 +302,8 @@ static void setRadioCfgAtTimeFromSeed(struct radio_cfg_s * cfg, lib_datetime_rea
 	rt = LIB_BYTEORDER_HTON_U64(rt); //probably doesn't work properly
 	crypto_blake2b_general((uint8_t *)&seed, sizeof(seed), (uint8_t *)&seed, sizeof(seed), (uint8_t *)&rt, sizeof(rt));
 	seed = LIB_BYTEORDER_NTOH_U32(seed);
-	
+	uint32_t tmp_toa;
+	uint16_t tmp_preambleSymbols;
 	do {
 		seed = LIB_BYTEORDER_NTOH_U32(lib_misc_XORshiftLFSR32(LIB_BYTEORDER_HTON_U32(seed)));
 		cfg->bandwidth = drv_lora_bandwidth_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_bandwidth_e_arr)/sizeof(drv_lora_bandwidth_e_arr[0]))];
@@ -311,9 +313,11 @@ static void setRadioCfgAtTimeFromSeed(struct radio_cfg_s * cfg, lib_datetime_rea
 		cfg->spreadingFactor = drv_lora_spreadingFactor_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_spreadingFactor_e_arr)/sizeof(drv_lora_spreadingFactor_e_arr[0]))];
 		seed = LIB_BYTEORDER_NTOH_U32(lib_misc_XORshiftLFSR32(LIB_BYTEORDER_HTON_U32(seed)));
 		cfg->codingRate = drv_lora_codingRate_e_arr[lib_misc_fastrange32(seed, sizeof(drv_lora_codingRate_e_arr)/sizeof(drv_lora_codingRate_e_arr[0]))];
-		estimateTimeOnAirInMsFromRadioCfg(cfg, packet_size);
+		estimateTimeOnAirInMsFromRadioCfg(cfg, 255, &tmp_toa, &tmp_preambleSymbols);
 		//DEBUG_PRINT("\t\tradio cfg seed: %u\n", seed);
-	} while (cfg->toaEstimate > PACKET_TOA_MAX_GENERATE);
+	} while (tmp_toa > PACKET_TOA_MAX_GENERATE);
+
+	estimateTimeOnAirInMsFromRadioCfg(cfg, packet_size, &(cfg->toaEstimate), &(cfg->preambleSymbols));
 }
 
 //this is kinda garbage

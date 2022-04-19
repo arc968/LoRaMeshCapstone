@@ -67,7 +67,7 @@ static void printStats(struct drv_mesh_stats_s * stats) {
 }
 
 static void printPeerStats(struct peer_s * peer) {
-	DEBUG_PRINT("[status=%s,last_packet_timestamp=%llu]\n", peer_status_string_arr[peer->status], peer->last_packet_timestamp);
+	DEBUG_PRINT("[status=%s,ip=[%hhu.%hhu.%hhu.%hhu],last_packet_timestamp=%llu]\n", peer_status_string_arr[peer->status], peer->ip[0], peer->ip[1], peer->ip[2], peer->ip[3], peer->last_packet_timestamp);
 }
 
 //small issue, starts backing off on boot not after initialization
@@ -116,7 +116,7 @@ static void drv_mesh_worker_scheduler(void * arg) {
 			uint32_t tmp = 0; //lib_misc_fastrange32(seed, DISCOVERY_INTERVAL_MILLIS);
 			appt->realtime = rt_disc + tmp;
 			lib_datetime_interval_t curTime = drv_timer_getMonotonicTime();
-			uint32_t tmp2 = (uint32_t)constrainU64(map(curTime, 0, LIB_DATETIME__MS_IN_DAY/24, DISC_FRAC_START, DISC_FRAC_END), DISC_FRAC_START, DISC_FRAC_END); // Ends at sending 1/n times
+			uint32_t tmp2 = (uint32_t)constrainU64(map(curTime, 0, DISC_BACKOFF_DURATION_MS, DISC_FRAC_START, DISC_FRAC_END), DISC_FRAC_START, DISC_FRAC_END); // Ends at sending 1/n times
 			uint32_t tmp3 = lib_misc_fastrange32(drv_rand_getU32(), tmp2);
 			
 			//appt->peer = NULL;
@@ -129,12 +129,12 @@ static void drv_mesh_worker_scheduler(void * arg) {
 			enum drv_sched_err_e err;
 
 			// TEMP DEBUG
-			hal_gpio_pinMode(7, INPUT_PULLUP);
-			if (hal_gpio_digitalRead(7)) {
-				tmp3 = 1;
-			} else {
-				tmp3 = 0;
-			}
+			// hal_gpio_pinMode(7, INPUT_PULLUP);
+			// if (hal_gpio_digitalRead(7)) {
+			// 	tmp3 = 1;
+			// } else {
+			// 	tmp3 = 0;
+			// }
 
 			// END TEMP DEBUG
 
@@ -259,7 +259,6 @@ static void drv_mesh_worker_scheduler(void * arg) {
 				DEBUG_PRINT("\tINFO: Scheduling peer send at t+%lu\n", offset);
 
 				setRadioCfgAtTimeFromSeed(&(appt->radio_cfg), appt->realtime, seed, packet->size);
-				//estimateTimeOnAirInMsFromRadioCfg(&(appt->radio_cfg), packet->size);
 				
 				if (packet->once) {
 					appt->packet = packet;
@@ -446,7 +445,7 @@ enum drv_mesh_error_e drv_mesh_send(struct drv_mesh_packet_s * packet) {
 
 	//TODO can only send unique payload once
 	//???
-	payload->auth.num_seq = ++state.counter_outbound;
+	payload->auth.num_seq = state.counter_outbound++;
 	payload->auth.num_ack = 0;
 
 	raw_packet->counter = payload->auth.num_seq;

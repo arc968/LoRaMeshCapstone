@@ -47,6 +47,9 @@ static void drv_mesh_parsePacket_disc(struct packet_s * raw_packet) {
 		crypto_blake2b_general(peer->key_chan_send, sizeof(peer->key_chan_send), key_tmp, sizeof(key_tmp), peer->key_dh_pub, sizeof(peer->key_dh_pub));
 		crypto_blake2b_general(peer->key_chan_recv, sizeof(peer->key_chan_recv), key_tmp, sizeof(key_tmp), state.key_dh_pub, sizeof(state.key_dh_pub));
 		crypto_wipe(key_tmp, sizeof(key_tmp));
+
+		DEBUG_PRINT_ARRAY(peer->key_chan_send);
+		DEBUG_PRINT_ARRAY(peer->key_chan_recv);
 		
 		crypto_wipe(peer->key_send, sizeof(peer->key_send));
 		peer->counter_send = 0;
@@ -143,11 +146,12 @@ static void drv_mesh_parsePacket_auth(struct packet_s * raw_packet) {
 			return;
 		}
 		
-		if (packet->lock.timestamp <= peer->last_packet_timestamp) {
+		if (packet->lock.timestamp < peer->last_packet_timestamp) {
 			DEBUG_PRINT("\tWARNING: Authentication packet from known peer is too old, dropping.\n");
 			return;
 		}
 		
+		lib_datetime_realtime_t tmp_timestamp = peer->last_packet_timestamp;
 		peer->last_packet_timestamp = packet->lock.timestamp;
 		
 		peer->index = packet->lock.index;
@@ -155,7 +159,7 @@ static void drv_mesh_parsePacket_auth(struct packet_s * raw_packet) {
 		if (peer->status == PEER_PASSERBY) {
 			peer->status = PEER_STRANGER;
 		}
-		{ // derive key_data_send/key_data_recv
+		if (tmp_timestamp < packet->lock.timestamp) { // derive key_data_send/key_data_recv
 			uint8_t key_tmp[32];
 			uint8_t key_shared_tmp[32];
 			uint8_t key_send_tmp[32];
@@ -405,10 +409,12 @@ static void drv_mesh_worker_recv(void * arg) {
 	lib_datetime_interval_t current = drv_timer_getMonotonicTime();
 	uint8_t reg_status = 0;
 	
-	estimateTimeOnAirInMsFromRadioCfg(&(appt->radio_cfg), 2);
+	uint32_t tmp_toa;
+	uint16_t tmp_preambleSymbols;
+	estimateTimeOnAirInMsFromRadioCfg(&(appt->radio_cfg), 2, &tmp_toa, &tmp_preambleSymbols);
 
 	uint32_t tmp_count1 = 0;
-	while (((current - start) < (PREAMBLE_MS + (appt->radio_cfg.toaEstimate - PREAMBLE_MS)) + PADDING_MS) && !(reg_status) && ((current - start) < (2*PACKET_TOA_MAX_GENERATE))) {
+	while (((current - start) < (PREAMBLE_MS + (tmp_toa - PREAMBLE_MS)) + PADDING_MS) && !(reg_status) && ((current - start) < (2*PACKET_TOA_MAX_GENERATE))) {
 		reg_status = drv_lora_getStatusReg(&state.radio) & (0x1 << 0);
 		//headerPacketSize = drv_lora_getHeaderPacketSize(&state.radio);
 		current = drv_timer_getMonotonicTime();
@@ -428,7 +434,7 @@ static void drv_mesh_worker_recv(void * arg) {
 	uint32_t tmp_count = 0;
 	start = drv_timer_getMonotonicTime();
 	current = drv_timer_getMonotonicTime();
-	while (((current - start) < ((appt->radio_cfg.toaEstimate - PREAMBLE_MS) + PADDING_MS)) && (readByteIndex < 1)) {
+	while (((current - start) < ((tmp_toa - PREAMBLE_MS) + PADDING_MS)) && (readByteIndex < 1)) {
 		readByteIndex = drv_lora_readRegister(0x25);
 		current = drv_timer_getMonotonicTime();
 		tmp_count++;
@@ -464,9 +470,9 @@ static void drv_mesh_worker_recv(void * arg) {
 
 	drv_lora_writeRegister(0x22, packetSize0);
 
-	estimateTimeOnAirInMsFromRadioCfg(&(appt->radio_cfg), packetSize0);
+	estimateTimeOnAirInMsFromRadioCfg(&(appt->radio_cfg), packetSize0, &tmp_toa, &tmp_preambleSymbols);
 	
-	enum drv_sched_err_e err = drv_sched_once(drv_mesh_worker_recv_finish, NULL, DRV_SCHED_PRI__REALTIME, (appt->radio_cfg.toaEstimate - PREAMBLE_MS) + PADDING_MS);
+	enum drv_sched_err_e err = drv_sched_once(drv_mesh_worker_recv_finish, NULL, DRV_SCHED_PRI__REALTIME, (tmp_toa- PREAMBLE_MS) + PADDING_MS);
 	if (err != DRV_SCHED_ERR__NONE) { //error checking
 		DEBUG_PRINT("\tWARNING: Failed to schedule drv_mesh_worker_recv_finish()\n");
 		drv_lora_setMode(&state.radio, DRV_LORA_MODE__SLEEP);
