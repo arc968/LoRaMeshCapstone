@@ -94,6 +94,11 @@ void drv_gps_init(struct drv_gps_s * handle) {
 		}
 		hal_interrupt_attachPin(0, isr_pps, INTERRUPT_FALLING);
 	#elif defined(HW_RAK4260_H)
+		hal_gpio_pinMode(5, INPUT_PULLUP);
+		if (hal_gpio_digitalRead(5) == 0) {
+			timestamp = drv_timer_getMonotonicTime();
+			drv_sched_once(job_getGpsMessage, NULL, DRV_SCHED_PRI__NORMAL, 250);
+		}
 		hal_interrupt_attachPin(5, isr_pps, INTERRUPT_FALLING);
 	#elif defined(HW_RAK4600_H)
 			
