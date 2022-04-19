@@ -26,10 +26,6 @@ uint16_t sensordata = 0;
 #define BRIGHTNESS          25 // Set BRIGHTNESS(max = 255)
 #define RING_LED_COUNT      12
 #define RING_LED_DATAIN_PIN 1
-#define CON_STRIP_COUNT     10
-#define CON1_STRIP_DATA_PIN 7
-#define CON2_STRIP_DATA_PIN 8
-#define CON3_STRIP_DATA_PIN 9
 
 //packet type defines
 #define RGBPACKET           0x00
@@ -171,7 +167,7 @@ uint32_t Wheel(Adafruit_NeoPixel *strip, byte WheelPos) {
 void multiPixelColors(Adafruit_NeoPixel *strip) {
   for(uint16_t j=0; j<256*5; j++) {
     for(uint16_t i=0; i<strip->numPixels(); i++) {
-      strip->setPixelColor(i, Wheel(strip, (i+j) & 255));
+      strip->setPixelColor(i, drv_rand_getU8());
     }
   }
 }
